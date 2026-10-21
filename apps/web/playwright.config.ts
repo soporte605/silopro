@@ -20,10 +20,29 @@ export default defineConfig({
     { name: 'escritorio', use: { ...devices['Desktop Chrome'] } },
     { name: 'movil', use: { ...devices['Pixel 7'] } },
   ],
-  webServer: {
-    command: 'npx ng serve --port 4300',
-    url: 'http://localhost:4300',
-    reuseExistingServer: !process.env['CI'],
-    timeout: 120_000,
-  },
+  // La API debe estar compilada (`pnpm --filter @silopro/api build`) y usar una base
+  // desechable: las pruebas crean cuentas y organizaciones nuevas en cada ejecución.
+  webServer: [
+    {
+      command: 'node ../api/dist/main.js',
+      url: 'http://localhost:3000/api/health',
+      reuseExistingServer: !process.env['CI'],
+      timeout: 60_000,
+      env: {
+        NODE_ENV: 'development',
+        PORT: '3000',
+        DATABASE_URL:
+          process.env['E2E_DATABASE_URL'] ??
+          'postgres://silopro:silopro@localhost:5432/silopro_e2e',
+        MIGRATE_ON_START: 'true',
+        CORS_ORIGINS: 'http://localhost:4300',
+      },
+    },
+    {
+      command: 'npx ng serve --port 4300',
+      url: 'http://localhost:4300',
+      reuseExistingServer: !process.env['CI'],
+      timeout: 120_000,
+    },
+  ],
 });

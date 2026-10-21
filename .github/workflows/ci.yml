@@ -53,6 +53,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: calidad
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      E2E_DATABASE_URL: postgres://silopro:silopro@localhost:5432/silopro_e2e
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -61,7 +72,14 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Crear rol de aplicación y base desechable
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "CREATE ROLE silopro LOGIN PASSWORD 'silopro' NOSUPERUSER NOBYPASSRLS"
+          psql -h localhost -U postgres -c "CREATE DATABASE silopro_e2e OWNER silopro"
       - run: pnpm build:packages
+      - run: pnpm --filter @silopro/api build
       - run: pnpm --filter @silopro/web exec playwright install --with-deps chromium
       - run: pnpm --filter @silopro/web e2e
       - uses: actions/upload-artifact@v4

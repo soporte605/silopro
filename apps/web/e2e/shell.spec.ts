@@ -1,13 +1,13 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
-test('la página de inicio muestra el estado y la hoja de ruta', async ({ page }) => {
+test('la página de inicio muestra la organización y la hoja de ruta', async ({ page, account }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/SiloPro/);
-  await expect(page.getByRole('heading', { name: 'Inicio' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: account.organizationName })).toBeVisible();
   await expect(page.getByRole('cell', { name: /Fundamentos/ })).toBeVisible();
 });
 
-test('la paleta de comandos navega con el teclado', async ({ page, isMobile }) => {
+test('la paleta de comandos navega con el teclado', async ({ page, isMobile, account: _ }) => {
   test.skip(isMobile, 'Atajo de teclado de escritorio');
   await page.goto('/');
   await page.keyboard.press('Control+k');
@@ -18,28 +18,25 @@ test('la paleta de comandos navega con el teclado', async ({ page, isMobile }) =
   await expect(page).toHaveURL(/gabinetes\/demo/);
 });
 
-test('el gabinete de demostración permite seleccionar y fusionar', async ({ page, isMobile }) => {
+test('el gabinete de demostración permite seleccionar y fusionar', async ({
+  page,
+  isMobile,
+  account: _,
+}) => {
   test.skip(isMobile, 'Selección por teclado de escritorio');
   await page.goto('/gabinetes/demo');
   const cabinet = page.getByRole('application');
   await cabinet.focus();
-  await expect(
-    page
-      .getByRole('complementary', { name: 'Detalle del compartimento' })
-      .getByText('A1', { exact: true }),
-  ).toBeVisible();
+  const detail = page.getByRole('complementary', { name: 'Detalle del compartimento' });
+  await expect(detail.getByText('A1', { exact: true })).toBeVisible();
   await page.keyboard.press('Shift+ArrowRight');
   await page.getByRole('button', { name: 'Fusionar selección' }).click();
   await expect(page.getByText('Compartimento A1 creado')).toBeVisible();
-  await expect(
-    page.getByRole('complementary', { name: 'Detalle del compartimento' }),
-  ).toContainText('1×2 celdas');
-  await expect(
-    page.getByRole('complementary', { name: 'Detalle del compartimento' }),
-  ).toContainText('79 compartimentos');
+  await expect(detail).toContainText('1×2 celdas');
+  await expect(detail).toContainText('79 compartimentos');
 });
 
-test('el tema oscuro se aplica y persiste', async ({ page, isMobile }) => {
+test('el tema oscuro se aplica y persiste', async ({ page, isMobile, account: _ }) => {
   test.skip(isMobile, 'Control en la barra lateral de escritorio');
   await page.goto('/');
   const toggle = page.getByRole('button', { name: /Tema:/ });
@@ -50,7 +47,10 @@ test('el tema oscuro se aplica y persiste', async ({ page, isMobile }) => {
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
-test('el catálogo abre un diálogo accesible y lo cierra con Escape', async ({ page }) => {
+test('el catálogo abre un diálogo accesible y lo cierra con Escape', async ({
+  page,
+  account: _,
+}) => {
   await page.goto('/sistema/componentes');
   await page.getByRole('button', { name: 'Abrir diálogo' }).click();
   const dialog = page.getByRole('dialog');
