@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': true
+  lmdb: true
+  msgpackr-extract: true
+  '@swc/core': true
+
+minimumReleaseAgeExclude:
+  - '@lucide/angular@1.60.0'

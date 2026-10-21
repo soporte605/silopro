@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+.angular
+pnpm-lock.yaml
+*.svg
+test-results
+playwright-report
+.angular
+brand/previews
