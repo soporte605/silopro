@@ -38,6 +38,11 @@ services:
       MIGRATE_ON_START: 'true'
       # Local por HTTP; ponga 'true' detrás de HTTPS.
       COOKIE_SECURE: 'false'
+      UPLOADS_DIR: /data/uploads
+      # Origen con el que se construyen los enlaces de invitación.
+      PUBLIC_WEB_URL: http://localhost:8080
+    volumes:
+      - uploads:/data/uploads
     ports:
       - '127.0.0.1:3000:3000'
     depends_on:
@@ -56,3 +61,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:
