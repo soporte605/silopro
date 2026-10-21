@@ -1,6 +1,6 @@
 {
   "name": "@elikarsystems/tokens",
-  "version": "0.2.0-alpha.2",
+  "version": "0.3.0-alpha.1",
   "private": true,
   "description": "Tokens de diseño de ElikarSystems (CSS custom properties + tema de Tailwind CSS v4).",
   "exports": {
