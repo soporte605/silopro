@@ -39,6 +39,17 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 | `PATCH items/:id`       | catalog.write | + `version`                                                    |
 | `DELETE items/:id`      | catalog.write | Archiva                                                        |
 
+## Fotografías · `/orgs/:orgId/items/:itemId/photos`
+
+| Método y ruta             | Permiso       | Notas                                                                                    |
+| ------------------------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `GET photos`              | catalog.read  | En orden; la primera es la portada (`Item.coverPhotoId`)                                 |
+| `POST photos`             | catalog.write | `multipart/form-data`, campo `file`; JPEG, PNG o WebP ≤ 8 MB; máx. 10; `413`/`415`/`422` |
+| `GET photos/:id/thumb`    | catalog.read  | WebP 480 px; `Cache-Control: private, immutable`                                         |
+| `GET photos/:id/full`     | catalog.read  | WebP 2000 px                                                                             |
+| `POST photos/:id/portada` | catalog.write | La mueve al primer lugar                                                                 |
+| `DELETE photos/:id`       | catalog.write | Borra el registro y los archivos                                                         |
+
 ## Ubicaciones y existencias · `/orgs/:orgId/…`
 
 | Método y ruta             | Permiso                            | Notas                                                                           |
@@ -49,6 +60,24 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 | `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación                                                       |
 | `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                 |
 
+## Miembros e invitaciones · `/orgs/:orgId/…`
+
+| Método y ruta            | Permiso        | Notas                                                                                            |
+| ------------------------ | -------------- | ------------------------------------------------------------------------------------------------ |
+| `GET members`            | catalog.read   | Nombre, correo, rol y fecha de alta                                                              |
+| `PATCH members/:userId`  | members.manage | `role`; solo un propietario asigna o quita el rol propietario; `422 LAST_OWNER`                  |
+| `DELETE members/:userId` | members.manage | Cualquiera puede salir de la organización (salvo el último propietario)                          |
+| `GET invitations`        | members.manage | Con `status`: `pending`, `accepted`, `revoked`, `expired`                                        |
+| `POST invitations`       | members.manage | `email, role` → `201` con `url` (se muestra una sola vez); vence en 7 días; `409 ALREADY_MEMBER` |
+| `DELETE invitations/:id` | members.manage | Revoca                                                                                           |
+
+Rutas públicas del enlace (`/invitacion/:orgId/:token` en la web):
+
+| Método y ruta                           | Sesión | Notas                                                                   |
+| --------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| `GET invitations/:orgId/:token`         | no     | Organización, quien invita, correo, rol y estado; `404` si no es válido |
+| `POST invitations/:orgId/:token/accept` | sí     | El correo de la sesión debe coincidir (`403 INVITATION_EMAIL_MISMATCH`) |
+
 ## Roles
 
 | Permiso        | Propietario | Administrador | Operador | Consulta |
@@ -58,3 +87,4 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 | stock.move     |      ✓      |       ✓       |    ✓     |          |
 | stock.adjust   |      ✓      |       ✓       |          |          |
 | stock.negative |      ✓      |               |          |          |
+| members.manage |      ✓      |       ✓       |          |          |

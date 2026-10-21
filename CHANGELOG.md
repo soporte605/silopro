@@ -4,6 +4,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.2.0-alpha.2] — 2026-10-21
+
+Fase 2 · Inventario (funcionalidad completa).
+
+### Añadido
+
+- Fotografías de artículos: hasta 10 por artículo (JPEG, PNG o WebP ≤ 8 MB), re-codificadas a WebP sin metadatos, miniatura y tamaño completo, portada elegible, visor y miniatura en la lista de artículos.
+- Miembros: pantalla `/miembros` con cambio de rol y baja; nunca queda una organización sin propietario.
+- Invitaciones por enlace (válido 7 días, de un solo uso, ligado al correo invitado y revocable); página pública `/invitacion/…` que lleva a crear cuenta o iniciar sesión y aceptar.
+- Migraciones `0002_fotos_e_invitaciones` y `0003_fotos_e_invitaciones_aislamiento` (RLS y FK compuesta).
+- Docker: volumen `uploads` para las fotografías; nginx acepta cuerpos de hasta 9 MB.
+
+### Corregido
+
+- Los scripts y archivos de Docker se fuerzan a finales de línea LF (`.gitattributes`); en Windows el rol de base de datos no se creaba.
+
+### Limitaciones conocidas
+
+- Las invitaciones no se envían por correo: el enlace se copia y se comparte a mano.
+- Quien se registra desde una invitación también recibe su propia organización.
+
 ## [0.2.0-alpha.1] — 2026-10-21
 
 Fase 2 · Inventario (primera entrega). Pendiente para `alpha.2`: fotografías de artículos e invitación de miembros.

@@ -23,11 +23,12 @@ Estado: **implementado en la Fase 2** para usuarios, organizaciones, catálogo, 
 users ── sessions (hash SHA-256 del token)
   │
 organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── users      ✅
+               ├─ invitations (hash SHA-256 del token, vence en 7 días)       ✅
                ├─ units (6 por defecto al registrar)                          ✅
                ├─ categories (árbol; attributes jsonb = definiciones)         ✅
                ├─ items (attributes jsonb validado por categoría)             ✅
                │     ├─ item_suppliers ── suppliers                           ✅
-               │     └─ item_photos                                           ⏳ F2 (alpha.2)
+               │     └─ item_photos (archivos WebP en UPLOADS_DIR)            ✅
                ├─ locations (árbol; path materializado)                       ✅
                │     └─ cabinet_layouts (jsonb del motor)                     ⏳ F3
                ├─ stock_levels (item × location)                              ✅
@@ -56,3 +57,9 @@ Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no 
 ### Artículos y categorías
 
 `items(id, sku, internal_code, name, description, category_id, manufacturer, model, unit_id, cost, price, min_stock, attributes jsonb, qr_code, version, archived_at)`; SKU único por organización sin distinguir mayúsculas. Los atributos se validan (`@silopro/domain/attributes.ts`) contra las definiciones **efectivas** de la categoría, es decir, las suyas más las heredadas de sus ancestros (tipo, unidad, obligatoriedad, opciones), lo que permite que «Resistencia» tenga _valor/tolerancia/potencia_ y «Refacción de compresor» tenga _marca/modelo de equipo/refrigerante_ sin cambiar el esquema.
+
+### Fotografías e invitaciones (migraciones `0002` y `0003`)
+
+- `item_photos`: dimensiones, bytes y `position` (la menor es la portada). FK compuesta a `items`; los archivos viven en `UPLOADS_DIR/<organización>/<id>-{full,thumb}.webp`, fuera de la raíz pública.
+- `invitations`: correo en minúsculas (CHECK), rol, `token_hash` único, `expires_at`, `accepted_at/by`, `revoked_at`. El estado se deriva de esas columnas.
+- Ambas tablas tienen RLS forzada como el resto de tablas de negocio.

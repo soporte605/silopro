@@ -19,7 +19,7 @@ Cada fase cierra con criterios de aceptación verificados, pruebas en verde y do
 
 Marca: concepto B · S-Estante adoptado. Pendiente: colores oficiales de ElikarSystems.
 
-## Fase 2 — Inventario · `v0.2.0` · 🟡 `v0.2.0-alpha.1` (falta fotografías)
+## Fase 2 — Inventario · `v0.2.0` · 🟡 `v0.2.0-alpha.2` (funcionalidad completa; `v0.2.0` tras su revisión)
 
 Autenticación (sesiones seguras, Argon2id), organizaciones y membresías con roles, aislamiento por organización (RLS), categorías jerárquicas con plantillas de atributos, artículos (SKU, código interno, fabricante, modelo, unidades, precios, costos, proveedores, stock mínimo), fotografías con almacenamiento seguro, tabla de movimientos con escritura transaccional, Drizzle + migraciones versionadas.
 
@@ -32,8 +32,8 @@ _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con 
 | e2e de alta de artículo y movimientos |   ✅   | `apps/web/e2e/inventory.spec.ts` (escritorio y móvil)    |
 | Migraciones reproducibles             |   ✅   | `apps/api/drizzle/`, aplicadas desde cero en cada prueba |
 | Concurrencia de existencias           |   ✅   | 12 salidas simultáneas sobre 5 → 5 aceptadas             |
-| Fotografías con almacenamiento seguro |   ⏳   | siguiente iteración (`v0.2.0-alpha.2`)                   |
-| Invitar miembros a una organización   |   ⏳   | los roles ya se aplican; falta la pantalla de invitación |
+| Fotografías con almacenamiento seguro |   ✅   | `apps/api/test/photos.spec.ts`, e2e `photos-members`     |
+| Invitar miembros a una organización   |   ✅   | `apps/api/test/members.spec.ts`, e2e `photos-members`    |
 
 ## Fase 3 — Almacenamiento · `v0.3.0`
 

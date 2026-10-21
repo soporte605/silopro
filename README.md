@@ -4,7 +4,7 @@
 
 SiloPro conecta el inventario digital con la organización física: almacenes, estanterías, gabinetes, cajones y compartimentos se representan virtualmente y cada artículo tiene una ubicación identificable. Más adelante el sistema generará modelos CAD paramétricos para fabricar organizadores por impresión 3D.
 
-> Estado: **v0.2.0-alpha.1 — Fase 2 (Inventario)**. Cuentas, organizaciones, catálogo y existencias funcionan; faltan las fotografías de artículos. Ver [ROADMAP](docs/ROADMAP.md).
+> Estado: **v0.2.0-alpha.2 — Fase 2 (Inventario)**. Cuentas, organizaciones con invitación de miembros, catálogo con fotografías y existencias funcionan. Ver [ROADMAP](docs/ROADMAP.md).
 
 ## Qué hay hoy
 
@@ -14,7 +14,7 @@ SiloPro conecta el inventario digital con la organización física: almacenes, e
 | Cuentas y organizaciones: registro, inicio de sesión, roles, aislamiento entre organizaciones (RLS)                         | ✅ con pruebas                         |
 | Catálogo: artículos, categorías jerárquicas con atributos propios, proveedores, unidades                                    | ✅ `/inventario`, `/categorias`        |
 | Ubicaciones y existencias: entradas, salidas, ajustes por conteo, historial, alertas de mínimo                              | ✅ `/ubicaciones`, detalle de artículo |
-| Fotografías de artículos                                                                                                    | ⏳ siguiente                           |
+| Fotografías de artículos e invitación de miembros                                                                           | ✅ detalle de artículo, `/miembros`    |
 | API: `GET /api/health`, configuración validada, errores uniformes, cabeceras de seguridad                                   | ✅                                     |
 | Motor de gabinetes (`@silopro/cabinet-engine`): cuadrícula, direccionamiento, fusión/división, planificación para impresora | ✅ con pruebas                         |
 | Reglas de dominio (`@silopro/domain`): jerarquía de ubicaciones, existencias y reservas                                     | ✅ con pruebas                         |

@@ -27,10 +27,14 @@ Escriba a soporte de ElikarSystems con el asunto «Seguridad SiloPro». No abra 
 | Movimientos inmutables (trigger) y saldos no negativos (CHECK + bloqueo de fila)                                         | migración `0001`, `test/inventory.spec.ts`                   |
 | Redirección tras iniciar sesión solo a rutas internas (sin _open redirect_)                                              | `pages/auth/auth-layout.ts`, prueba                          |
 
+| Fotografías: tipo detectado por contenido (no extensión), ≤ 8 MB, ≤ 40 Mpx, re-codificadas a WebP sin metadatos EXIF/GPS, nombres aleatorios, fuera de la raíz pública; se sirven solo con sesión y permiso | `catalog/photos.service.ts`, `test/photos.spec.ts` |
+| Invitaciones: token de 256 bits, solo el hash en BD, se muestra una vez, vence en 7 días, revocable, de un solo uso y ligado al correo invitado | `members/members.service.ts`, `test/members.spec.ts` |
+| Cambios de rol: solo un propietario gestiona propietarios; nunca queda una organización sin propietario (bloqueo de filas) | `checkMembershipChange` en `@silopro/domain` |
+
 ## Diseño para las fases siguientes
 
-- **Sesiones:** el limitador de intentos vive en memoria (una instancia); con varias réplicas pasará a PostgreSQL o Redis. Pendiente: cerrar todas las sesiones, recuperación de contraseña por correo e invitaciones a la organización.
-- **Archivos (fotografías):** tamaño máximo, verificación de tipo por firma (no por extensión), re-codificación de imágenes para eliminar metadatos EXIF/GPS, nombres aleatorios, almacenamiento fuera de la raíz pública, descarga mediante URL firmada.
+- **Sesiones:** el limitador de intentos vive en memoria (una instancia); con varias réplicas pasará a PostgreSQL o Redis. Pendiente: cerrar todas las sesiones, recuperación de contraseña y envío de invitaciones por correo (hoy el enlace se copia y se comparte a mano).
+- **Archivos:** las fotografías ya cumplen los controles de la tabla. Para almacenamiento en la nube (S3 o similar) se usarán URL firmadas de corta duración; los planos CAD (Fase 7) seguirán las mismas reglas.
 - **Auditoría:** registro inmutable de movimientos y cambios administrativos (quién, qué, cuándo, desde dónde).
 - **Dependencias:** `pnpm audit` en CI y actualización mensual; scripts de instalación solo para paquetes aprobados (`allowBuilds` en `pnpm-workspace.yaml`).
 - **CSP** estricta en producción (`script-src 'self'`); el único script en línea actual (aplicar el tema antes del primer pintado) se moverá a un archivo o se autorizará por hash.
