@@ -78,7 +78,7 @@ export { DIALOG_DATA, DialogRef };
     </footer>
   `,
   host: {
-    class: 'flex h-full max-h-[inherit] flex-col bg-surface-raised text-fg',
+    class: 'flex h-full max-h-[inherit] w-full min-w-0 flex-1 flex-col bg-surface-raised text-fg',
     role: 'document',
     '[attr.aria-labelledby]': 'titleId',
   },
