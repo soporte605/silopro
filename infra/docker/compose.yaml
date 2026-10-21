@@ -11,15 +11,16 @@ services:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: silopro
-      POSTGRES_USER: silopro
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-silopro}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-postgres}
+      SILOPRO_DB_PASSWORD: ${POSTGRES_PASSWORD:-silopro}
     ports:
       - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-silopro.sh:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U silopro -d silopro']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d silopro']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -34,6 +35,9 @@ services:
       PORT: 3000
       CORS_ORIGINS: http://localhost:8080
       DATABASE_URL: postgres://silopro:${POSTGRES_PASSWORD:-silopro}@postgres:5432/silopro
+      MIGRATE_ON_START: 'true'
+      # Local por HTTP; ponga 'true' detrás de HTTPS.
+      COOKIE_SECURE: 'false'
     ports:
       - '127.0.0.1:3000:3000'
     depends_on:

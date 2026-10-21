@@ -21,14 +21,13 @@ jobs:
       postgres:
         image: postgres:18-alpine
         env:
-          POSTGRES_DB: silopro
-          POSTGRES_USER: silopro
-          POSTGRES_PASSWORD: silopro
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U silopro" --health-interval 5s --health-timeout 3s --health-retries 10
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
-      TEST_DATABASE_URL: postgres://silopro:silopro@localhost:5432/silopro
+      TEST_DATABASE_URL: postgres://silopro:silopro@localhost:5432/silopro_test
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -37,6 +36,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Crear rol de aplicación sin superusuario (RLS efectiva)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "CREATE ROLE silopro LOGIN PASSWORD 'silopro' NOSUPERUSER NOBYPASSRLS"
+          psql -h localhost -U postgres -c "CREATE DATABASE silopro_test OWNER silopro"
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

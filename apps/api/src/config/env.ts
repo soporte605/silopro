@@ -12,7 +12,16 @@ const envSchema = z.object({
         .map((s) => s.trim())
         .filter(Boolean),
     ),
-  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  /** Aplica migraciones pendientes al arrancar (útil en Docker). */
+  MIGRATE_ON_START: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  /** Duración de la sesión en días. */
+  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(14),
+  /** Cookie de sesión solo por HTTPS. Por defecto, activado en producción. */
+  COOKIE_SECURE: z.enum(['true', 'false']).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

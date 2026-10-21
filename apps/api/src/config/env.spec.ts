@@ -1,19 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { loadEnv } from './env.js';
 
+const DB = 'postgres://u:p@localhost:5432/db';
+
 describe('loadEnv', () => {
   it('aplica valores por defecto', () => {
-    const env = loadEnv({});
+    const env = loadEnv({ DATABASE_URL: DB });
     expect(env.PORT).toBe(3000);
     expect(env.CORS_ORIGINS).toEqual(['http://localhost:4200']);
-    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.SESSION_TTL_DAYS).toBe(14);
+    expect(env.MIGRATE_ON_START).toBe(false);
+  });
+
+  it('exige DATABASE_URL', () => {
+    expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
   });
 
   it('separa orígenes CORS', () => {
-    expect(loadEnv({ CORS_ORIGINS: 'http://a.test, http://b.test' }).CORS_ORIGINS).toEqual([
-      'http://a.test',
-      'http://b.test',
-    ]);
+    expect(
+      loadEnv({ DATABASE_URL: DB, CORS_ORIGINS: 'http://a.test, http://b.test' }).CORS_ORIGINS,
+    ).toEqual(['http://a.test', 'http://b.test']);
   });
 
   it('rechaza valores inválidos sin exponerlos', () => {
