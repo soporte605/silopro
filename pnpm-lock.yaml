@@ -208,6 +208,9 @@ importers:
       '@node-rs/argon2':
         specifier: ^2.2.2
         version: 2.2.2
+      '@silopro/cabinet-engine':
+        specifier: workspace:*
+        version: link:../../packages/cabinet-engine
       '@silopro/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

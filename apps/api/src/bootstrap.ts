@@ -11,6 +11,8 @@ export function configureApp(app: INestApplication, env: Env): void {
   // Detrás de nginx (Docker): confía en el primer proxy para obtener la IP real.
   express.set('trust proxy', 1);
   app.setGlobalPrefix('api');
+  // El diseño completo de un gabinete de 60×60 ronda los 350 KB.
+  express.useBodyParser('json', { limit: '1mb' });
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });

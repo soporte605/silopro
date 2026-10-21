@@ -6,12 +6,12 @@ import {
   type LocationNodeRef,
   locationPath,
 } from '@silopro/domain';
-import { asc, isNull, sql } from 'drizzle-orm';
+import { asc, eq, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
 import { invalid } from '../common/http.js';
 import { DbService, type Tx } from '../db/db.service.js';
-import { locations } from '../db/schema.js';
+import { cabinets, locations } from '../db/schema.js';
 
 const MESSAGES: Record<string, string> = {
   ROOT_MUST_BE_WAREHOUSE: 'Una ubicación sin padre debe ser un almacén',
@@ -31,8 +31,8 @@ const columns = {
 };
 
 /**
- * Árbol de ubicaciones (versión mínima de Fase 2, necesaria para registrar
- * existencias). El editor de almacenes y gabinetes llega en la Fase 3.
+ * Árbol de ubicaciones. Los cajones de los gabinetes también son ubicaciones;
+ * los crea y archiva `CabinetsService` al guardar el diseño.
  */
 @Injectable()
 export class LocationsService {
@@ -41,35 +41,43 @@ export class LocationsService {
   list(ctx: OrgContext): Promise<Location[]> {
     return this.dbs.tenant(ctx, (tx) =>
       tx
-        .select(columns)
+        .select({ ...columns, cabinetId: cabinets.id })
         .from(locations)
+        .leftJoin(cabinets, eq(cabinets.locationId, locations.id))
         .where(isNull(locations.archivedAt))
         .orderBy(asc(locations.path)),
     );
   }
 
-  async create(ctx: OrgContext, input: z.output<typeof locationInputSchema>): Promise<Location> {
-    return this.dbs.tenant(ctx, async (tx) => {
-      const chain = input.parentId ? await this.ancestors(tx, input.parentId) : [];
-      const parent = chain[0] ?? null;
-      const violation = checkPlacement({ kind: input.kind }, parent, chain);
-      if (violation) throw invalid(MESSAGES[violation.code] ?? 'Ubicación inválida', violation);
-      const path = locationPath([...chain.map((c) => c.code).reverse(), input.code]);
-      const [row] = await tx
-        .insert(locations)
-        .values({
-          organizationId: ctx.organizationId,
-          parentId: input.parentId,
-          kind: input.kind,
-          code: input.code,
-          name: input.name,
-          path,
-          depth: chain.length,
-          qrCode: generateShortCode(),
-        })
-        .returning(columns);
-      return row!;
-    });
+  create(ctx: OrgContext, input: z.output<typeof locationInputSchema>): Promise<Location> {
+    return this.dbs.tenant(ctx, (tx) => this.insert(tx, ctx, input));
+  }
+
+  /** Inserta una ubicación aplicando las reglas de jerarquía (reutilizable en otra transacción). */
+  async insert(
+    tx: Tx,
+    ctx: OrgContext,
+    input: z.output<typeof locationInputSchema>,
+  ): Promise<Location & { depth: number }> {
+    const chain = input.parentId ? await this.ancestors(tx, input.parentId) : [];
+    const parent = chain[0] ?? null;
+    const violation = checkPlacement({ kind: input.kind }, parent, chain);
+    if (violation) throw invalid(MESSAGES[violation.code] ?? 'Ubicación inválida', violation);
+    const path = locationPath([...chain.map((c) => c.code).reverse(), input.code]);
+    const [row] = await tx
+      .insert(locations)
+      .values({
+        organizationId: ctx.organizationId,
+        parentId: input.parentId,
+        kind: input.kind,
+        code: input.code,
+        name: input.name,
+        path,
+        depth: chain.length,
+        qrCode: generateShortCode(),
+      })
+      .returning({ ...columns, depth: locations.depth });
+    return { ...row!, cabinetId: null };
   }
 
   /** Cadena desde el nodo hasta la raíz (nodo primero). */

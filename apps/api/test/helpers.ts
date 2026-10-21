@@ -38,6 +38,7 @@ export interface Session {
   /** Petición con la cabecera CSRF ya incluida. */
   post: (url: string) => request.Test;
   patch: (url: string) => request.Test;
+  put: (url: string) => request.Test;
   del: (url: string) => request.Test;
   get: (url: string) => request.Test;
 }
@@ -69,6 +70,7 @@ export async function signUp(
     email: res.body.user.email,
     post: (u) => agent.post(abs(u)).set('X-SiloPro-Request', '1'),
     patch: (u) => agent.patch(abs(u)).set('X-SiloPro-Request', '1'),
+    put: (u) => agent.put(abs(u)).set('X-SiloPro-Request', '1'),
     del: (u) => agent.delete(abs(u)).set('X-SiloPro-Request', '1'),
     get: (u) => agent.get(abs(u)),
   };

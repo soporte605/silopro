@@ -7,7 +7,7 @@ import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound } from '../common/http.js';
 import { DbService } from '../db/db.service.js';
 import { iso, num0 } from '../db/mappers.js';
-import { items, locations, stockLevels, stockMovements, users } from '../db/schema.js';
+import { cabinets, items, locations, stockLevels, stockMovements, users } from '../db/schema.js';
 
 type MovementData = z.output<typeof movementInputSchema>;
 
@@ -131,9 +131,10 @@ export class MovementsService {
   byLocation(ctx: OrgContext, itemId: string): Promise<StockByLocation[]> {
     return this.dbs.tenant(ctx, async (tx) => {
       const rows = await tx
-        .select({ s: stockLevels, path: locations.path })
+        .select({ s: stockLevels, path: locations.path, cabinetId: cabinets.id })
         .from(stockLevels)
         .innerJoin(locations, eq(locations.id, stockLevels.locationId))
+        .leftJoin(cabinets, eq(cabinets.locationId, locations.parentId))
         .where(
           and(
             eq(stockLevels.itemId, itemId),
@@ -147,6 +148,7 @@ export class MovementsService {
         return {
           locationId: r.s.locationId,
           locationPath: r.path,
+          cabinetId: r.cabinetId,
           onHand,
           reserved,
           available: onHand - reserved,

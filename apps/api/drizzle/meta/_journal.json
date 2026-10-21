@@ -29,6 +29,20 @@
       "when": 1792606327747,
       "tag": "0003_fotos_e_invitaciones_aislamiento",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792618392826,
+      "tag": "0004_gabinetes",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792618393749,
+      "tag": "0005_gabinetes_aislamiento",
+      "breakpoints": true
     }
   ]
 }

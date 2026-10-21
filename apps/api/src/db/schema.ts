@@ -296,6 +296,31 @@ export const locations = pgTable(
   ],
 );
 
+/**
+ * Diseño de un gabinete en cuadrícula (`@silopro/cabinet-engine`). El gabinete
+ * es una ubicación de tipo `cabinet`; cada compartimento es una ubicación hija
+ * de tipo `drawer` cuyo código es la dirección (A1, B3…).
+ */
+export const cabinets = pgTable(
+  'cabinets',
+  {
+    id: id(),
+    organizationId: orgId(),
+    locationId: uuid('location_id')
+      .notNull()
+      .references(() => locations.id),
+    rows: smallint('rows').notNull(),
+    columns: smallint('columns').notNull(),
+    addressing: text('addressing').notNull(),
+    rowOrigin: text('row_origin').notNull(),
+    /** Compartimentos del motor: [{ id, row, column, rowSpan, columnSpan, address }]. */
+    compartments: jsonb('compartments').notNull(),
+    version: integer('version').notNull().default(1),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('cabinets_location_key').on(t.locationId)],
+);
+
 export const stockLevels = pgTable(
   'stock_levels',
   {
