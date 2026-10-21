@@ -240,3 +240,56 @@ export function splitCompartment(layout: CabinetLayout, id: string): CabinetLayo
     ),
   };
 }
+
+/**
+ * Cambia el tamaño de la cuadrícula. Los compartimentos que quedan dentro se
+ * conservan (re-direccionados si el esquema depende del número de filas); los
+ * que quedan completamente fuera se eliminan y las celdas nuevas se rellenan
+ * con compartimentos 1×1. Un compartimento cortado por el nuevo borde es un
+ * error: hay que dividirlo antes.
+ */
+export function resizeLayout(layout: CabinetLayout, rows: number, columns: number): CabinetLayout {
+  assertDimension('rows', rows);
+  assertDimension('columns', columns);
+  const kept: Compartment[] = [];
+  for (const c of layout.compartments) {
+    if (c.row >= rows || c.column >= columns) continue;
+    if (c.row + c.rowSpan > rows || c.column + c.columnSpan > columns) {
+      throw new LayoutError(
+        `El compartimento ${c.address} quedaría cortado; divídalo antes de reducir el gabinete`,
+        'NOT_RECTANGULAR',
+      );
+    }
+    const address = cellAddress(c.row, c.column, rows, layout.addressing, layout.rowOrigin);
+    kept.push({ ...c, id: address, address });
+  }
+  const next: CabinetLayout = { ...layout, rows, columns, compartments: kept };
+  const index = buildCellIndex(next);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < columns; c++) {
+      if (index[r * columns + c] != null) continue;
+      const address = cellAddress(r, c, rows, layout.addressing, layout.rowOrigin);
+      kept.push({ id: address, row: r, column: c, rowSpan: 1, columnSpan: 1, address });
+    }
+  }
+  kept.sort((a, b) => a.row - b.row || a.column - b.column);
+  return next;
+}
+
+/**
+ * Valida un diseño recibido del exterior (p. ej. al guardarlo): además de
+ * {@link validateLayout}, exige que cada id y dirección correspondan a su
+ * celda de origen y que no queden celdas sin compartimento.
+ */
+export function assertCanonicalLayout(layout: CabinetLayout): void {
+  validateLayout(layout);
+  for (const c of layout.compartments) {
+    const address = cellAddress(c.row, c.column, layout.rows, layout.addressing, layout.rowOrigin);
+    if (c.id !== address || c.address !== address) {
+      throw new LayoutError(`El compartimento ${c.id} no coincide con su posición`, 'NOT_FOUND');
+    }
+  }
+  if (buildCellIndex(layout).some((cell) => cell == null)) {
+    throw new LayoutError('Hay celdas sin compartimento', 'OUT_OF_BOUNDS');
+  }
+}

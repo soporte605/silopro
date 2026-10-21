@@ -7,6 +7,8 @@ import {
   LayoutError,
   lettersToIndex,
   mergeCompartments,
+  resizeLayout,
+  assertCanonicalLayout,
   splitCompartment,
   validateLayout,
 } from './layout.js';
@@ -105,5 +107,52 @@ describe('mergeCompartments / splitCompartment', () => {
     const merged = mergeCompartments(base, { row: 1, column: 1, rowSpan: 2, columnSpan: 2 });
     const split = splitCompartment(merged, 'B2');
     expect(split.compartments).toEqual(base.compartments);
+  });
+});
+
+describe('resizeLayout', () => {
+  it('conserva los compartimentos interiores y rellena las celdas nuevas', () => {
+    const merged = mergeCompartments(createGridLayout({ rows: 2, columns: 2 }), {
+      row: 0,
+      column: 0,
+      rowSpan: 1,
+      columnSpan: 2,
+    });
+    const grown = resizeLayout(merged, 3, 3);
+    expect(grown.compartments.find((c) => c.id === 'A1')?.columnSpan).toBe(2);
+    expect(grown.compartments).toHaveLength(8);
+    expect(() => assertCanonicalLayout(grown)).not.toThrow();
+  });
+
+  it('elimina lo que queda fuera y rechaza cortar un compartimento', () => {
+    const base = createGridLayout({ rows: 3, columns: 3 });
+    expect(resizeLayout(base, 2, 2).compartments.map((c) => c.id)).toEqual([
+      'A1',
+      'A2',
+      'B1',
+      'B2',
+    ]);
+    const wide = mergeCompartments(base, { row: 0, column: 1, rowSpan: 1, columnSpan: 2 });
+    expect(() => resizeLayout(wide, 3, 2)).toThrow(LayoutError);
+  });
+
+  it('re-direcciona si las filas se numeran desde abajo', () => {
+    const base = createGridLayout({ rows: 2, columns: 1, rowOrigin: 'bottom' });
+    expect(base.compartments[0]!.id).toBe('B1');
+    expect(resizeLayout(base, 3, 1).compartments.map((c) => c.id)).toEqual(['C1', 'B1', 'A1']);
+  });
+});
+
+describe('assertCanonicalLayout', () => {
+  it('rechaza ids que no corresponden a su celda y huecos', () => {
+    const base = createGridLayout({ rows: 2, columns: 2 });
+    const renamed = {
+      ...base,
+      compartments: base.compartments.map((c, i) => (i === 0 ? { ...c, id: 'X9' } : c)),
+    };
+    expect(() => assertCanonicalLayout(renamed)).toThrow(LayoutError);
+    const holes = { ...base, compartments: base.compartments.slice(1) };
+    expect(() => assertCanonicalLayout(holes)).toThrow(LayoutError);
+    expect(() => assertCanonicalLayout(base)).not.toThrow();
   });
 });
