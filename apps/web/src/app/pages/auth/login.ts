@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { EsButton, EsFormField, EsInput } from '@elikarsystems/ui';
@@ -44,15 +51,21 @@ import { AuthLayout, safeReturnUrl } from './auth-layout';
       </form>
       <p spAuthFooter>
         ¿No tienes cuenta?
-        <a routerLink="/registro" class="text-primary hover:underline">Crear cuenta</a>
+        <a
+          routerLink="/registro"
+          queryParamsHandling="preserve"
+          class="text-primary hover:underline"
+          >Crear cuenta</a
+        >
       </p>
     </sp-auth-layout>
   `,
 })
-export default class Login {
+export default class Login implements OnInit {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   readonly volver = input<string>();
+  readonly correo = input<string>();
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
@@ -60,6 +73,11 @@ export default class Login {
   });
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  ngOnInit(): void {
+    const correo = this.correo();
+    if (correo) this.form.controls.email.setValue(correo);
+  }
 
   protected async submit(): Promise<void> {
     if (this.form.invalid) {

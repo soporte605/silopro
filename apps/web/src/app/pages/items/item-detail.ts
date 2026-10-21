@@ -35,6 +35,7 @@ import { fmtDate, fmtMoney, fmtQty } from '../../core/format';
 import { SessionService } from '../../core/session';
 import { PageHeader } from '../page-header';
 import { ItemForm, type ItemFormData } from './item-form';
+import { ItemPhotos } from './item-photos';
 import { MovementDialog, type MovementDialogData, type MovementKindInput } from './movement-dialog';
 
 const KIND_LABELS: Record<Movement['kind'], string> = {
@@ -49,6 +50,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
   selector: 'sp-item-detail',
   imports: [
     PageHeader,
+    ItemPhotos,
     EsBadge,
     EsBreadcrumb,
     EsButton,
@@ -78,6 +80,16 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
             class="mb-1"
             [items]="[{ label: 'Artículos', link: '/inventario' }, { label: it.sku }]"
           />
+          @if (it.coverPhotoId) {
+            <img
+              spBefore
+              [src]="api.url('/items/' + it.id + '/photos/' + it.coverPhotoId + '/thumb')"
+              alt=""
+              class="mb-2 size-16 rounded-md border border-border object-cover"
+              width="64"
+              height="64"
+            />
+          }
           <ng-container spActions>
             @if (session.canMove()) {
               <button esButton (click)="move('receipt')">
@@ -217,6 +229,14 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
               </div>
             }
           </es-tab>
+          <es-tab label="Fotografías" value="photos">
+            <sp-item-photos
+              [itemId]="it.id"
+              [itemName]="it.name"
+              [canWrite]="session.canWrite()"
+              (changed)="item.reload()"
+            />
+          </es-tab>
           <es-tab label="Datos" value="data">
             <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               @for (row of details(); track row.label) {
@@ -239,7 +259,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
   `,
 })
 export default class ItemDetail {
-  private readonly api = inject(Api);
+  protected readonly api = inject(Api);
   private readonly dialog = inject(EsDialogService);
   private readonly toast = inject(EsToastService);
   private readonly router = inject(Router);

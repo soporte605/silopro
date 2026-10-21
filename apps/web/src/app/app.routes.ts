@@ -16,6 +16,11 @@ export const routes: Routes = [
     title: 'Crear cuenta · SiloPro',
   },
   {
+    path: 'invitacion/:orgId/:token',
+    loadComponent: () => import('./pages/auth/invitation'),
+    title: 'Invitación · SiloPro',
+  },
+  {
     path: '',
     component: Shell,
     canActivate: [authGuard],
@@ -45,6 +50,11 @@ export const routes: Routes = [
         path: 'ubicaciones',
         loadComponent: () => import('./pages/locations/locations'),
         title: 'Ubicaciones · SiloPro',
+      },
+      {
+        path: 'miembros',
+        loadComponent: () => import('./pages/members/members'),
+        title: 'Miembros · SiloPro',
       },
       {
         path: 'gabinetes/demo',

@@ -31,6 +31,7 @@ import {
   LucideSearch,
   LucideSun,
   LucideTruck,
+  LucideUsers,
 } from '@lucide/angular';
 import { ROLE_LABELS } from '@silopro/domain';
 import { SessionService } from '../core/session';
@@ -63,6 +64,7 @@ import { SessionService } from '../core/session';
     LucideFolderTree,
     LucideLogOut,
     LucideTruck,
+    LucideUsers,
     CdkMenuTrigger,
     EsMenu,
     EsMenuItem,
@@ -202,7 +204,17 @@ import { SessionService } from '../core/session';
         <ng-container *ngTemplateOutlet="navLinks" />
       </nav>
       <main id="contenido" class="min-h-0 flex-1 overflow-auto" tabindex="-1">
-        <router-outlet />
+        @if (session.orgId()) {
+          <router-outlet />
+        } @else {
+          <div class="mx-auto max-w-md p-6 text-center" role="status">
+            <h1 class="text-lg font-semibold">Sin organización</h1>
+            <p class="mt-1 text-sm text-fg-muted">
+              Tu cuenta no pertenece a ninguna organización. Pide a un administrador un enlace de
+              invitación.
+            </p>
+          </div>
+        }
       </main>
     </div>
 
@@ -247,6 +259,9 @@ import { SessionService } from '../core/session';
         ariaCurrentWhenActive="page"
       >
         <svg lucideMapPin></svg> Ubicaciones
+      </a>
+      <a esNavItem routerLink="/miembros" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <svg lucideUsers></svg> Miembros
       </a>
       <a
         esNavItem

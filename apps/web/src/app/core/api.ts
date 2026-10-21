@@ -60,7 +60,8 @@ export class Api {
   private readonly http = inject(HttpClient);
   private readonly session = inject(SessionService);
 
-  private url(path: string): string {
+  /** URL absoluta de la API para la organización activa (p. ej. para `<img src>`). */
+  url(path: string): string {
     if (path.startsWith('/api/')) return path;
     const org = this.session.orgId();
     if (!org) throw new ApiRequestError(400, 'NO_ORG', 'No hay organización activa');
@@ -83,6 +84,13 @@ export class Api {
 
   patch<T>(path: string, body: unknown): Promise<T> {
     return this.wrap(firstValueFrom(this.http.patch<T>(this.url(path), body)));
+  }
+
+  /** Envía un archivo como `multipart/form-data` en el campo `file`. */
+  upload<T>(path: string, file: Blob, filename = 'archivo'): Promise<T> {
+    const form = new FormData();
+    form.append('file', file, filename);
+    return this.wrap(firstValueFrom(this.http.post<T>(this.url(path), form)));
   }
 
   delete(path: string): Promise<void> {

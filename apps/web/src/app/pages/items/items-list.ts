@@ -150,6 +150,22 @@ const PAGE_SIZE = 50;
                     }}</a>
                   </td>
                   <td>
+                    <span
+                      class="inline-flex size-6 shrink-0 overflow-hidden rounded-sm bg-surface-active align-middle mr-2"
+                    >
+                      @if (item.coverPhotoId) {
+                        <img
+                          [src]="
+                            api.url('/items/' + item.id + '/photos/' + item.coverPhotoId + '/thumb')
+                          "
+                          alt=""
+                          loading="lazy"
+                          width="24"
+                          height="24"
+                          class="size-full object-cover"
+                        />
+                      }
+                    </span>
                     <a
                       [routerLink]="['/inventario', item.id]"
                       class="font-medium hover:underline"
@@ -189,7 +205,7 @@ const PAGE_SIZE = 50;
   `,
 })
 export default class ItemsList {
-  private readonly api = inject(Api);
+  protected readonly api = inject(Api);
   private readonly dialog = inject(EsDialogService);
   private readonly router = inject(Router);
   protected readonly session = inject(SessionService);
