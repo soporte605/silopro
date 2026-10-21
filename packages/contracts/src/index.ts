@@ -5,6 +5,7 @@ import es from 'zod/v4/locales/es.js';
 z.config(es());
 
 export * from './auth.js';
+export * from './cabinets.js';
 export * from './catalog.js';
 export * from './common.js';
 export * from './health.js';

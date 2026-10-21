@@ -39,6 +39,8 @@ export interface Location {
   parentId: string | null;
   path: string;
   qrCode: string;
+  /** Gabinete con diseño guardado (solo en ubicaciones de tipo gabinete). */
+  cabinetId: string | null;
 }
 
 export const MOVEMENT_KIND_VALUES = ['receipt', 'issue', 'adjustment'] as const;
@@ -96,6 +98,8 @@ export interface Movement {
 export interface StockByLocation {
   locationId: string;
   locationPath: string;
+  /** Gabinete al que pertenece el cajón, para abrirlo resaltado. */
+  cabinetId: string | null;
   onHand: number;
   reserved: number;
   available: number;
