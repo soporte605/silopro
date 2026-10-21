@@ -1,6 +1,6 @@
 # Lineamientos de marca · SiloPro
 
-> Estado: **exploración**. Tres conceptos para elegir. Colores **provisionales** (ver §Color). La aplicación usa el concepto A de forma provisional.
+> Estado: **concepto B · S-Estante adoptado** (decisión del propietario, 2026-10-21). Colores **provisionales** (ver §Color).
 
 ## Personalidad
 
@@ -10,13 +10,13 @@ Precisa, ordenada, técnica sin ser fría. SiloPro es una herramienta de trabajo
 
 Generados por `brand/scripts/generate.py` (geometría paramétrica en cuadrícula de 64 u). Archivos en `brand/concepts/<concepto>/`, vistas previas PNG en `brand/previews/`.
 
-|               | A · Silo de cajones                                                                                                 | B · S-Estante                                                                 | C · Coordenada                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Idea          | Un silo construido con cajones apilados: almacenamiento + organización. El cajón verde es «el artículo encontrado». | La «S» trazada como dos estantes; un bloque verde es un artículo en su lugar. | Una cuadrícula de compartimentos dentro de un visor de escaneo: ubicación + QR. |
-| Isotipo       | ![A](../brand/concepts/a-silo-de-cajones/04-isotipo.svg)                                                            | ![B](../brand/concepts/b-s-estante/04-isotipo.svg)                            | ![C](../brand/concepts/c-coordenada/04-isotipo.svg)                             |
-| Fortalezas    | Relación directa con el nombre; cuenta la historia del producto; reconocible a 16 px                                | Monograma muy propio, fuerte como icono de app                                | Comunica «ubicación» y «escaneo» con claridad                                   |
-| Riesgos       | La silueta puede recordar a un «servidor» si se usa sin color                                                       | Puede leerse como «5»; menos literal                                          | El visor de escaneo es un recurso habitual; menos distintivo                    |
-| Recomendación | **Recomendado** como marca principal                                                                                | Alternativa fuerte                                                            | Útil como icono funcional (p. ej. escáner), no como marca                       |
+|            | A · Silo de cajones                                                                                                 | B · S-Estante                                                                 | C · Coordenada                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Idea       | Un silo construido con cajones apilados: almacenamiento + organización. El cajón verde es «el artículo encontrado». | La «S» trazada como dos estantes; un bloque verde es un artículo en su lugar. | Una cuadrícula de compartimentos dentro de un visor de escaneo: ubicación + QR. |
+| Isotipo    | ![A](../brand/concepts/a-silo-de-cajones/04-isotipo.svg)                                                            | ![B](../brand/concepts/b-s-estante/04-isotipo.svg)                            | ![C](../brand/concepts/c-coordenada/04-isotipo.svg)                             |
+| Fortalezas | Relación directa con el nombre; cuenta la historia del producto; reconocible a 16 px                                | Monograma muy propio, fuerte como icono de app                                | Comunica «ubicación» y «escaneo» con claridad                                   |
+| Riesgos    | La silueta puede recordar a un «servidor» si se usa sin color                                                       | Puede leerse como «5»; menos literal                                          | El visor de escaneo es un recurso habitual; menos distintivo                    |
+| Decisión   | Descartado                                                                                                          | **Adoptado como marca oficial**                                               | Descartado (posible icono funcional de escáner)                                 |
 
 ### Variantes entregadas (por concepto)
 
@@ -45,7 +45,7 @@ Todos son SVG editables con formas simples (sin texto vivo ni efectos). Para cam
 
 - Retícula de 64 u para el isotipo; altura de mayúscula del logotipo = 25 u (≈ 39 % del isotipo).
 - Separación isotipo–texto: 15 u medidos desde el borde visible del símbolo.
-- Área de protección: 8 u (½ del ancho del cajón del concepto A) en todos los lados.
+- Área de protección: 8 u (el grosor del trazo de la S) en todos los lados.
 - Tamaños mínimos: horizontal 96 px de ancho en pantalla / 25 mm impreso; isotipo 16 px (usar variante simplificada ≤ 24 px).
 
 ## Color
@@ -75,4 +75,4 @@ Proporción orientativa: 70 % neutros, 20 % azul, ≤ 10 % verde (el verde seña
 
 ## Pendiente
 
-Elección de concepto · colores oficiales · activos originales de ElikarSystems (logotipo matriz) · prueba impresa en etiquetas térmicas · registro de marca (**requiere autorización**).
+Colores oficiales · activos originales de ElikarSystems (logotipo matriz) · prueba impresa en etiquetas térmicas · registro de marca (**requiere autorización**).

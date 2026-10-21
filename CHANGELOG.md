@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Cambiado
+
+- Marca: se adopta el concepto B · S-Estante como logotipo oficial; la aplicación y el favicon lo usan.
+
 ## [0.1.0-alpha.1] — 2026-10-21
 
 Fase 1 · Fundamentos. Primera base técnica; sin inventario persistente todavía.

@@ -17,7 +17,7 @@ Cada fase cierra con criterios de aceptación verificados, pruebas en verde y do
 | Identidad: 3 conceptos × 10 variantes SVG               | `brand/concepts/`                                               |
 | Documentación y ADRs                                    | `docs/`                                                         |
 
-Pendiente de decisión del propietario: elegir concepto de logotipo y entregar colores oficiales.
+Marca: concepto B · S-Estante adoptado. Pendiente: colores oficiales de ElikarSystems.
 
 ## Fase 2 — Inventario · `v0.2.0`
 
