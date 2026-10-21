@@ -15,6 +15,20 @@
       "when": 1792552661657,
       "tag": "0001_aislamiento_organizaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792606326838,
+      "tag": "0002_fotos_e_invitaciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792606327747,
+      "tag": "0003_fotos_e_invitaciones_aislamiento",
+      "breakpoints": true
     }
   ]
 }

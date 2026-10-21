@@ -13,7 +13,7 @@ import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound, staleVersion } from '../common/http.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { num, num0 } from '../db/mappers.js';
-import { categories, items, itemSuppliers, stockLevels, units } from '../db/schema.js';
+import { categories, itemPhotos, items, itemSuppliers, stockLevels, units } from '../db/schema.js';
 import { CategoriesService } from './categories.service.js';
 
 type ItemData = z.output<typeof itemInputSchema>;
@@ -188,6 +188,9 @@ export class ItemsService {
         unitSymbol: units.symbol,
         onHand: stock.onHand,
         reserved: stock.reserved,
+        coverPhotoId: sql<
+          string | null
+        >`(select ${itemPhotos.id} from ${itemPhotos} where ${itemPhotos.itemId} = ${items.id} order by ${itemPhotos.position}, ${itemPhotos.createdAt} limit 1)`,
       })
       .from(items)
       .innerJoin(units, eq(units.id, items.unitId))
@@ -218,6 +221,7 @@ export class ItemsService {
       unitSymbol: string;
       onHand: string | null;
       reserved: string | null;
+      coverPhotoId: string | null;
     },
     supplierIds: string[],
   ): Item {
@@ -242,6 +246,7 @@ export class ItemsService {
       attributes: r.item.attributes as Item['attributes'],
       supplierIds,
       qrCode: r.item.qrCode,
+      coverPhotoId: r.coverPhotoId,
       onHand,
       reserved,
       available: onHand - reserved,

@@ -113,6 +113,33 @@ export const memberships = pgTable(
   ],
 );
 
+/**
+ * Invitaciones a una organización. El enlace lleva el id de la organización y
+ * un token aleatorio; en la BD solo se guarda su hash SHA-256.
+ */
+export const invitations = pgTable(
+  'invitations',
+  {
+    id: id(),
+    organizationId: orgId(),
+    email: text('email').notNull(),
+    role: roleEnum('role').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    acceptedBy: uuid('accepted_by').references(() => users.id),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('invitations_token_key').on(t.tokenHash),
+    index('invitations_org_idx').on(t.organizationId),
+  ],
+);
+
 // ── Catálogo ───────────────────────────────────────────────────────────────
 export const units = pgTable(
   'units',
@@ -218,6 +245,27 @@ export const itemSuppliers = pgTable(
       .references(() => suppliers.id, { onDelete: 'cascade' }),
   },
   (t) => [primaryKey({ columns: [t.itemId, t.supplierId] })],
+);
+
+/** Fotografías re-codificadas (WebP, sin metadatos) guardadas en UPLOADS_DIR. */
+export const itemPhotos = pgTable(
+  'item_photos',
+  {
+    id: id(),
+    organizationId: orgId(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id, { onDelete: 'cascade' }),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    bytes: integer('bytes').notNull(),
+    position: smallint('position').notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('item_photos_item_idx').on(t.itemId, t.position)],
 );
 
 // ── Ubicaciones y existencias ──────────────────────────────────────────────

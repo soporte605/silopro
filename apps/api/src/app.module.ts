@@ -6,6 +6,7 @@ import { CsrfGuard } from './common/csrf.guard.js';
 import { ENV, type Env } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
+import { MembersModule } from './members/members.module.js';
 import { StockModule } from './stock/stock.module.js';
 
 @Global()
@@ -28,6 +29,7 @@ export class AppModule {
         HealthModule,
         CatalogModule,
         StockModule,
+        MembersModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],
     };

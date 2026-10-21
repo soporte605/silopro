@@ -22,6 +22,10 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(14),
   /** Cookie de sesión solo por HTTPS. Por defecto, activado en producción. */
   COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+  /** Carpeta privada para fotografías (fuera de cualquier raíz web pública). */
+  UPLOADS_DIR: z.string().min(1).default('./data/uploads'),
+  /** Origen público de la web, para construir enlaces de invitación. */
+  PUBLIC_WEB_URL: z.url().default('http://localhost:4200'),
 });
 
 export type Env = z.infer<typeof envSchema>;
