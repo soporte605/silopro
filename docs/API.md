@@ -52,13 +52,15 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 ## Ubicaciones y existencias · `/orgs/:orgId/…`
 
-| Método y ruta             | Permiso                            | Notas                                                                           |
-| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------- |
-| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)       |
-| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                     |
-| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason` |
-| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón              |
-| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                 |
+| Método y ruta             | Permiso                            | Notas                                                                              |
+| ------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)          |
+| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                        |
+| `PATCH locations/:id`     | catalog.write                      | `code, name, parentId, version, maxItems?`; mueve el subárbol; `409 STALE_VERSION` |
+| `DELETE locations/:id`    | catalog.write                      | Archiva con su contenido; `422 LOCATION_HAS_STOCK` si hay existencias              |
+| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason`    |
+| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                 |
+| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                    |
 
 ## Gabinetes · `/orgs/:orgId/cabinets`
 
@@ -71,7 +73,7 @@ Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubica
 | `GET cabinets/:id`                    | catalog.read  | Diseño completo; cada compartimento con `locationId`, `name`, `qrCode`, `itemCount` y `state`                 |
 | `GET cabinets/:id/stock`              | catalog.read  | Una fila por artículo y cajón, con `lowStock`                                                                 |
 | `PUT cabinets/:id/layout`             | catalog.write | `version, rows, columns, compartments[]` (diseño del motor); `409 STALE_VERSION`; `422 COMPARTMENT_HAS_STOCK` |
-| `PATCH cabinets/:id/compartments/:id` | catalog.write | `name` del cajón                                                                                              |
+| `PATCH cabinets/:id/compartments/:id` | catalog.write | `name` y/o `maxItems` (1–999 o `null`) del cajón                                                              |
 
 Al guardar un diseño la API lo valida con `assertCanonicalLayout` (sin huecos ni superposiciones; cada id coincide con su celda), archiva los cajones que desaparecen **solo si están vacíos** y restaura con su mismo id los que reaparecen. El esquema de direccionamiento se fija al crear el gabinete.
 

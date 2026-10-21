@@ -14,6 +14,7 @@ import {
   type CabinetStockEntry,
   type CabinetSummary,
   type CompartmentState,
+  type compartmentUpdateSchema,
   generateShortCode,
 } from '@silopro/contracts';
 import { isLowStock, locationPath, MAX_LOCATION_DEPTH } from '@silopro/domain';
@@ -27,7 +28,14 @@ import { cabinets, locations, stockLevels } from '../db/schema.js';
 import { LocationsService } from './locations.service.js';
 
 type CabinetRow = typeof cabinets.$inferSelect;
-type LocationRow = { id: string; code: string; name: string; path: string; qrCode: string };
+type LocationRow = {
+  id: string;
+  code: string;
+  name: string;
+  path: string;
+  qrCode: string;
+  maxItems: number | null;
+};
 
 const drawerName = (address: string) => `Cajón ${address}`;
 
@@ -214,11 +222,12 @@ export class CabinetsService {
     });
   }
 
-  renameCompartment(
+  /** Renombra un cajón o fija cuántos artículos distintos admite. */
+  updateCompartment(
     ctx: OrgContext,
     id: string,
     compartmentId: string,
-    name: string,
+    input: z.output<typeof compartmentUpdateSchema>,
   ): Promise<Cabinet> {
     return this.dbs.tenant(ctx, async (tx) => {
       const [cab] = await tx
@@ -228,7 +237,12 @@ export class CabinetsService {
       if (!cab) throw notFound('Gabinete');
       const updated = await tx
         .update(locations)
-        .set({ name, updatedAt: new Date() })
+        .set({
+          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          version: sql`${locations.version} + 1`,
+          updatedAt: new Date(),
+        })
         .where(
           and(
             eq(locations.parentId, cab.locationId),
@@ -331,6 +345,7 @@ export class CabinetsService {
         name: locations.name,
         path: locations.path,
         qrCode: locations.qrCode,
+        maxItems: locations.maxItems,
       })
       .from(locations)
       .where(
@@ -352,13 +367,21 @@ export class CabinetsService {
     const compartments: CabinetCompartment[] = (row.c.compartments as Compartment[]).map((c) => {
       const d = byCode.get(c.id);
       const agg = d ? perLocation.get(d.id) : undefined;
-      const state: CompartmentState = !agg ? 'empty' : agg.low ? 'low' : 'stocked';
+      const maxItems = d?.maxItems ?? null;
+      const state: CompartmentState = !agg
+        ? 'empty'
+        : agg.low
+          ? 'low'
+          : maxItems !== null && agg.count >= maxItems
+            ? 'full'
+            : 'stocked';
       return {
         ...c,
         locationId: d?.id ?? '',
         name: d?.name ?? drawerName(c.address),
         qrCode: d?.qrCode ?? '',
         itemCount: agg?.count ?? 0,
+        maxItems,
         state,
       };
     });

@@ -18,11 +18,12 @@ import {
   resizeLayout,
   splitCompartment,
 } from '@silopro/cabinet-engine';
-import type {
-  Cabinet,
-  CabinetCompartment,
-  CabinetStockEntry,
-  CompartmentState,
+import {
+  type Cabinet,
+  type CabinetCompartment,
+  type CabinetStockEntry,
+  type CompartmentState,
+  compartmentUpdateSchema,
 } from '@silopro/contracts';
 import {
   EsBadge,
@@ -176,10 +177,10 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   <div class="flex flex-col gap-2 border-b border-border px-4 py-3">
                     @if (session.canWrite()) {
                       <form
-                        class="flex items-end gap-2"
-                        (submit)="$event.preventDefault(); rename(c.id, draftName())"
+                        class="grid grid-cols-[1fr_5.5rem] items-end gap-2"
+                        (submit)="$event.preventDefault(); saveCompartment(c.id)"
                       >
-                        <es-form-field label="Nombre del cajón" #fn="esFormField" class="flex-1">
+                        <es-form-field label="Nombre del cajón" #fn="esFormField">
                           <input
                             esInput
                             [id]="fn.controlId"
@@ -188,8 +189,36 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                             maxlength="120"
                           />
                         </es-form-field>
-                        <button esButton type="submit" [disabled]="dirty()" [loading]="renaming()">
-                          Guardar
+                        <es-form-field label="Capacidad" #fc="esFormField">
+                          <input
+                            esInput
+                            type="number"
+                            min="1"
+                            max="999"
+                            placeholder="Sin límite"
+                            [id]="fc.controlId"
+                            [value]="draftCapacity()"
+                            (input)="draftCapacity.set($any($event.target).value)"
+                            [attr.aria-describedby]="fc.controlId + '-hint'"
+                          />
+                        </es-form-field>
+                        <p
+                          [id]="fc.controlId + '-hint'"
+                          class="col-span-full text-xs text-fg-muted"
+                        >
+                          Capacidad: artículos distintos que caben ({{ sc.itemCount }} ahora).
+                          @if (sc.state === 'full') {
+                            <es-badge tone="primary" class="ml-1">Lleno</es-badge>
+                          }
+                        </p>
+                        <button
+                          esButton
+                          type="submit"
+                          class="col-span-full justify-self-end"
+                          [disabled]="dirty()"
+                          [loading]="renaming()"
+                        >
+                          Guardar cajón
                         </button>
                       </form>
                     } @else {
@@ -329,6 +358,10 @@ export default class CabinetEditor {
   protected readonly draftName = linkedSignal(
     () => this.savedById().get(this.selectedId() ?? '')?.name ?? '',
   );
+  /** Capacidad en edición del cajón seleccionado ('' = sin límite). */
+  protected readonly draftCapacity = linkedSignal(() =>
+    String(this.savedById().get(this.selectedId() ?? '')?.maxItems ?? ''),
+  );
   protected readonly rect = computed(() => {
     const lay = this.layout();
     return lay ? selectionRect(lay, this.anchorId(), this.selectedId()) : null;
@@ -452,19 +485,31 @@ export default class CabinetEditor {
     }
   }
 
-  protected async rename(compartmentId: string, name: string): Promise<void> {
+  protected async saveCompartment(compartmentId: string): Promise<void> {
     const cab = this.cabinet();
-    if (!cab || !name.trim()) return;
+    const parsed = compartmentUpdateSchema.safeParse({
+      name: this.draftName().trim(),
+      maxItems: this.draftCapacity().trim() === '' ? null : this.draftCapacity(),
+    });
+    if (!cab) return;
+    if (!parsed.success) {
+      this.toast.show('Revise el cajón', {
+        description: 'El nombre es obligatorio y la capacidad va de 1 a 999.',
+        tone: 'danger',
+      });
+      return;
+    }
     this.renaming.set(true);
     try {
       this.server.set(
-        await this.api.patch<Cabinet>(`/cabinets/${cab.id}/compartments/${compartmentId}`, {
-          name: name.trim(),
-        }),
+        await this.api.patch<Cabinet>(
+          `/cabinets/${cab.id}/compartments/${compartmentId}`,
+          parsed.data,
+        ),
       );
-      this.toast.show('Nombre guardado', { tone: 'success' });
+      this.toast.show('Cajón guardado', { tone: 'success' });
     } catch (e) {
-      this.toast.show('No se pudo renombrar', {
+      this.toast.show('No se pudo guardar el cajón', {
         description: ApiRequestError.from(e).message,
         tone: 'danger',
       });

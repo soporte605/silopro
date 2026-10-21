@@ -1,15 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { generateShortCode, type Location, type locationInputSchema } from '@silopro/contracts';
+import {
+  generateShortCode,
+  type Location,
+  type locationInputSchema,
+  type locationUpdateSchema,
+} from '@silopro/contracts';
 import {
   checkPlacement,
   type LocationKind,
   type LocationNodeRef,
   locationPath,
+  MAX_LOCATION_DEPTH,
 } from '@silopro/domain';
-import { asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
-import { invalid } from '../common/http.js';
+import { invalid, notFound, staleVersion } from '../common/http.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { cabinets, locations } from '../db/schema.js';
 
@@ -28,6 +34,8 @@ const columns = {
   parentId: locations.parentId,
   path: locations.path,
   qrCode: locations.qrCode,
+  maxItems: locations.maxItems,
+  version: locations.version,
 };
 
 /**
@@ -37,6 +45,108 @@ const columns = {
 @Injectable()
 export class LocationsService {
   constructor(@Inject(DbService) private readonly dbs: DbService) {}
+
+  /**
+   * Renombra, mueve o fija la capacidad. Al mover o cambiar el código se
+   * recalculan la ruta y la profundidad de todo el subárbol.
+   */
+  update(
+    ctx: OrgContext,
+    id: string,
+    input: z.output<typeof locationUpdateSchema>,
+  ): Promise<Location> {
+    return this.dbs.tenant(ctx, async (tx) => {
+      const [node] = await tx
+        .select()
+        .from(locations)
+        .where(and(eq(locations.id, id), isNull(locations.archivedAt)))
+        .for('update');
+      if (!node) throw notFound('Ubicación');
+      if (node.version !== input.version) throw staleVersion();
+      const moved = node.parentId !== input.parentId || node.code !== input.code;
+      if (moved && (await this.isManagedDrawer(tx, node))) {
+        throw invalid(
+          'Este cajón pertenece a un gabinete: su posición y código se cambian desde el editor',
+        );
+      }
+
+      const chain = input.parentId ? await this.ancestors(tx, input.parentId) : [];
+      if (node.parentId !== input.parentId) {
+        const violation = checkPlacement({ id: node.id, kind: node.kind }, chain[0] ?? null, chain);
+        if (violation) throw invalid(MESSAGES[violation.code] ?? 'Ubicación inválida', violation);
+        const height = (await this.subtreeMaxDepth(tx, node.id)) - node.depth;
+        if (chain.length + height + 1 > MAX_LOCATION_DEPTH) {
+          throw invalid(MESSAGES['MAX_DEPTH_EXCEEDED']!, {
+            code: 'MAX_DEPTH_EXCEEDED',
+            max: MAX_LOCATION_DEPTH,
+          });
+        }
+      }
+      const path = locationPath([...chain.map((c) => c.code).reverse(), input.code]);
+      const delta = chain.length - node.depth;
+      await tx
+        .update(locations)
+        .set({
+          name: input.name,
+          code: input.code,
+          parentId: input.parentId,
+          path,
+          depth: chain.length,
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          version: node.version + 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(locations.id, id));
+      if (path !== node.path || delta !== 0) {
+        await tx.execute(sql`
+          with recursive sub as (
+            select id from locations where parent_id = ${id}
+            union all
+            select l.id from locations l join sub on l.parent_id = sub.id
+          )
+          update locations
+            set path = ${path} || substr(path, ${node.path.length + 1}),
+                depth = depth + ${delta}
+            where id in (select id from sub)`);
+      }
+      return this.one(tx, id);
+    });
+  }
+
+  /** Archiva la ubicación y todo lo que contiene, solo si no hay existencias. */
+  archive(ctx: OrgContext, id: string): Promise<void> {
+    return this.dbs.tenant(ctx, async (tx) => {
+      const [node] = await tx
+        .select()
+        .from(locations)
+        .where(and(eq(locations.id, id), isNull(locations.archivedAt)))
+        .for('update');
+      if (!node) throw notFound('Ubicación');
+      if (await this.isManagedDrawer(tx, node)) {
+        throw invalid('Los cajones de un gabinete se quitan fusionándolos desde el editor');
+      }
+      const subtree = sql`(
+        with recursive sub as (
+          select id from locations where id = ${id}
+          union all
+          select l.id from locations l join sub on l.parent_id = sub.id where l.archived_at is null
+        ) select id from sub)`;
+      const stocked = await tx.execute<{ path: string }>(sql`
+        select distinct l.path from stock_levels sl join locations l on l.id = sl.location_id
+        where sl.location_id in ${subtree} and (sl.on_hand <> 0 or sl.reserved <> 0)
+        order by l.path limit 5`);
+      if (stocked.rows.length) {
+        const paths = stocked.rows.map((r) => r.path);
+        throw invalid(
+          `Hay existencias en: ${paths.join(', ')}. Muévalas o ajústelas antes de archivar.`,
+          { code: 'LOCATION_HAS_STOCK', paths },
+        );
+      }
+      await tx.execute(
+        sql`update locations set archived_at = now(), updated_at = now() where id in ${subtree}`,
+      );
+    });
+  }
 
   list(ctx: OrgContext): Promise<Location[]> {
     return this.dbs.tenant(ctx, (tx) =>
@@ -78,6 +188,39 @@ export class LocationsService {
       })
       .returning({ ...columns, depth: locations.depth });
     return { ...row!, cabinetId: null };
+  }
+
+  private async one(tx: Tx, id: string): Promise<Location> {
+    const [row] = await tx
+      .select({ ...columns, cabinetId: cabinets.id })
+      .from(locations)
+      .leftJoin(cabinets, eq(cabinets.locationId, locations.id))
+      .where(eq(locations.id, id));
+    return row!;
+  }
+
+  /** Un cajón creado por un gabinete con diseño: su código es su dirección. */
+  private async isManagedDrawer(
+    tx: Tx,
+    node: { kind: LocationKind; parentId: string | null },
+  ): Promise<boolean> {
+    if (node.kind !== 'drawer' || !node.parentId) return false;
+    const [cab] = await tx
+      .select({ id: cabinets.id })
+      .from(cabinets)
+      .where(eq(cabinets.locationId, node.parentId));
+    return !!cab;
+  }
+
+  private async subtreeMaxDepth(tx: Tx, id: string): Promise<number> {
+    const res = await tx.execute<{ max: number }>(sql`
+      with recursive sub as (
+        select id, depth from locations where id = ${id}
+        union all
+        select l.id, l.depth from locations l join sub on l.parent_id = sub.id
+          where l.archived_at is null
+      ) select max(depth)::int as max from sub`);
+    return res.rows[0]?.max ?? 0;
   }
 
   /** Cadena desde el nodo hasta la raíz (nodo primero). */

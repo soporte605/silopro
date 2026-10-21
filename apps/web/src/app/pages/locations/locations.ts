@@ -22,8 +22,9 @@ import {
   EsToastService,
 } from '@elikarsystems/ui';
 import { RouterLink } from '@angular/router';
-import { LucideMapPin, LucidePlus } from '@lucide/angular';
-import { type Location, locationInputSchema } from '@silopro/contracts';
+import { LucideArchive, LucideMapPin, LucidePencil, LucidePlus } from '@lucide/angular';
+import { ConfirmService } from '../../core/confirm';
+import { type Location, locationInputSchema, locationUpdateSchema } from '@silopro/contracts';
 import { ALLOWED_CHILDREN, LOCATION_KIND_LABELS, type LocationKind } from '@silopro/domain';
 import { ApiRequestError, Api } from '../../core/api';
 import { zodErrors } from '../../core/forms';
@@ -33,6 +34,8 @@ import { PageHeader } from '../page-header';
 interface LocationFormData {
   all: Location[];
   parentId: string | null;
+  /** Ubicación a editar; sin ella el diálogo crea una nueva. */
+  location?: Location;
 }
 
 @Component({
@@ -42,8 +45,8 @@ interface LocationFormData {
   host: { class: 'flex h-full w-full' },
   template: `
     <es-dialog-shell
-      title="Nueva ubicación"
-      [description]="parent()?.path ?? 'Ubicación raíz (almacén)'"
+      [title]="editing ? 'Editar ubicación' : 'Nueva ubicación'"
+      [description]="editing?.path ?? parent()?.path ?? 'Ubicación raíz (almacén)'"
     >
       <form
         id="location-form"
@@ -56,24 +59,33 @@ interface LocationFormData {
             {{ error() }}
           </p>
         }
-        <es-form-field label="Dentro de" #p="esFormField">
+        <es-form-field label="Dentro de" [error]="fields()['parentId']" #p="esFormField">
           <select
             esSelect
             [id]="p.controlId"
             [value]="parentId()"
             (change)="setParent($any($event.target).value)"
           >
-            <option value="">— Raíz (almacén) —</option>
+            @if (!editing || editing.kind === 'warehouse') {
+              <option value="">— Raíz (almacén) —</option>
+            }
             @for (l of parents(); track l.id) {
               <option [value]="l.id">{{ l.path }}</option>
             }
           </select>
         </es-form-field>
-        <es-form-field label="Tipo" required [error]="fields()['kind']" #k="esFormField">
+        <es-form-field
+          label="Tipo"
+          required
+          [hint]="editing ? 'El tipo no se cambia al editar.' : ''"
+          [error]="fields()['kind']"
+          #k="esFormField"
+        >
           <select
             esSelect
             [id]="k.controlId"
             [value]="kind()"
+            [disabled]="!!editing"
             (change)="kind.set($any($event.target).value)"
           >
             @for (opt of kindOptions(); track opt) {
@@ -110,6 +122,27 @@ interface LocationFormData {
             />
           </es-form-field>
         </div>
+        @if (editing) {
+          <es-form-field
+            label="Capacidad"
+            hint="Máximo de artículos distintos que caben aquí. Vacío: sin límite."
+            [error]="fields()['maxItems']"
+            #m="esFormField"
+          >
+            <input
+              esInput
+              type="number"
+              min="1"
+              max="999"
+              class="w-32"
+              [id]="m.controlId"
+              [value]="maxItems()"
+              (input)="maxItems.set($any($event.target).value)"
+              [attr.aria-describedby]="m.describedBy()"
+              [attr.aria-invalid]="!!fields()['maxItems']"
+            />
+          </es-form-field>
+        }
       </form>
       <ng-container esDialogFooter>
         <button esButton type="button" (click)="ref.close()">Cancelar</button>
@@ -121,7 +154,7 @@ interface LocationFormData {
           [loading]="busy()"
           [disabled]="!kindOptions().length"
         >
-          Crear
+          {{ editing ? 'Guardar' : 'Crear' }}
         </button>
       </ng-container>
     </es-dialog-shell>
@@ -132,20 +165,33 @@ export class LocationForm {
   protected readonly data = inject<LocationFormData>(DIALOG_DATA);
   private readonly api = inject(Api);
   private readonly toast = inject(EsToastService);
+  protected readonly editing = this.data.location;
 
-  protected readonly parentId = signal(this.data.parentId ?? '');
+  protected readonly parentId = signal(this.editing?.parentId ?? this.data.parentId ?? '');
   protected readonly parent = computed(() => this.data.all.find((l) => l.id === this.parentId()));
-  /** Solo ubicaciones que admiten hijos. */
-  protected readonly parents = computed(() =>
-    this.data.all.filter((l) => ALLOWED_CHILDREN[l.kind].length > 0),
-  );
+  /**
+   * Lugares válidos: que admitan hijos y, al editar, que acepten este tipo y
+   * no estén dentro de la propia ubicación.
+   */
+  protected readonly parents = computed(() => {
+    const e = this.editing;
+    return this.data.all.filter((l) =>
+      e
+        ? ALLOWED_CHILDREN[l.kind].includes(e.kind) &&
+          l.id !== e.id &&
+          !l.path.startsWith(e.path + ' / ')
+        : ALLOWED_CHILDREN[l.kind].length > 0,
+    );
+  });
   protected readonly kindOptions = computed<readonly LocationKind[]>(() => {
+    if (this.editing) return [this.editing.kind];
     const p = this.parent();
     return p ? ALLOWED_CHILDREN[p.kind] : ['warehouse'];
   });
   protected readonly kind = signal<LocationKind>(this.kindOptions()[0] ?? 'warehouse');
-  protected readonly code = signal('');
-  protected readonly name = signal('');
+  protected readonly code = signal(this.editing?.code ?? '');
+  protected readonly name = signal(this.editing?.name ?? '');
+  protected readonly maxItems = signal(String(this.editing?.maxItems ?? ''));
   protected readonly fields = signal<Record<string, string>>({});
   protected readonly error = signal<string | null>(null);
   protected readonly busy = signal(false);
@@ -161,27 +207,41 @@ export class LocationForm {
   }
 
   protected async save(): Promise<void> {
-    const parsed = locationInputSchema.safeParse({
-      kind: this.kind(),
+    const e = this.editing;
+    const common = {
       code: this.code(),
       name: this.name(),
       parentId: this.parentId() || null,
-    });
+    };
+    const parsed = e
+      ? locationUpdateSchema.safeParse({
+          ...common,
+          version: e.version,
+          maxItems: this.maxItems().trim() === '' ? null : this.maxItems(),
+        })
+      : locationInputSchema.safeParse({ ...common, kind: this.kind() });
     this.fields.set(parsed.success ? {} : zodErrors(parsed.error));
     if (!parsed.success) return;
     this.busy.set(true);
     this.error.set(null);
     try {
-      const loc = await this.api.post<Location>('/locations', parsed.data);
-      this.toast.show('Ubicación creada', { tone: 'success', description: loc.path });
+      const loc = e
+        ? await this.api.patch<Location>(`/locations/${e.id}`, parsed.data)
+        : await this.api.post<Location>('/locations', parsed.data);
+      this.toast.show(e ? 'Ubicación guardada' : 'Ubicación creada', {
+        tone: 'success',
+        description: loc.path,
+      });
       this.ref.close(loc);
-    } catch (e) {
-      const err = ApiRequestError.from(e);
-      this.fields.set(err.fieldErrors());
+    } catch (err) {
+      const apiErr = ApiRequestError.from(err);
+      this.fields.set(apiErr.fieldErrors());
       this.error.set(
-        err.code === 'DUPLICATE'
+        apiErr.code === 'DUPLICATE'
           ? 'Ya existe una ubicación con ese código en ese nivel.'
-          : err.message,
+          : apiErr.code === 'STALE_VERSION'
+            ? 'Alguien más cambió esta ubicación. Cierre y vuelva a abrirla.'
+            : apiErr.message,
       );
     } finally {
       this.busy.set(false);
@@ -200,6 +260,8 @@ export class LocationForm {
     EsSkeleton,
     EsTable,
     LucidePlus,
+    LucidePencil,
+    LucideArchive,
     LucideMapPin,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -237,7 +299,7 @@ export class LocationForm {
                 <th scope="col" class="w-32">Tipo</th>
                 <th scope="col" class="w-44">QR</th>
                 @if (session.canWrite()) {
-                  <th scope="col" class="w-12"><span class="sr-only">Acciones</span></th>
+                  <th scope="col" class="w-28"><span class="sr-only">Acciones</span></th>
                 }
               </tr>
             </thead>
@@ -263,18 +325,40 @@ export class LocationForm {
                   <td class="code text-fg-muted">{{ r.l.qrCode }}</td>
                   @if (session.canWrite()) {
                     <td>
-                      @if (canHaveChildren(r.l)) {
+                      <div class="flex justify-end gap-0.5">
+                        @if (canHaveChildren(r.l)) {
+                          <button
+                            esButton
+                            variant="ghost"
+                            size="sm"
+                            iconOnly
+                            [attr.aria-label]="'Agregar dentro de ' + r.l.name"
+                            (click)="open(r.l.id)"
+                          >
+                            <svg lucidePlus></svg>
+                          </button>
+                        }
                         <button
                           esButton
                           variant="ghost"
                           size="sm"
                           iconOnly
-                          [attr.aria-label]="'Agregar dentro de ' + r.l.name"
-                          (click)="open(r.l.id)"
+                          [attr.aria-label]="'Editar ' + r.l.name"
+                          (click)="edit(r.l)"
                         >
-                          <svg lucidePlus></svg>
+                          <svg lucidePencil></svg>
                         </button>
-                      }
+                        <button
+                          esButton
+                          variant="ghost"
+                          size="sm"
+                          iconOnly
+                          [attr.aria-label]="'Archivar ' + r.l.name"
+                          (click)="archive(r.l)"
+                        >
+                          <svg lucideArchive></svg>
+                        </button>
+                      </div>
                     </td>
                   }
                 </tr>
@@ -289,6 +373,8 @@ export class LocationForm {
 export default class Locations {
   private readonly api = inject(Api);
   private readonly dialog = inject(EsDialogService);
+  private readonly toast = inject(EsToastService);
+  private readonly confirm = inject(ConfirmService);
   protected readonly session = inject(SessionService);
 
   protected readonly list = resource({
@@ -338,5 +424,31 @@ export default class Locations {
         ariaLabel: 'Nueva ubicación',
       })
       .closed.subscribe((saved) => saved && this.list.reload());
+  }
+
+  protected edit(location: Location): void {
+    this.dialog
+      .open<Location, LocationFormData>(LocationForm, {
+        data: { all: this.list.value() ?? [], parentId: location.parentId, location },
+        ariaLabel: 'Editar ubicación',
+      })
+      .closed.subscribe((saved) => saved && this.list.reload());
+  }
+
+  protected async archive(l: Location): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Archivar ubicación',
+      message: `«${l.path}» y todo lo que contiene dejarán de aparecer. Solo se puede si no hay existencias dentro; el historial se conserva.`,
+      confirmLabel: 'Archivar',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await this.api.delete(`/locations/${l.id}`);
+      this.toast.show('Ubicación archivada', { description: l.path });
+      this.list.reload();
+    } catch (e) {
+      this.toast.show(ApiRequestError.from(e).message, { tone: 'danger' });
+    }
   }
 }

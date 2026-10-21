@@ -1,6 +1,13 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import type { Movement, movementInputSchema, StockByLocation } from '@silopro/contracts';
-import { applyDelta, can, fromScaled, StockError, toScaled } from '@silopro/domain';
+import {
+  applyDelta,
+  can,
+  exceedsCapacity,
+  fromScaled,
+  StockError,
+  toScaled,
+} from '@silopro/domain';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
@@ -37,10 +44,20 @@ export class MovementsService {
         .where(and(eq(items.id, input.itemId), isNull(items.archivedAt)));
       if (!item) throw notFound('Artículo');
       const [loc] = await tx
-        .select({ id: locations.id, path: locations.path })
+        .select({ id: locations.id, path: locations.path, maxItems: locations.maxItems })
         .from(locations)
         .where(and(eq(locations.id, input.locationId), isNull(locations.archivedAt)));
       if (!loc) throw notFound('Ubicación');
+      const capped = loc.maxItems !== null && input.kind !== 'issue';
+      // Con capacidad, se bloquea la ubicación antes que la existencia para que
+      // dos entradas de artículos distintos no la rebasen a la vez.
+      if (capped) {
+        await tx
+          .select({ id: locations.id })
+          .from(locations)
+          .where(eq(locations.id, loc.id))
+          .for('update');
+      }
 
       await tx
         .insert(stockLevels)
@@ -61,6 +78,30 @@ export class MovementsService {
       else if (input.kind === 'issue') delta = -toScaled(input.quantity);
       else delta = toScaled(input.countedQuantity) - current.onHand;
       if (delta === 0) throw invalid('El movimiento no cambia las existencias');
+
+      if (capped && delta > 0) {
+        const [{ distinct } = { distinct: 0 }] = await tx
+          .select({ distinct: sql<number>`count(*)::int` })
+          .from(stockLevels)
+          .where(
+            and(
+              eq(stockLevels.locationId, loc.id),
+              sql`${stockLevels.itemId} <> ${item.id}`,
+              sql`${stockLevels.onHand} <> 0`,
+            ),
+          );
+        const full = exceedsCapacity({
+          maxItems: loc.maxItems,
+          distinctItems: distinct,
+          itemAlreadyThere: current.onHand !== 0,
+        });
+        if (full) {
+          throw invalid(
+            `${loc.path} ya tiene ${distinct} de ${loc.maxItems} artículos distintos. Elija otra ubicación o amplíe su capacidad.`,
+            { code: 'CAPACITY_EXCEEDED', maxItems: loc.maxItems, distinctItems: distinct },
+          );
+        }
+      }
 
       let next;
       try {

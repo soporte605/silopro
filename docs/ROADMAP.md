@@ -35,7 +35,7 @@ _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con 
 | Fotografías con almacenamiento seguro |   ✅   | `apps/api/test/photos.spec.ts`, e2e `photos-members`     |
 | Invitar miembros a una organización   |   ✅   | `apps/api/test/members.spec.ts`, e2e `photos-members`    |
 
-## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.1`
+## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.2`
 
 Almacenes y árbol de ubicaciones (reglas de `@silopro/domain`), gabinetes persistidos con el modelo de `@silopro/cabinet-engine`, editor 2D completo (crear, redimensionar, fusionar, etiquetar), existencias por ubicación, búsqueda que resalta posiciones, estados de ocupación.
 
@@ -49,8 +49,8 @@ _Aceptación:_ gabinete de 60×40 fluido (< 16 ms por interacción); un artícul
 | Búsqueda que resalta posiciones                             |   ✅   | buscador del editor y enlace «ver en el gabinete» desde el artículo                             |
 | Un artículo en varias ubicaciones                           |   ✅   | `stock_levels` por artículo × ubicación (desde la Fase 2)                                       |
 | 60×40 fluido (< 16 ms por interacción)                      |   ✅   | ≈ 7,5 ms de script + 1,7 ms de estilo y maquetación por clic (ver `docs/TESTING.md`)            |
-| Almacenes y árbol de ubicaciones editable                   |   ⏳   | crear ya funciona; mover, renombrar y archivar llegan en `alpha.2`                              |
-| Validaciones de capacidad                                   |   ⏳   | `alpha.2`                                                                                       |
+| Almacenes y árbol de ubicaciones editable                   |   ✅   | crear, renombrar, mover y archivar (`alpha.2`)                                                  |
+| Validaciones de capacidad                                   |   ✅   | artículos distintos por ubicación o cajón (`alpha.2`)                                           |
 
 ## Fase 4 — Visualización 3D · `v0.4.0`
 

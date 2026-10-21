@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { locationInputSchema } from './stock.js';
+import { locationInputSchema, maxItemsSchema } from './stock.js';
 
 /** Límites de un gabinete guardado (el motor admite más; esto acota la carga). */
 export const CABINET_MAX_ROWS = 60;
@@ -48,9 +48,12 @@ export const cabinetLayoutUpdateSchema = z.object({
 });
 export type CabinetLayoutUpdate = z.input<typeof cabinetLayoutUpdateSchema>;
 
-export const compartmentRenameSchema = z.object({
-  name: locationInputSchema.shape.name,
-});
+export const compartmentUpdateSchema = z
+  .object({
+    name: locationInputSchema.shape.name.optional(),
+    maxItems: maxItemsSchema.optional(),
+  })
+  .refine((v) => v.name !== undefined || v.maxItems !== undefined, 'Nada que actualizar');
 
 export interface CabinetSummary {
   id: string;
@@ -66,7 +69,7 @@ export interface CabinetSummary {
   updatedAt: string;
 }
 
-export type CompartmentState = 'empty' | 'stocked' | 'low';
+export type CompartmentState = 'empty' | 'stocked' | 'low' | 'full';
 
 export interface CabinetCompartment {
   id: string;
@@ -79,6 +82,7 @@ export interface CabinetCompartment {
   name: string;
   qrCode: string;
   itemCount: number;
+  maxItems: number | null;
   state: CompartmentState;
 }
 

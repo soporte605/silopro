@@ -89,7 +89,9 @@ const ch = (c: GridRect) => c.rowSpan * CELL_H + (c.rowSpan - 1) * GAP;
               [attr.width]="w(c) - 8"
               height="4"
               rx="2"
-              [attr.class]="s === 'low' ? 'fill-warning' : 'fill-accent'"
+              [attr.class]="
+                s === 'low' ? 'fill-warning' : s === 'full' ? 'fill-info' : 'fill-accent'
+              "
             />
           }
         }
@@ -177,6 +179,9 @@ export class CabinetCells {
       >
       <span class="flex items-center gap-1.5"
         ><span class="h-1 w-4 rounded-full bg-warning"></span> Stock bajo</span
+      >
+      <span class="flex items-center gap-1.5"
+        ><span class="h-1 w-4 rounded-full bg-info"></span> Lleno</span
       >
       <span class="flex items-center gap-1.5"
         ><span class="size-3 rounded-sm ring-2 ring-info"></span> Coincidencia</span

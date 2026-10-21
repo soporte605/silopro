@@ -4,6 +4,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.3.0-alpha.2] — 2026-10-21
+
+Fase 3 · Almacenamiento: ubicaciones editables y capacidad.
+
+### Añadido
+
+- Editar ubicaciones (`PATCH locations/:id`): renombrar, cambiar el código y moverla a otro lugar. La ruta de todo lo que contiene se recalcula; se respetan las reglas de jerarquía, la profundidad máxima, los ciclos y el bloqueo optimista (`409 STALE_VERSION`).
+- Archivar ubicaciones (`DELETE locations/:id`) con todo su contenido, solo si no hay existencias (`422 LOCATION_HAS_STOCK` con las rutas afectadas). El código queda libre para reutilizarse.
+- Capacidad por ubicación y por cajón: máximo de artículos distintos (1–999). Una entrada o ajuste que la rebase se rechaza con `422 CAPACITY_EXCEEDED`; el mismo artículo siempre puede sumar.
+- Estado «Lleno» en el gabinete (barra azul) y campo de capacidad en el detalle del cajón.
+- Botones de editar y archivar en Ubicaciones.
+- Dominio: `exceedsCapacity`. Migración `0006_ubicaciones_capacidad`.
+
+### Cambiado
+
+- `PATCH cabinets/:id/compartments/:id` acepta `name` y/o `maxItems`.
+- Los cajones de un gabinete solo se mueven o quitan desde su editor.
+- El índice único de código por lugar ignora las ubicaciones archivadas.
+
+### Corregido
+
+- Los diálogos ocupan todo el ancho de la ventana modal (antes quedaban descuadrados).
+- Salidas y ajustes preseleccionan la ubicación con existencias sin esperar a que cargue la lista (antes podía salir «Inválido UUID»).
+
 ## [0.3.0-alpha.1] — 2026-10-21
 
 Fase 3 · Almacenamiento (primera entrega): gabinetes guardados.

@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Inject,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { locationInputSchema, movementInputSchema } from '@silopro/contracts';
+import { locationInputSchema, locationUpdateSchema, movementInputSchema } from '@silopro/contracts';
 import type { z } from 'zod';
 import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.js';
 import type { OrgContext } from '../auth/request-context.js';
@@ -39,6 +42,23 @@ export class StockController {
     @Body(new ZodValidationPipe(locationInputSchema)) body: z.output<typeof locationInputSchema>,
   ) {
     return this.locationsSvc.create(ctx, body);
+  }
+
+  @Patch('locations/:id')
+  @RequirePermission('catalog.write')
+  updateLocation(
+    @Org() ctx: OrgContext,
+    @Param('id', uuid) id: string,
+    @Body(new ZodValidationPipe(locationUpdateSchema)) body: z.output<typeof locationUpdateSchema>,
+  ) {
+    return this.locationsSvc.update(ctx, id, body);
+  }
+
+  @Delete('locations/:id')
+  @HttpCode(204)
+  @RequirePermission('catalog.write')
+  async archiveLocation(@Org() ctx: OrgContext, @Param('id', uuid) id: string) {
+    await this.locationsSvc.archive(ctx, id);
   }
 
   @Post('movements')

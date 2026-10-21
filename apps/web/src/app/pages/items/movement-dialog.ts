@@ -160,7 +160,13 @@ export class MovementDialog {
   protected readonly qty = fmtQty;
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    locationId: this.data.locationId ?? '',
+    // Salidas y ajustes ya conocen dónde hay existencias: no esperan a la lista.
+    locationId:
+      this.data.locationId ??
+      (this.data.kind === 'receipt'
+        ? ''
+        : (this.data.stock.find((s) => s.onHand > 0) ?? this.data.stock[0])?.locationId) ??
+      '',
     quantity: '',
     reason: '',
   });

@@ -51,10 +51,14 @@ test('gabinete: crear, fusionar, guardar y encontrar un artículo en su cajón',
   await expect(detail).toContainText('11 cajones');
   await expect(detail).toContainText('1×2 celdas');
 
-  // Renombrar el cajón fusionado.
+  // Renombrar el cajón fusionado y limitar su capacidad.
   await detail.getByLabel('Nombre del cajón').fill('Microcontroladores');
-  await detail.getByRole('button', { name: 'Guardar' }).click();
-  await expect(page.getByText('Nombre guardado')).toBeVisible();
+  await detail.getByRole('spinbutton', { name: 'Capacidad' }).fill('2');
+  await detail.getByRole('button', { name: 'Guardar cajón' }).click();
+  await expect(page.getByText('Cajón guardado')).toBeVisible();
+  await page.reload();
+  await page.locator('[data-address="A1"]').click();
+  await expect(detail.getByRole('spinbutton', { name: 'Capacidad' })).toHaveValue('2');
 
   // Entrada al cajón B2 desde el artículo y enlace de vuelta al gabinete.
   await page.goto(`/inventario/${item.id}`);

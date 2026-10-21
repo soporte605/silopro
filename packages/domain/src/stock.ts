@@ -92,3 +92,18 @@ export function shortage(required: number, availableQty: number): number {
 export function isLowStock(totalAvailable: number, minimum: number | null): boolean {
   return minimum != null && minimum > 0 && totalAvailable <= minimum;
 }
+
+/**
+ * Capacidad de una ubicación expresada en artículos distintos (p. ej. un
+ * cajón de un solo SKU tiene `maxItems = 1`). Las cantidades no se suman
+ * entre artículos porque sus unidades pueden ser distintas.
+ * Devuelve `true` si guardar el artículo superaría la capacidad.
+ */
+export function exceedsCapacity(opts: {
+  maxItems: number | null;
+  distinctItems: number;
+  itemAlreadyThere: boolean;
+}): boolean {
+  if (opts.maxItems == null || opts.itemAlreadyThere) return false;
+  return opts.distinctItems + 1 > opts.maxItems;
+}

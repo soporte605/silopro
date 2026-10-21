@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { checkPlacement, type LocationNodeRef } from './locations.js';
 import {
   applyDelta,
+  exceedsCapacity,
   available,
   fromScaled,
   isLowStock,
@@ -83,5 +84,20 @@ describe('stock', () => {
     expect(isLowStock(5, 5)).toBe(true);
     expect(isLowStock(6, 5)).toBe(false);
     expect(isLowStock(0, null)).toBe(false);
+  });
+});
+
+describe('exceedsCapacity', () => {
+  it('sin límite nunca se excede', () => {
+    expect(exceedsCapacity({ maxItems: null, distinctItems: 50, itemAlreadyThere: false })).toBe(
+      false,
+    );
+  });
+
+  it('cuenta artículos distintos, no cantidades', () => {
+    expect(exceedsCapacity({ maxItems: 1, distinctItems: 0, itemAlreadyThere: false })).toBe(false);
+    expect(exceedsCapacity({ maxItems: 1, distinctItems: 1, itemAlreadyThere: false })).toBe(true);
+    // Reponer un artículo que ya está no ocupa un lugar nuevo.
+    expect(exceedsCapacity({ maxItems: 1, distinctItems: 1, itemAlreadyThere: true })).toBe(false);
   });
 });

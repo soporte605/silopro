@@ -282,16 +282,20 @@ export const locations = pgTable(
     path: text('path').notNull(),
     depth: smallint('depth').notNull(),
     qrCode: text('qr_code').notNull(),
+    /** Capacidad en artículos distintos (`null` = sin límite). */
+    maxItems: smallint('max_items'),
     version: integer('version').notNull().default(1),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
-    uniqueIndex('locations_org_parent_code_key').on(
-      t.organizationId,
-      sql`coalesce(${t.parentId}, '00000000-0000-0000-0000-000000000000')`,
-      sql`lower(${t.code})`,
-    ),
+    uniqueIndex('locations_org_parent_code_key')
+      .on(
+        t.organizationId,
+        sql`coalesce(${t.parentId}, '00000000-0000-0000-0000-000000000000')`,
+        sql`lower(${t.code})`,
+      )
+      .where(sql`${t.archivedAt} is null`),
     uniqueIndex('locations_qr_code_key').on(t.qrCode),
   ],
 );

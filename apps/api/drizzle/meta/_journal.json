@@ -43,6 +43,13 @@
       "when": 1792618393749,
       "tag": "0005_gabinetes_aislamiento",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792621719312,
+      "tag": "0006_ubicaciones_capacidad",
+      "breakpoints": true
     }
   ]
 }

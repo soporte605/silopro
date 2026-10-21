@@ -14,7 +14,7 @@ import {
   cabinetInputSchema,
   cabinetLayoutUpdateSchema,
   compartmentIdSchema,
-  compartmentRenameSchema,
+  compartmentUpdateSchema,
 } from '@silopro/contracts';
 import type { z } from 'zod';
 import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.js';
@@ -67,13 +67,13 @@ export class CabinetsController {
 
   @Patch(':id/compartments/:compartmentId')
   @RequirePermission('catalog.write')
-  renameCompartment(
+  updateCompartment(
     @Org() ctx: OrgContext,
     @Param('id', uuid) id: string,
     @Param('compartmentId', new ZodValidationPipe(compartmentIdSchema)) compartment: string,
-    @Body(new ZodValidationPipe(compartmentRenameSchema))
-    body: z.output<typeof compartmentRenameSchema>,
+    @Body(new ZodValidationPipe(compartmentUpdateSchema))
+    body: z.output<typeof compartmentUpdateSchema>,
   ) {
-    return this.svc.renameCompartment(ctx, id, compartment, body.name);
+    return this.svc.updateCompartment(ctx, id, compartment, body);
   }
 }

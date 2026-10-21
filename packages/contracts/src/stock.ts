@@ -31,6 +31,21 @@ export const locationInputSchema = z.object({
 });
 export type LocationInput = z.input<typeof locationInputSchema>;
 
+/** Capacidad en artículos distintos; `null` = sin límite. */
+export const maxItemsSchema = z.coerce
+  .number()
+  .int()
+  .min(1, 'La capacidad mínima es 1 artículo')
+  .max(999)
+  .nullable();
+
+/** Renombrar, mover (cambiar `parentId`) o fijar la capacidad de una ubicación. */
+export const locationUpdateSchema = locationInputSchema.omit({ kind: true }).extend({
+  version: z.coerce.number().int().min(1),
+  maxItems: maxItemsSchema.optional(),
+});
+export type LocationUpdate = z.input<typeof locationUpdateSchema>;
+
 export interface Location {
   id: string;
   kind: (typeof LOCATION_KIND_VALUES)[number];
@@ -41,6 +56,9 @@ export interface Location {
   qrCode: string;
   /** Gabinete con diseño guardado (solo en ubicaciones de tipo gabinete). */
   cabinetId: string | null;
+  /** Artículos distintos que admite; `null` = sin límite. */
+  maxItems: number | null;
+  version: number;
 }
 
 export const MOVEMENT_KIND_VALUES = ['receipt', 'issue', 'adjustment'] as const;
