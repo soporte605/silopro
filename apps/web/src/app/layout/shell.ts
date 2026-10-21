@@ -1,32 +1,45 @@
+import { CdkMenuTrigger } from '@angular/cdk/menu';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { Logo } from './logo';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   EsButton,
   EsCommandPaletteService,
   EsKbd,
+  EsMenu,
+  EsMenuItem,
+  EsMenuSeparator,
   EsNavItem,
   EsThemeService,
   EsTooltip,
 } from '@elikarsystems/ui';
 import {
   LucideArrowLeftRight,
+  LucideBox,
+  LucideBuilding2,
+  LucideCheck,
   LucideClipboardList,
   LucideComponent,
+  LucideFolderTree,
   LucideGrid3x3,
   LucideHouse,
+  LucideLogOut,
   LucideMapPin,
   LucideMonitor,
   LucideMoon,
-  LucidePackage,
   LucideSearch,
   LucideSun,
+  LucideTruck,
 } from '@lucide/angular';
+import { ROLE_LABELS } from '@silopro/domain';
+import { SessionService } from '../core/session';
 
 @Component({
   selector: 'sp-shell',
   imports: [
     RouterOutlet,
+    NgTemplateOutlet,
     Logo,
     RouterLink,
     RouterLinkActive,
@@ -41,10 +54,19 @@ import {
     LucideSun,
     LucideMoon,
     LucideMonitor,
-    LucidePackage,
     LucideMapPin,
     LucideArrowLeftRight,
     LucideClipboardList,
+    LucideBox,
+    LucideBuilding2,
+    LucideCheck,
+    LucideFolderTree,
+    LucideLogOut,
+    LucideTruck,
+    CdkMenuTrigger,
+    EsMenu,
+    EsMenuItem,
+    EsMenuSeparator,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -78,40 +100,21 @@ import {
         </button>
       </div>
       <nav class="flex flex-col gap-0.5 px-2" aria-label="Principal">
-        <a
-          esNavItem
-          routerLink="/"
-          routerLinkActive="is-active"
-          [routerLinkActiveOptions]="{ exact: true }"
-          ariaCurrentWhenActive="page"
-        >
-          <svg lucideHouse></svg> Inicio
-        </a>
-        <a
-          esNavItem
-          routerLink="/gabinetes/demo"
-          routerLinkActive="is-active"
-          ariaCurrentWhenActive="page"
-        >
-          <svg lucideGrid3x3></svg> Gabinete (demo)
-        </a>
+        <ng-container *ngTemplateOutlet="navLinks" />
       </nav>
       <p class="mt-4 px-4 pb-1 text-2xs font-medium text-fg-subtle uppercase">Próximamente</p>
       <ul class="flex flex-col gap-0.5 px-2 text-fg-subtle" aria-label="Módulos en desarrollo">
         @for (m of upcoming; track m.label) {
           <li class="flex h-7 items-center gap-2 px-2 text-sm">
             @switch (m.icon) {
-              @case ('package') {
-                <svg lucidePackage [size]="16"></svg>
-              }
-              @case ('map') {
-                <svg lucideMapPin [size]="16"></svg>
-              }
               @case ('moves') {
                 <svg lucideArrowLeftRight [size]="16"></svg>
               }
               @case ('bom') {
                 <svg lucideClipboardList [size]="16"></svg>
+              }
+              @default {
+                <svg lucideGrid3x3 [size]="16"></svg>
               }
             }
             {{ m.label }}
@@ -120,6 +123,24 @@ import {
         }
       </ul>
       <div class="mt-auto flex flex-col gap-0.5 border-t border-border p-2">
+        <button
+          type="button"
+          class="mb-1 flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-surface-hover"
+          [cdkMenuTriggerFor]="userMenu"
+          aria-label="Cuenta y organización"
+        >
+          <span
+            class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-semibold text-primary-fg"
+            aria-hidden="true"
+            >{{ initials() }}</span
+          >
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-medium">{{ session.me()?.user?.name }}</span>
+            <span class="block truncate text-2xs text-fg-muted">
+              {{ session.membership()?.organizationName }} · {{ roleLabel() }}
+            </span>
+          </span>
+        </button>
         <a
           esNavItem
           routerLink="/sistema/componentes"
@@ -164,11 +185,96 @@ import {
         >
           <svg lucideSearch></svg>
         </button>
+        <button
+          esButton
+          variant="ghost"
+          iconOnly
+          aria-label="Cuenta y organización"
+          [cdkMenuTriggerFor]="userMenu"
+        >
+          <span class="text-2xs font-semibold">{{ initials() }}</span>
+        </button>
       </header>
+      <nav
+        class="flex gap-0.5 overflow-x-auto border-b border-border px-2 py-1 md:hidden [&_a]:shrink-0"
+        aria-label="Principal (móvil)"
+      >
+        <ng-container *ngTemplateOutlet="navLinks" />
+      </nav>
       <main id="contenido" class="min-h-0 flex-1 overflow-auto" tabindex="-1">
         <router-outlet />
       </main>
     </div>
+
+    <ng-template #navLinks>
+      <a
+        esNavItem
+        routerLink="/"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideHouse></svg> Inicio
+      </a>
+      <a
+        esNavItem
+        routerLink="/inventario"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideBox></svg> Artículos
+      </a>
+      <a
+        esNavItem
+        routerLink="/categorias"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideFolderTree></svg> Categorías
+      </a>
+      <a
+        esNavItem
+        routerLink="/proveedores"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideTruck></svg> Proveedores
+      </a>
+      <a
+        esNavItem
+        routerLink="/ubicaciones"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideMapPin></svg> Ubicaciones
+      </a>
+      <a
+        esNavItem
+        routerLink="/gabinetes/demo"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideGrid3x3></svg> Gabinete (demo)
+      </a>
+    </ng-template>
+
+    <ng-template #userMenu>
+      <div esMenu class="min-w-56">
+        <p class="px-2 pt-1 pb-0.5 text-2xs font-medium text-fg-subtle uppercase">Organización</p>
+        @for (m of session.me()?.memberships ?? []; track m.organizationId) {
+          <button esMenuItem (triggered)="switchOrg(m.organizationId)">
+            <svg lucideBuilding2></svg>
+            <span class="flex-1 truncate">{{ m.organizationName }}</span>
+            @if (m.organizationId === session.orgId()) {
+              <svg lucideCheck aria-label="Activa"></svg>
+            }
+          </button>
+        }
+        <div esMenuSeparator></div>
+        <p class="truncate px-2 py-1 text-xs text-fg-muted">{{ session.me()?.user?.email }}</p>
+        <button esMenuItem (triggered)="logout()"><svg lucideLogOut></svg> Cerrar sesión</button>
+      </div>
+    </ng-template>
   `,
 })
 export class Shell {
@@ -176,16 +282,44 @@ export class Shell {
   protected readonly theme = inject(EsThemeService);
   private readonly router = inject(Router);
 
+  protected readonly session = inject(SessionService);
+
   protected readonly upcoming = [
-    { label: 'Inventario', icon: 'package', phase: 'F2' },
-    { label: 'Ubicaciones', icon: 'map', phase: 'F3' },
-    { label: 'Movimientos', icon: 'moves', phase: 'F5' },
+    { label: 'Gabinetes', icon: 'grid', phase: 'F3' },
+    { label: 'Transferencias', icon: 'moves', phase: 'F5' },
     { label: 'Proyectos y BOM', icon: 'bom', phase: 'F6' },
   ];
 
   constructor() {
     this.palette.register([
       { id: 'nav.home', label: 'Ir a Inicio', group: 'Navegación', run: () => this.go('/') },
+      {
+        id: 'nav.items',
+        label: 'Ir a Artículos',
+        group: 'Navegación',
+        keywords: ['inventario', 'existencias', 'sku'],
+        run: () => this.go('/inventario'),
+      },
+      {
+        id: 'nav.categories',
+        label: 'Ir a Categorías',
+        group: 'Navegación',
+        keywords: ['atributos'],
+        run: () => this.go('/categorias'),
+      },
+      {
+        id: 'nav.suppliers',
+        label: 'Ir a Proveedores',
+        group: 'Navegación',
+        run: () => this.go('/proveedores'),
+      },
+      {
+        id: 'nav.locations',
+        label: 'Ir a Ubicaciones',
+        group: 'Navegación',
+        keywords: ['almacen', 'estante'],
+        run: () => this.go('/ubicaciones'),
+      },
       {
         id: 'nav.cabinet',
         label: 'Abrir gabinete de demostración',
@@ -208,6 +342,34 @@ export class Shell {
         run: () => this.theme.cycle(),
       },
     ]);
+  }
+
+  protected initials(): string {
+    const name = this.session.me()?.user.name ?? '';
+    return (
+      name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0]!.toUpperCase())
+        .join('') || '?'
+    );
+  }
+
+  protected roleLabel(): string {
+    const role = this.session.role();
+    return role ? ROLE_LABELS[role] : '';
+  }
+
+  protected switchOrg(id: string): void {
+    this.session.selectOrg(id);
+    // Recarga la vista actual con los datos de la nueva organización.
+    void this.router.navigateByUrl('/');
+  }
+
+  protected async logout(): Promise<void> {
+    await this.session.logout();
+    await this.router.navigateByUrl('/acceso');
   }
 
   protected themeName(): string {

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { EsToaster } from '@elikarsystems/ui';
-import { Shell } from './layout/shell';
 
 @Component({
   selector: 'sp-root',
-  imports: [Shell, EsToaster],
+  imports: [RouterOutlet, EsToaster],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<sp-shell /><es-toaster />`,
+  template: `<router-outlet /><es-toaster />`,
 })
 export class App {}

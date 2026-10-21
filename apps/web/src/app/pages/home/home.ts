@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EsBadge, EsButton, EsSkeleton, EsTable } from '@elikarsystems/ui';
+import { SessionService } from '../../core/session';
 
 interface Health {
   status: 'ok' | 'degraded';
@@ -19,15 +20,33 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
     <div class="mx-auto flex max-w-5xl flex-col gap-6 p-4 md:p-6">
       <header class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 class="text-xl font-semibold tracking-tight">Inicio</h1>
+          <h1 class="text-xl font-semibold tracking-tight">
+            {{ session.membership()?.organizationName }}
+          </h1>
           <p class="text-sm text-fg-muted">
-            Sistema universal de inventario y almacenamiento inteligente · v0.1.0-alpha.1
+            Sistema universal de inventario y almacenamiento inteligente
           </p>
         </div>
-        <a esButton variant="primary" routerLink="/gabinetes/demo"
-          >Abrir gabinete de demostración</a
-        >
+        <a esButton variant="primary" routerLink="/inventario">Ver artículos</a>
       </header>
+
+      <section aria-labelledby="pasos">
+        <h2 id="pasos" class="mb-2 text-xs font-medium text-fg-muted">Primeros pasos</h2>
+        <ol class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          @for (s of steps; track s.n) {
+            <li>
+              <a
+                [routerLink]="s.link"
+                class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+              >
+                <span class="font-mono text-2xs text-fg-subtle">{{ s.n }}</span>
+                <span class="text-sm font-medium">{{ s.title }}</span>
+                <span class="text-xs text-fg-muted">{{ s.text }}</span>
+              </a>
+            </li>
+          }
+        </ol>
+      </section>
 
       <section aria-labelledby="estado" class="rounded-lg border border-border bg-surface">
         <h2 id="estado" class="border-b border-border px-3 py-2 text-xs font-medium text-fg-muted">
@@ -80,7 +99,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
           </div>
           <div class="px-3 py-2.5">
             <dt class="text-xs text-fg-muted">Fase actual</dt>
-            <dd class="mt-1">1 · Fundamentos</dd>
+            <dd class="mt-1">2 · Inventario</dd>
           </div>
         </dl>
       </section>
@@ -109,9 +128,13 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
                   <span class="text-fg-muted"> · {{ p.scope }}</span>
                 </td>
                 <td>
-                  <es-badge [tone]="p.n === 1 ? 'primary' : 'neutral'">
-                    {{ p.n === 1 ? 'En curso' : 'Pendiente' }}
-                  </es-badge>
+                  @if (p.n < currentPhase) {
+                    <es-badge tone="success">Completada</es-badge>
+                  } @else if (p.n === currentPhase) {
+                    <es-badge tone="primary">En curso</es-badge>
+                  } @else {
+                    <es-badge>Pendiente</es-badge>
+                  }
                 </td>
               </tr>
             }
@@ -123,6 +146,28 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
 })
 export default class Home {
   private readonly http = inject(HttpClient);
+  protected readonly session = inject(SessionService);
+  protected readonly currentPhase = 2;
+  protected readonly steps = [
+    {
+      n: 1,
+      title: 'Cree una ubicación',
+      text: 'Su almacén, taller o laboratorio.',
+      link: '/ubicaciones',
+    },
+    {
+      n: 2,
+      title: 'Defina categorías',
+      text: 'Con los atributos técnicos de cada tipo.',
+      link: '/categorias',
+    },
+    {
+      n: 3,
+      title: 'Registre artículos',
+      text: 'Y sus entradas de existencias.',
+      link: '/inventario',
+    },
+  ];
   protected readonly api = signal<ApiState>({ kind: 'loading' });
   protected readonly version = computed(() => {
     const s = this.api();

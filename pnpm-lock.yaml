@@ -305,6 +305,9 @@ importers:
       '@silopro/cabinet-engine':
         specifier: workspace:*
         version: link:../../packages/cabinet-engine
+      '@silopro/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@silopro/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -314,6 +317,9 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@angular/build':
         specifier: ^22.2.3
