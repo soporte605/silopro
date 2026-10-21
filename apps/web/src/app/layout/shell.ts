@@ -265,11 +265,11 @@ import { SessionService } from '../core/session';
       </a>
       <a
         esNavItem
-        routerLink="/gabinetes/demo"
+        routerLink="/gabinetes"
         routerLinkActive="is-active"
         ariaCurrentWhenActive="page"
       >
-        <svg lucideGrid3x3></svg> Gabinete (demo)
+        <svg lucideGrid3x3></svg> Gabinetes
       </a>
     </ng-template>
 
@@ -300,7 +300,6 @@ export class Shell {
   protected readonly session = inject(SessionService);
 
   protected readonly upcoming = [
-    { label: 'Gabinetes', icon: 'grid', phase: 'F3' },
     { label: 'Transferencias', icon: 'moves', phase: 'F5' },
     { label: 'Proyectos y BOM', icon: 'bom', phase: 'F6' },
   ];
@@ -336,10 +335,17 @@ export class Shell {
         run: () => this.go('/ubicaciones'),
       },
       {
+        id: 'nav.cabinets',
+        label: 'Ir a Gabinetes',
+        group: 'Navegación',
+        keywords: ['cajones', 'ubicacion', '2d'],
+        run: () => this.go('/gabinetes'),
+      },
+      {
         id: 'nav.cabinet',
         label: 'Abrir gabinete de demostración',
         group: 'Navegación',
-        keywords: ['cajones', 'ubicacion', '2d'],
+        keywords: ['cajones', 'demo', '2d'],
         run: () => this.go('/gabinetes/demo'),
       },
       {

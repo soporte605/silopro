@@ -21,6 +21,7 @@ import {
   EsTable,
   EsToastService,
 } from '@elikarsystems/ui';
+import { RouterLink } from '@angular/router';
 import { LucideMapPin, LucidePlus } from '@lucide/angular';
 import { type Location, locationInputSchema } from '@silopro/contracts';
 import { ALLOWED_CHILDREN, LOCATION_KIND_LABELS, type LocationKind } from '@silopro/domain';
@@ -191,6 +192,7 @@ export class LocationForm {
 @Component({
   selector: 'sp-locations',
   imports: [
+    RouterLink,
     PageHeader,
     EsBadge,
     EsButton,
@@ -205,7 +207,7 @@ export class LocationForm {
     <div class="mx-auto flex max-w-5xl flex-col gap-4 p-4 md:p-6">
       <sp-page-header
         title="Ubicaciones"
-        description="Almacenes, estanterías, gabinetes y cajones. El editor visual de gabinetes llega en la fase 3."
+        description="Almacenes, estanterías, gabinetes y cajones. Los gabinetes en cuadrícula se diseñan en Gabinetes."
       >
         @if (session.canWrite()) {
           <button spActions esButton variant="primary" (click)="open(null)">
@@ -247,6 +249,13 @@ export class LocationForm {
                       <span class="font-mono text-xs text-fg-muted">{{ r.l.code }}</span>
                       <span class="ml-2 font-medium">{{ r.l.name }}</span>
                     </span>
+                    @if (r.l.cabinetId) {
+                      <a
+                        class="ml-2 text-xs text-accent hover:underline"
+                        [routerLink]="['/gabinetes', r.l.cabinetId]"
+                        >Abrir gabinete · {{ drawerCount().get(r.l.id) ?? 0 }} cajones</a
+                      >
+                    }
                   </td>
                   <td>
                     <es-badge>{{ kindLabel(r.l.kind) }}</es-badge>
@@ -287,6 +296,14 @@ export default class Locations {
     loader: () => this.api.get<Location[]>('/locations'),
   });
 
+  protected readonly drawerCount = computed(() => {
+    const out = new Map<string, number>();
+    for (const l of this.list.value() ?? []) {
+      if (l.kind === 'drawer' && l.parentId) out.set(l.parentId, (out.get(l.parentId) ?? 0) + 1);
+    }
+    return out;
+  });
+
   /** Orden de árbol con profundidad, a partir de parentId. */
   protected readonly rows = computed(() => {
     const all = this.list.value() ?? [];
@@ -298,7 +315,8 @@ export default class Locations {
         a.code.localeCompare(b.code, 'es', { numeric: true }),
       )) {
         out.push({ l, depth });
-        walk(l.id, depth + 1);
+        // Los cajones de un gabinete con diseño se gestionan en su editor.
+        if (!l.cabinetId) walk(l.id, depth + 1);
       }
     };
     walk(null, 0);

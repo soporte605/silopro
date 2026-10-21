@@ -57,9 +57,19 @@ export const routes: Routes = [
         title: 'Miembros · SiloPro',
       },
       {
+        path: 'gabinetes',
+        loadComponent: () => import('./pages/cabinet/cabinets'),
+        title: 'Gabinetes · SiloPro',
+      },
+      {
         path: 'gabinetes/demo',
         loadComponent: () => import('./pages/cabinet/cabinet-demo'),
         title: 'Gabinete (demo) · SiloPro',
+      },
+      {
+        path: 'gabinetes/:id',
+        loadComponent: () => import('./pages/cabinet/cabinet-editor'),
+        title: 'Gabinete · SiloPro',
       },
       {
         path: 'sistema/componentes',

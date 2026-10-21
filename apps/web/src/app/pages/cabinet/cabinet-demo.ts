@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import {
   type AddressingScheme,
   type CabinetLayout,
-  type Compartment,
   createGridLayout,
   LayoutError,
   mergeCompartments,
@@ -16,18 +15,13 @@ import {
   EsButton,
   EsFormField,
   EsInput,
-  EsKbd,
   EsSelect,
   EsToastService,
   normalizeSearch,
 } from '@elikarsystems/ui';
+import type { CompartmentState } from '@silopro/contracts';
+import { CabinetGrid, selectionRect } from './cabinet-grid';
 import { demoStock, type DemoStock } from './demo-data';
-
-type CellState = 'empty' | 'ok' | 'low';
-
-const CELL_W = 44;
-const CELL_H = 28;
-const GAP = 3;
 
 /**
  * Vista frontal 2D de un gabinete (demostración de Fase 1).
@@ -37,7 +31,16 @@ const GAP = 3;
  */
 @Component({
   selector: 'sp-cabinet-demo',
-  imports: [FormsModule, EsBadge, EsBreadcrumb, EsButton, EsFormField, EsInput, EsKbd, EsSelect],
+  imports: [
+    FormsModule,
+    CabinetGrid,
+    EsBadge,
+    EsBreadcrumb,
+    EsButton,
+    EsFormField,
+    EsInput,
+    EsSelect,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex h-full min-h-0 flex-col">
@@ -105,73 +108,14 @@ const GAP = 3;
 
       <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div class="min-h-0 min-w-0 flex-1 overflow-auto bg-surface-sunken p-4">
-          <svg
-            role="application"
-            aria-roledescription="gabinete"
-            [attr.aria-label]="
-              'Gabinete de ' +
-              rows() +
-              ' por ' +
-              columns() +
-              '. Use las flechas para moverse y Mayús para seleccionar un rango.'
-            "
-            tabindex="0"
-            class="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            [attr.width]="svgWidth()"
-            [attr.height]="svgHeight()"
-            [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
-            (keydown)="onKeydown($event)"
-          >
-            <rect
-              [attr.width]="svgWidth()"
-              [attr.height]="svgHeight()"
-              rx="6"
-              class="fill-(--es-primary-700) dark:fill-border-strong"
-            />
-            @for (c of layout().compartments; track c.id) {
-              <g class="cursor-pointer" (click)="select(c, $event.shiftKey)">
-                <rect
-                  [attr.x]="x(c.column)"
-                  [attr.y]="y(c.row)"
-                  [attr.width]="c.columnSpan * cellW + (c.columnSpan - 1) * gap"
-                  [attr.height]="c.rowSpan * cellH + (c.rowSpan - 1) * gap"
-                  rx="2.5"
-                  [class]="cellClass(c)"
-                />
-                <text
-                  [attr.x]="x(c.column) + 4"
-                  [attr.y]="y(c.row) + 11"
-                  class="pointer-events-none fill-fg-muted font-mono text-[8px]"
-                >
-                  {{ c.address }}
-                </text>
-                @if (stateOf(c) !== 'empty') {
-                  <rect
-                    [attr.x]="x(c.column) + 4"
-                    [attr.y]="y(c.row) + 16"
-                    [attr.width]="c.columnSpan * cellW + (c.columnSpan - 1) * gap - 8"
-                    height="4"
-                    rx="2"
-                    [class]="stateOf(c) === 'low' ? 'fill-warning' : 'fill-accent'"
-                  />
-                }
-              </g>
-            }
-          </svg>
-          <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-fg-muted">
-            <span class="flex items-center gap-1.5"
-              ><span class="h-1 w-4 rounded-full bg-accent"></span> Con existencias</span
-            >
-            <span class="flex items-center gap-1.5"
-              ><span class="h-1 w-4 rounded-full bg-warning"></span> Stock bajo</span
-            >
-            <span class="flex items-center gap-1.5"
-              ><span class="size-3 rounded-sm ring-2 ring-info"></span> Coincidencia</span
-            >
-            <span class="ml-auto flex items-center gap-1"
-              ><kbd esKbd>←↑→↓</kbd> mover <kbd esKbd>Mayús</kbd> rango</span
-            >
-          </div>
+          <sp-cabinet-grid
+            label="Gabinete de demostración"
+            [layout]="layout()"
+            [states]="states()"
+            [matches]="matches()"
+            [(selectedId)]="selectedId"
+            [(anchorId)]="anchorId"
+          />
         </div>
 
         <aside
@@ -222,9 +166,6 @@ const GAP = 3;
 })
 export default class CabinetDemo {
   private readonly toast = inject(EsToastService);
-  protected readonly cellW = CELL_W;
-  protected readonly cellH = CELL_H;
-  protected readonly gap = GAP;
 
   protected readonly rows = signal(10);
   protected readonly columns = signal(8);
@@ -232,7 +173,7 @@ export default class CabinetDemo {
   protected readonly layout = signal<CabinetLayout>(createGridLayout({ rows: 10, columns: 8 }));
   protected readonly query = signal('');
   protected readonly selectedId = signal<string | null>('A1');
-  private readonly anchorId = signal<string | null>('A1');
+  protected readonly anchorId = signal<string | null>('A1');
 
   protected readonly stock = computed(() =>
     demoStock(this.layout().compartments.map((c) => c.address)),
@@ -253,20 +194,16 @@ export default class CabinetDemo {
     return out;
   });
 
-  /** Rectángulo entre el ancla y la selección actual (selección con Mayús). */
-  protected readonly selectionRect = computed(() => {
-    const comps = this.layout().compartments;
-    const a = comps.find((c) => c.id === this.anchorId());
-    const b = comps.find((c) => c.id === this.selectedId());
-    if (!a || !b || a.id === b.id) return null;
-    const row = Math.min(a.row, b.row);
-    const column = Math.min(a.column, b.column);
-    return {
-      row,
-      column,
-      rowSpan: Math.max(a.row + a.rowSpan, b.row + b.rowSpan) - row,
-      columnSpan: Math.max(a.column + a.columnSpan, b.column + b.columnSpan) - column,
-    };
+  protected readonly selectionRect = computed(() =>
+    selectionRect(this.layout(), this.anchorId(), this.selectedId()),
+  );
+
+  protected readonly states = computed(() => {
+    const out = new Map<string, CompartmentState>();
+    for (const [address, st] of this.stock()) {
+      out.set(address, this.isLow(st) ? 'low' : 'stocked');
+    }
+    return out;
   });
 
   protected readonly canSplit = computed(() => {
@@ -281,45 +218,8 @@ export default class CabinetDemo {
     return `${c.address}: ${s ? `${s.item}, ${s.quantity} piezas` : 'vacío'}`;
   });
 
-  protected readonly svgWidth = computed(() => this.columns() * (CELL_W + GAP) + GAP + 8);
-  protected readonly svgHeight = computed(() => this.rows() * (CELL_H + GAP) + GAP + 8);
-
-  protected x(column: number): number {
-    return 4 + GAP + column * (CELL_W + GAP);
-  }
-
-  protected y(row: number): number {
-    return 4 + GAP + row * (CELL_H + GAP);
-  }
-
-  protected stateOf(c: Compartment): CellState {
-    const s = this.stock().get(c.address);
-    if (!s) return 'empty';
-    return this.isLow(s) ? 'low' : 'ok';
-  }
-
   protected isLow(s: DemoStock): boolean {
     return isLowStock(s.quantity, s.minimum);
-  }
-
-  protected cellClass(c: Compartment): string {
-    const rect = this.selectionRect();
-    const inRect =
-      rect &&
-      c.row >= rect.row &&
-      c.column >= rect.column &&
-      c.row < rect.row + rect.rowSpan &&
-      c.column < rect.column + rect.columnSpan;
-    const base = 'transition-[fill] duration-75';
-    if (c.id === this.selectedId()) return `${base} fill-surface stroke-accent stroke-[2.5]`;
-    if (inRect) return `${base} fill-surface-hover stroke-accent stroke-1`;
-    if (this.matches().has(c.id)) return `${base} fill-surface stroke-info stroke-2`;
-    return `${base} fill-surface-raised hover:fill-surface-hover`;
-  }
-
-  protected select(c: Compartment, extend: boolean): void {
-    this.selectedId.set(c.id);
-    if (!extend) this.anchorId.set(c.id);
   }
 
   protected resize(rows: number, columns: number): void {
@@ -368,31 +268,5 @@ export default class CabinetDemo {
     if (!c) return;
     this.layout.set(splitCompartment(this.layout(), c.id));
     this.toast.show(`Compartimento ${c.address} dividido`);
-  }
-
-  /** Navegación con flechas por celdas; Mayús extiende la selección. */
-  protected onKeydown(event: KeyboardEvent): void {
-    const deltas: Record<string, [number, number]> = {
-      ArrowUp: [-1, 0],
-      ArrowDown: [1, 0],
-      ArrowLeft: [0, -1],
-      ArrowRight: [0, 1],
-    };
-    const d = deltas[event.key];
-    const current = this.selected();
-    if (!d || !current) return;
-    event.preventDefault();
-    const row = d[0] < 0 ? current.row - 1 : d[0] > 0 ? current.row + current.rowSpan : current.row;
-    const col =
-      d[1] < 0
-        ? current.column - 1
-        : d[1] > 0
-          ? current.column + current.columnSpan
-          : current.column;
-    const target = this.layout().compartments.find(
-      (c) =>
-        row >= c.row && row < c.row + c.rowSpan && col >= c.column && col < c.column + c.columnSpan,
-    );
-    if (target) this.select(target, event.shiftKey);
   }
 }

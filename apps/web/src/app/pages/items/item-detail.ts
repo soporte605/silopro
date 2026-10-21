@@ -6,7 +6,7 @@ import {
   input,
   resource,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   EsBadge,
   EsBreadcrumb,
@@ -49,6 +49,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
 @Component({
   selector: 'sp-item-detail',
   imports: [
+    RouterLink,
     PageHeader,
     ItemPhotos,
     EsBadge,
@@ -174,7 +175,19 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
                   <tbody>
                     @for (s of stock.value(); track s.locationId) {
                       <tr>
-                        <td>{{ s.locationPath }}</td>
+                        <td>
+                          @if (s.cabinetId) {
+                            <a
+                              class="hover:underline"
+                              [routerLink]="['/gabinetes', s.cabinetId]"
+                              [queryParams]="{ resaltar: s.locationId }"
+                              [attr.aria-label]="s.locationPath + ': ver en el gabinete'"
+                              >{{ s.locationPath }}</a
+                            >
+                          } @else {
+                            {{ s.locationPath }}
+                          }
+                        </td>
                         <td class="num">{{ qty(s.onHand) }}</td>
                         <td class="num">{{ qty(s.reserved) }}</td>
                         <td class="num">{{ qty(s.available) }}</td>

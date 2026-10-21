@@ -99,7 +99,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
           </div>
           <div class="px-3 py-2.5">
             <dt class="text-xs text-fg-muted">Fase actual</dt>
-            <dd class="mt-1">2 · Inventario</dd>
+            <dd class="mt-1">3 · Almacenamiento</dd>
           </div>
         </dl>
       </section>
@@ -147,7 +147,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
 export default class Home {
   private readonly http = inject(HttpClient);
   protected readonly session = inject(SessionService);
-  protected readonly currentPhase = 2;
+  protected readonly currentPhase = 3;
   protected readonly steps = [
     {
       n: 1,
