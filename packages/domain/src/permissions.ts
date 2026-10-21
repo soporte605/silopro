@@ -41,3 +41,36 @@ const GRANTS: Record<Role, readonly Permission[]> = {
 export function can(role: Role, permission: Permission): boolean {
   return GRANTS[role].includes(permission);
 }
+
+export type MembershipViolation =
+  | 'FORBIDDEN'
+  /** Solo un propietario puede nombrar o modificar propietarios. */
+  | 'OWNER_ONLY'
+  /** La organización siempre conserva al menos un propietario. */
+  | 'LAST_OWNER';
+
+export interface MembershipChange {
+  actor: Role;
+  /** Rol actual del miembro afectado (o `null` si es una invitación nueva). */
+  current: Role | null;
+  /** Rol resultante; `null` = quitar de la organización. */
+  next: Role | null;
+  /** Propietarios que tiene la organización antes del cambio. */
+  ownerCount: number;
+  /** El actor se modifica a sí mismo (p. ej. abandonar la organización). */
+  self?: boolean;
+}
+
+/**
+ * Valida invitar, cambiar de rol o quitar a un miembro. Cualquiera puede
+ * abandonar una organización por sí mismo, salvo el último propietario.
+ */
+export function checkMembershipChange(c: MembershipChange): MembershipViolation | null {
+  const leaving = c.self && c.next === null;
+  if (!leaving && !can(c.actor, 'members.manage')) return 'FORBIDDEN';
+  if (!leaving && c.actor !== 'owner' && (c.current === 'owner' || c.next === 'owner')) {
+    return 'OWNER_ONLY';
+  }
+  if (c.current === 'owner' && c.next !== 'owner' && c.ownerCount <= 1) return 'LAST_OWNER';
+  return null;
+}

@@ -130,6 +130,8 @@ export interface Item {
   attributes: Record<string, string | number | boolean>;
   supplierIds: string[];
   qrCode: string;
+  /** Primera fotografía (portada) o null. */
+  coverPhotoId: string | null;
   onHand: number;
   reserved: number;
   available: number;
