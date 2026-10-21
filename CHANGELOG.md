@@ -4,6 +4,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.3.0-alpha.1] — 2026-10-21
+
+Fase 3 · Almacenamiento (primera entrega): gabinetes guardados.
+
+### Añadido
+
+- Gabinetes guardados por organización (`/gabinetes`): se crean dentro de una ubicación con filas, columnas, direccionamiento y numeración de filas; cada celda es un cajón (ubicación de tipo cajón con su QR).
+- Editor 2D conectado (`/gabinetes/:id`): fusionar, dividir y redimensionar en local y guardar el diseño completo con bloqueo optimista; nombre por cajón.
+- Al guardar, los cajones que desaparecen se archivan solo si están vacíos (`422 COMPARTMENT_HAS_STOCK` si no) y los que reaparecen se restauran con su historial.
+- Ocupación por cajón (vacío, con existencias, stock bajo), contenido del cajón y búsqueda por artículo, SKU o dirección que resalta los cajones.
+- Desde el detalle del artículo, «ver en el gabinete» abre el gabinete con el cajón resaltado.
+- Motor: `resizeLayout` y `assertCanonicalLayout`.
+- Migraciones `0004_gabinetes` y `0005_gabinetes_aislamiento` (FK compuesta, CHECK y RLS).
+
+### Cambiado
+
+- La lista de Ubicaciones agrupa los cajones de cada gabinete en un enlace «Abrir gabinete».
+- El menú lateral apunta a Gabinetes; la demostración sigue en `/gabinetes/demo`.
+- El límite del cuerpo JSON de la API sube a 1 MB (el diseño de un gabinete de 60×60 ronda los 350 KB).
+
+### Rendimiento
+
+- Las celdas del gabinete se dibujan en un componente aparte y la selección en una capa encima: en 60×40, ≈ 9 ms de trabajo por clic en modo desarrollo.
+
 ## [0.2.0-alpha.2] — 2026-10-21
 
 Fase 2 · Inventario (funcionalidad completa).

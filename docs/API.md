@@ -54,11 +54,26 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 | Método y ruta             | Permiso                            | Notas                                                                           |
 | ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------- |
-| `GET locations`           | catalog.read                       | Con `path` legible y `qrCode`                                                   |
+| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)       |
 | `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                     |
 | `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason` |
-| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación                                                       |
+| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón              |
 | `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                 |
+
+## Gabinetes · `/orgs/:orgId/cabinets`
+
+Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubicación hija de tipo `drawer` cuyo código es su dirección (`A1`, `B12`, `3-4`). Las existencias se registran en los cajones con `POST movements` como en cualquier ubicación.
+
+| Método y ruta                         | Permiso       | Notas                                                                                                         |
+| ------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------- |
+| `GET cabinets`                        | catalog.read  | Con tamaño, número de cajones y cajones ocupados                                                              |
+| `POST cabinets`                       | catalog.write | `parentId, code, name, rows (1–60), columns (1–60), addressing?, rowOrigin?`; crea un cajón por celda         |
+| `GET cabinets/:id`                    | catalog.read  | Diseño completo; cada compartimento con `locationId`, `name`, `qrCode`, `itemCount` y `state`                 |
+| `GET cabinets/:id/stock`              | catalog.read  | Una fila por artículo y cajón, con `lowStock`                                                                 |
+| `PUT cabinets/:id/layout`             | catalog.write | `version, rows, columns, compartments[]` (diseño del motor); `409 STALE_VERSION`; `422 COMPARTMENT_HAS_STOCK` |
+| `PATCH cabinets/:id/compartments/:id` | catalog.write | `name` del cajón                                                                                              |
+
+Al guardar un diseño la API lo valida con `assertCanonicalLayout` (sin huecos ni superposiciones; cada id coincide con su celda), archiva los cajones que desaparecen **solo si están vacíos** y restaura con su mismo id los que reaparecen. El esquema de direccionamiento se fija al crear el gabinete.
 
 ## Miembros e invitaciones · `/orgs/:orgId/…`
 

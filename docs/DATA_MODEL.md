@@ -30,7 +30,7 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                │     ├─ item_suppliers ── suppliers                           ✅
                │     └─ item_photos (archivos WebP en UPLOADS_DIR)            ✅
                ├─ locations (árbol; path materializado)                       ✅
-               │     └─ cabinet_layouts (jsonb del motor)                     ⏳ F3
+               │     └─ cabinets (diseño jsonb del motor; cajones = locations) ✅
                ├─ stock_levels (item × location)                              ✅
                ├─ stock_movements (registro inmutable, trigger)               ✅
                ├─ reservations                                                ⏳ F5
@@ -63,3 +63,8 @@ Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no 
 - `item_photos`: dimensiones, bytes y `position` (la menor es la portada). FK compuesta a `items`; los archivos viven en `UPLOADS_DIR/<organización>/<id>-{full,thumb}.webp`, fuera de la raíz pública.
 - `invitations`: correo en minúsculas (CHECK), rol, `token_hash` único, `expires_at`, `accepted_at/by`, `revoked_at`. El estado se deriva de esas columnas.
 - Ambas tablas tienen RLS forzada como el resto de tablas de negocio.
+
+### Gabinetes (migraciones `0004` y `0005`)
+
+- `cabinets`: `location_id` único (la ubicación de tipo `cabinet`), `rows` y `columns` (1–60, CHECK), `addressing`, `row_origin` y `compartments` jsonb con el diseño de `@silopro/cabinet-engine`; `version` para bloqueo optimista. FK compuesta a `locations` y RLS forzada.
+- Cada compartimento es una fila de `locations` de tipo `drawer`, hija del gabinete, con la dirección como `code` y ruta `ALMACÉN / GABINETE / A1`. Al fusionar, los cajones absorbidos se archivan (`archived_at`); al dividir se restauran, conservando su id, QR e historial.
