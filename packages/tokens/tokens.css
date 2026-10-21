@@ -1,0 +1,184 @@
+/*
+ * @elikarsystems/tokens — tokens de diseño.
+ *
+ * Tres capas:
+ *   1. Fuente de marca: muy pocos valores de los que derivan todos los demás.
+ *   2. Escalas: generadas con color-mix() en OKLCH a partir de la fuente.
+ *   3. Semánticos: lo que usan los componentes (fondo, superficie, borde...).
+ *
+ * ⚠ COLORES DE MARCA PROVISIONALES
+ * --es-source-primary y --es-source-accent se tomaron de las etiquetas meta del
+ * sitio elikarsystems.com (msapplication-TileColor y theme-color). NO son
+ * valores oficiales confirmados. Cuando ElikarSystems entregue su paleta,
+ * basta con sustituir estas dos variables: las escalas y los tokens semánticos
+ * se recalculan solos. Ver docs/BRAND_GUIDELINES.md §Color.
+ */
+
+:root {
+  /* 1 · Fuente de marca (PROVISIONAL) */
+  --es-source-primary: #002150;
+  --es-source-accent: #67be28;
+  /* Neutro frío, ligeramente azulado para armonizar con el primario. */
+  --es-source-neutral: oklch(0.55 0.02 255);
+
+  /* 2 · Escalas derivadas. 50 = más claro, 950 = más oscuro. */
+  --es-primary-50: color-mix(in oklch, var(--es-source-primary) 5%, white);
+  --es-primary-100: color-mix(in oklch, var(--es-source-primary) 10%, white);
+  --es-primary-200: color-mix(in oklch, var(--es-source-primary) 22%, white);
+  --es-primary-300: color-mix(in oklch, var(--es-source-primary) 38%, white);
+  --es-primary-400: color-mix(in oklch, var(--es-source-primary) 58%, white);
+  --es-primary-500: color-mix(in oklch, var(--es-source-primary) 78%, white);
+  --es-primary-600: color-mix(in oklch, var(--es-source-primary) 90%, white);
+  --es-primary-700: var(--es-source-primary);
+  --es-primary-800: color-mix(in oklch, var(--es-source-primary) 85%, black);
+  --es-primary-900: color-mix(in oklch, var(--es-source-primary) 70%, black);
+
+  --es-accent-50: color-mix(in oklch, var(--es-source-accent) 8%, white);
+  --es-accent-100: color-mix(in oklch, var(--es-source-accent) 16%, white);
+  --es-accent-300: color-mix(in oklch, var(--es-source-accent) 55%, white);
+  --es-accent-500: var(--es-source-accent);
+  --es-accent-600: color-mix(in oklch, var(--es-source-accent) 82%, black);
+  --es-accent-700: color-mix(in oklch, var(--es-source-accent) 62%, black);
+  --es-accent-800: color-mix(in oklch, var(--es-source-accent) 45%, black);
+
+  --es-neutral-0: white;
+  --es-neutral-25: color-mix(in oklch, var(--es-source-neutral) 2.5%, white);
+  --es-neutral-50: color-mix(in oklch, var(--es-source-neutral) 5%, white);
+  --es-neutral-100: color-mix(in oklch, var(--es-source-neutral) 10%, white);
+  --es-neutral-200: color-mix(in oklch, var(--es-source-neutral) 18%, white);
+  --es-neutral-300: color-mix(in oklch, var(--es-source-neutral) 30%, white);
+  --es-neutral-400: color-mix(in oklch, var(--es-source-neutral) 55%, white);
+  --es-neutral-500: var(--es-source-neutral);
+  --es-neutral-600: color-mix(in oklch, var(--es-source-neutral) 80%, black);
+  --es-neutral-700: color-mix(in oklch, var(--es-source-neutral) 60%, black);
+  --es-neutral-800: color-mix(in oklch, var(--es-source-neutral) 40%, black);
+  --es-neutral-850: color-mix(in oklch, var(--es-source-neutral) 30%, black);
+  --es-neutral-900: color-mix(in oklch, var(--es-source-neutral) 22%, black);
+  --es-neutral-950: color-mix(in oklch, var(--es-source-neutral) 14%, black);
+
+  /* Estados funcionales (no forman parte de la marca). */
+  --es-red-500: oklch(0.6 0.2 25);
+  --es-red-600: oklch(0.53 0.2 25);
+  --es-amber-500: oklch(0.77 0.16 75);
+  --es-amber-700: oklch(0.55 0.13 65);
+  --es-blue-500: oklch(0.62 0.17 250);
+
+  /* Tipografía */
+  --es-font-sans:
+    'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --es-font-mono:
+    'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* Radios y movimiento */
+  --es-radius-sm: 4px;
+  --es-radius-md: 6px;
+  --es-radius-lg: 8px;
+  --es-ease: cubic-bezier(0.2, 0, 0, 1);
+  --es-duration: 120ms;
+
+  /* Densidad: altura de controles */
+  --es-control-sm: 24px;
+  --es-control-md: 28px;
+  --es-control-lg: 32px;
+
+  /* 3 · Semánticos — tema claro */
+  color-scheme: light;
+  --es-bg: var(--es-neutral-25);
+  --es-surface: var(--es-neutral-0);
+  --es-surface-raised: var(--es-neutral-0);
+  --es-surface-sunken: var(--es-neutral-50);
+  --es-surface-hover: var(--es-neutral-50);
+  --es-surface-active: var(--es-neutral-100);
+  --es-border: var(--es-neutral-200);
+  --es-border-strong: var(--es-neutral-300);
+  --es-fg: var(--es-neutral-950);
+  --es-fg-muted: var(--es-neutral-600);
+  --es-fg-subtle: var(--es-neutral-500);
+  --es-primary: var(--es-primary-700);
+  --es-primary-hover: var(--es-primary-600);
+  --es-primary-fg: white;
+  --es-accent: var(--es-accent-500);
+  /* Verde para texto: el acento puro no alcanza contraste AA sobre blanco. */
+  --es-accent-fg: var(--es-accent-700);
+  --es-accent-soft: var(--es-accent-50);
+  --es-danger: var(--es-red-600);
+  --es-danger-soft: oklch(0.97 0.02 25);
+  --es-warning: var(--es-amber-700);
+  --es-warning-soft: oklch(0.97 0.04 85);
+  --es-info: var(--es-blue-500);
+  --es-ring: color-mix(in oklch, var(--es-primary-500) 55%, transparent);
+  --es-overlay: color-mix(in oklch, var(--es-neutral-950) 40%, transparent);
+  --es-shadow-sm: 0 1px 2px color-mix(in oklch, var(--es-neutral-950) 6%, transparent);
+  --es-shadow-md:
+    0 4px 12px color-mix(in oklch, var(--es-neutral-950) 8%, transparent),
+    0 1px 2px color-mix(in oklch, var(--es-neutral-950) 6%, transparent);
+}
+
+/*
+ * Tema oscuro: por preferencia del sistema, salvo que se fuerce el claro con
+ * data-theme="light"; o forzado con data-theme="dark". El bloque se repite
+ * porque CSS no permite combinar una media query con un selector alternativo.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --es-bg: var(--es-neutral-950);
+    --es-surface: color-mix(in oklch, var(--es-neutral-950) 70%, var(--es-neutral-900));
+    --es-surface-raised: var(--es-neutral-900);
+    --es-surface-sunken: color-mix(in oklch, var(--es-neutral-950) 85%, black);
+    --es-surface-hover: var(--es-neutral-900);
+    --es-surface-active: var(--es-neutral-850);
+    --es-border: var(--es-neutral-850);
+    --es-border-strong: var(--es-neutral-800);
+    --es-fg: var(--es-neutral-50);
+    --es-fg-muted: var(--es-neutral-400);
+    --es-fg-subtle: var(--es-neutral-500);
+    --es-primary: var(--es-primary-300);
+    --es-primary-hover: var(--es-primary-200);
+    --es-primary-fg: var(--es-primary-900);
+    --es-accent-fg: var(--es-accent-300);
+    --es-accent-soft: color-mix(in oklch, var(--es-accent-500) 14%, transparent);
+    --es-danger: var(--es-red-500);
+    --es-danger-soft: color-mix(in oklch, var(--es-red-500) 15%, transparent);
+    --es-warning: var(--es-amber-500);
+    --es-warning-soft: color-mix(in oklch, var(--es-amber-500) 14%, transparent);
+    --es-ring: color-mix(in oklch, var(--es-primary-300) 60%, transparent);
+    --es-overlay: color-mix(in oklch, black 60%, transparent);
+    --es-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --es-shadow-md: 0 6px 16px rgb(0 0 0 / 0.45);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --es-bg: var(--es-neutral-950);
+  --es-surface: color-mix(in oklch, var(--es-neutral-950) 70%, var(--es-neutral-900));
+  --es-surface-raised: var(--es-neutral-900);
+  --es-surface-sunken: color-mix(in oklch, var(--es-neutral-950) 85%, black);
+  --es-surface-hover: var(--es-neutral-900);
+  --es-surface-active: var(--es-neutral-850);
+  --es-border: var(--es-neutral-850);
+  --es-border-strong: var(--es-neutral-800);
+  --es-fg: var(--es-neutral-50);
+  --es-fg-muted: var(--es-neutral-400);
+  --es-fg-subtle: var(--es-neutral-500);
+  --es-primary: var(--es-primary-300);
+  --es-primary-hover: var(--es-primary-200);
+  --es-primary-fg: var(--es-primary-900);
+  --es-accent-fg: var(--es-accent-300);
+  --es-accent-soft: color-mix(in oklch, var(--es-accent-500) 14%, transparent);
+  --es-danger: var(--es-red-500);
+  --es-danger-soft: color-mix(in oklch, var(--es-red-500) 15%, transparent);
+  --es-warning: var(--es-amber-500);
+  --es-warning-soft: color-mix(in oklch, var(--es-amber-500) 14%, transparent);
+  --es-ring: color-mix(in oklch, var(--es-primary-300) 60%, transparent);
+  --es-overlay: color-mix(in oklch, black 60%, transparent);
+  --es-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --es-shadow-md: 0 6px 16px rgb(0 0 0 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --es-duration: 0ms;
+  }
+}
