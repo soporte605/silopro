@@ -36,6 +36,8 @@ export default defineConfig({
           'postgres://silopro:silopro@localhost:5432/silopro_e2e',
         MIGRATE_ON_START: 'true',
         CORS_ORIGINS: 'http://localhost:4300',
+        UPLOADS_DIR: 'test-results/uploads',
+        PUBLIC_WEB_URL: 'http://localhost:4300',
       },
     },
     {
