@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Formato, lint, tipos, pruebas y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: silopro
+          POSTGRES_USER: silopro
+          POSTGRES_PASSWORD: silopro
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U silopro" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://silopro:silopro@localhost:5432/silopro
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    name: Pruebas end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: calidad
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - run: pnpm --filter @silopro/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @silopro/web e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-trazas
+          path: apps/web/test-results
+          retention-days: 7
+
+  docker:
+    name: Construcción de imágenes Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: calidad
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose -f infra/docker/compose.yaml build
