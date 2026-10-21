@@ -13,7 +13,7 @@ test('la paleta de comandos navega con el teclado', async ({ page, isMobile, acc
   await page.keyboard.press('Control+k');
   const input = page.getByRole('combobox');
   await expect(input).toBeFocused();
-  await input.fill('gabinete');
+  await input.fill('demostración');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/gabinetes\/demo/);
 });
