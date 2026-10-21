@@ -1,0 +1,149 @@
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { EsBadge, EsButton, EsSkeleton, EsTable } from '@elikarsystems/ui';
+
+interface Health {
+  status: 'ok' | 'degraded';
+  version: string;
+  checks: Record<string, 'up' | 'down' | 'skipped'>;
+}
+
+type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: 'offline' };
+
+@Component({
+  selector: 'sp-home',
+  imports: [EsBadge, EsButton, EsSkeleton, EsTable, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="mx-auto flex max-w-5xl flex-col gap-6 p-4 md:p-6">
+      <header class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight">Inicio</h1>
+          <p class="text-sm text-fg-muted">
+            Sistema universal de inventario y almacenamiento inteligente · v0.1.0-alpha.1
+          </p>
+        </div>
+        <a esButton variant="primary" routerLink="/gabinetes/demo"
+          >Abrir gabinete de demostración</a
+        >
+      </header>
+
+      <section aria-labelledby="estado" class="rounded-lg border border-border bg-surface">
+        <h2 id="estado" class="border-b border-border px-3 py-2 text-xs font-medium text-fg-muted">
+          Estado del sistema
+        </h2>
+        <dl class="grid grid-cols-2 divide-x divide-border text-sm sm:grid-cols-4">
+          <div class="px-3 py-2.5">
+            <dt class="text-xs text-fg-muted">API</dt>
+            <dd class="mt-1">
+              @switch (api().kind) {
+                @case ('loading') {
+                  <es-skeleton class="h-5 w-16" />
+                }
+                @case ('ok') {
+                  <es-badge tone="success" dot>En línea</es-badge>
+                }
+                @default {
+                  <es-badge tone="warning" dot>Sin conexión</es-badge>
+                }
+              }
+            </dd>
+          </div>
+          <div class="px-3 py-2.5">
+            <dt class="text-xs text-fg-muted">Base de datos</dt>
+            <dd class="mt-1">
+              @if (api(); as s) {
+                @if (s.kind === 'ok') {
+                  @switch (s.health.checks['database']) {
+                    @case ('up') {
+                      <es-badge tone="success" dot>Conectada</es-badge>
+                    }
+                    @case ('down') {
+                      <es-badge tone="danger" dot>Caída</es-badge>
+                    }
+                    @default {
+                      <es-badge>No configurada</es-badge>
+                    }
+                  }
+                } @else {
+                  <span class="text-fg-subtle">—</span>
+                }
+              }
+            </dd>
+          </div>
+          <div class="px-3 py-2.5">
+            <dt class="text-xs text-fg-muted">Versión API</dt>
+            <dd class="mt-1 font-mono text-xs">
+              {{ version() }}
+            </dd>
+          </div>
+          <div class="px-3 py-2.5">
+            <dt class="text-xs text-fg-muted">Fase actual</dt>
+            <dd class="mt-1">1 · Fundamentos</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section
+        aria-labelledby="hoja"
+        class="overflow-hidden rounded-lg border border-border bg-surface"
+      >
+        <h2 id="hoja" class="border-b border-border px-3 py-2 text-xs font-medium text-fg-muted">
+          Hoja de ruta
+        </h2>
+        <table esTable>
+          <thead>
+            <tr>
+              <th scope="col" class="w-12">Fase</th>
+              <th scope="col">Alcance</th>
+              <th scope="col" class="w-32">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of phases; track p.n) {
+              <tr>
+                <td class="code">{{ p.n }}</td>
+                <td>
+                  <span class="font-medium">{{ p.name }}</span>
+                  <span class="text-fg-muted"> · {{ p.scope }}</span>
+                </td>
+                <td>
+                  <es-badge [tone]="p.n === 1 ? 'primary' : 'neutral'">
+                    {{ p.n === 1 ? 'En curso' : 'Pendiente' }}
+                  </es-badge>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+  `,
+})
+export default class Home {
+  private readonly http = inject(HttpClient);
+  protected readonly api = signal<ApiState>({ kind: 'loading' });
+  protected readonly version = computed(() => {
+    const s = this.api();
+    return s.kind === 'ok' ? s.health.version : '—';
+  });
+
+  protected readonly phases = [
+    { n: 1, name: 'Fundamentos', scope: 'arquitectura, marca, design system, monorepo, CI' },
+    { n: 2, name: 'Inventario', scope: 'autenticación, organizaciones, artículos, categorías' },
+    { n: 3, name: 'Almacenamiento', scope: 'almacenes, ubicaciones, gabinetes, editor 2D' },
+    { n: 4, name: 'Visualización 3D', scope: 'Three.js, selección, apertura de cajones' },
+    { n: 5, name: 'Operaciones', scope: 'movimientos, reservas, auditoría, QR' },
+    { n: 6, name: 'Productividad', scope: 'proyectos, BOM, alertas, importación' },
+    { n: 7, name: 'Fabricación', scope: 'CAD paramétrico, STL/3MF, impresión 3D' },
+    { n: 8, name: 'Comercialización', scope: 'planes, límites, despliegue, versión estable' },
+  ];
+
+  constructor() {
+    this.http.get<Health>('/api/health').subscribe({
+      next: (health) => this.api.set({ kind: 'ok', health }),
+      error: () => this.api.set({ kind: 'offline' }),
+    });
+  }
+}

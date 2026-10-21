@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+@import '@elikarsystems/tokens/tokens.css';
+@import '@elikarsystems/tokens/tailwind.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@angular/cdk/overlay-prebuilt.css';
+
+/* Clases de la biblioteca UI que viven fuera de este proyecto. */
+@source '../../../packages/ui/src';
+
+/* Modo oscuro de Tailwind controlado por data-theme o por el sistema. */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+}
+
+@layer base {
+  html {
+    font-family: var(--es-font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-bg text-sm text-fg;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--es-primary) 25%, transparent);
+  }
+}
+
+/* Paneles de diálogo (Angular CDK) */
+.es-backdrop {
+  background: var(--es-overlay);
+}
+.es-dialog-panel {
+  display: flex;
+}
+.es-dialog-panel > .cdk-dialog-container {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--es-border);
+  background: var(--es-surface-raised);
+  box-shadow: var(--es-shadow-md);
+  outline: none;
+}
+.es-dialog-center > .cdk-dialog-container,
+.es-dialog-top > .cdk-dialog-container {
+  border-radius: var(--es-radius-lg);
+}
+.es-dialog-top {
+  position: absolute !important;
+  top: 12vh;
+}
+.es-dialog-right > .cdk-dialog-container {
+  border-width: 0 0 0 1px;
+}
