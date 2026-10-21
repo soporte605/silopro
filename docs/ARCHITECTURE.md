@@ -11,11 +11,11 @@
                 └───────────────┬──────────────────────────────────────────────┬─────────────┘
                                 │ HTTP /api (contratos zod)                     │ importa
                 ┌───────────────▼────────────── apps/api (NestJS 12) ───────────┐      │
-                │ módulos: health · (F2) auth, orgs, catalog, inventory ·        │      │
+                │ módulos: health · auth · catalog · stock (F2 ✅) ·             │      │
                 │ (F3) locations, cabinets · (F5) movements, labels · (F6) bom   │      │
                 │ capas por módulo: controller → application → domain ← infra    │      │
                 └───────────────┬────────────────────────────────────────────────┘      │
-                                │ SQL (Drizzle, F2)                                      │
+                                │ SQL (Drizzle) + RLS por organización                   │
                          ┌──────▼──────┐        ┌──────────── packages/ ───────────────▼─────┐
                          │ PostgreSQL  │        │ domain · cabinet-engine · contracts         │
                          └─────────────┘        │ (TypeScript puro, sin framework, con pruebas)│

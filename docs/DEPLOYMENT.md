@@ -18,12 +18,17 @@ Detener: `docker compose -f infra/docker/compose.yaml down` (añadir `-v` **borr
 
 ### Variables de la API
 
-| Variable       | Por defecto             | Descripción                                          |
-| -------------- | ----------------------- | ---------------------------------------------------- |
-| `PORT`         | 3000                    | Puerto HTTP                                          |
-| `CORS_ORIGINS` | `http://localhost:4200` | Orígenes permitidos, separados por coma              |
-| `DATABASE_URL` | —                       | `postgres://…`; si falta, la salud reporta `skipped` |
-| `NODE_ENV`     | development             | `production` en contenedores                         |
+| Variable           | Por defecto             | Descripción                                          |
+| ------------------ | ----------------------- | ---------------------------------------------------- |
+| `PORT`             | 3000                    | Puerto HTTP                                          |
+| `CORS_ORIGINS`     | `http://localhost:4200` | Orígenes permitidos, separados por coma              |
+| `DATABASE_URL`     | —                       | **Obligatoria.** Rol sin `SUPERUSER` ni `BYPASSRLS`  |
+| `MIGRATE_ON_START` | false                   | Aplica migraciones pendientes al arrancar            |
+| `SESSION_TTL_DAYS` | 14                      | Duración de la sesión                                |
+| `COOKIE_SECURE`    | `true` en producción    | Ponga `false` solo si sirve por HTTP en la red local |
+| `NODE_ENV`         | development             | `production` en contenedores                         |
+
+El contenedor de PostgreSQL crea al iniciarse por primera vez el rol de aplicación `silopro` sin privilegios especiales (`infra/docker/postgres-init.sh`); el superusuario `postgres` solo se usa para administración.
 
 ## Desarrollo sin Docker
 

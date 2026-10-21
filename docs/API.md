@@ -1,0 +1,60 @@
+# API REST
+
+Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopro/contracts`.
+
+## Convenciones
+
+- **Sesión:** cookie `sp_session` (`HttpOnly`, `SameSite=Lax`). El navegador la envía sola; los clientes no web deben conservarla.
+- **CSRF:** todo `POST`, `PATCH` y `DELETE` debe incluir `X-SiloPro-Request: 1`; sin ella la respuesta es `403`.
+- **Organización:** las rutas de negocio llevan `/orgs/:orgId`. Una organización de la que no es miembro responde `404` (no se revela si existe).
+- **Concurrencia:** las actualizaciones (`PATCH`) envían el `version` leído; si otra persona modificó el registro, `409 STALE_VERSION`.
+- **Errores:** siempre `{ status, code, message, details? }`. `400 VALIDATION_ERROR` trae `details: [{ path, message }]`; `422 UNPROCESSABLE` trae reglas de negocio (atributos `[{ key, message }]`, existencias `{ code }`); `409 DUPLICATE` para claves únicas.
+- **Cantidades:** números con hasta 3 decimales.
+
+## Autenticación
+
+| Método y ruta         | Cuerpo                                          | Respuesta                                               |
+| --------------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| `POST /auth/register` | `name, email, password (≥10), organizationName` | `201 Me`; crea organización (propietario) y 6 unidades  |
+| `POST /auth/login`    | `email, password`                               | `200 Me`; `401` genérico; `429` tras 10 intentos/15 min |
+| `POST /auth/logout`   | —                                               | `204`                                                   |
+| `GET /auth/me`        | —                                               | `Me` (usuario y membresías) o `401`                     |
+
+## Catálogo · `/orgs/:orgId/…`
+
+| Método y ruta           | Permiso       | Notas                                                          |
+| ----------------------- | ------------- | -------------------------------------------------------------- |
+| `GET units`             | catalog.read  |                                                                |
+| `POST units`            | catalog.write | `code, name, symbol, decimals (0–3)`                           |
+| `GET categories`        | catalog.read  | Incluye `attributes` propios e `itemCount`                     |
+| `POST categories`       | catalog.write | `name, parentId?, description?, attributes[]`                  |
+| `PATCH categories/:id`  | catalog.write | + `version`; rechaza ciclos                                    |
+| `DELETE categories/:id` | catalog.write | Archiva; `422` si tiene subcategorías activas                  |
+| `GET suppliers`         | catalog.read  |                                                                |
+| `POST suppliers`        | catalog.write | `name, contactName?, email?, phone?, website?, notes?`         |
+| `PATCH suppliers/:id`   | catalog.write | + `version`                                                    |
+| `GET items`             | catalog.read  | `q, categoryId, lowStock, limit (≤200), offset` → `Page<Item>` |
+| `GET items/:id`         | catalog.read  | Con `onHand`, `reserved`, `available`, `lowStock`              |
+| `POST items`            | catalog.write | Atributos validados contra la categoría y sus ancestros        |
+| `PATCH items/:id`       | catalog.write | + `version`                                                    |
+| `DELETE items/:id`      | catalog.write | Archiva                                                        |
+
+## Ubicaciones y existencias · `/orgs/:orgId/…`
+
+| Método y ruta             | Permiso                            | Notas                                                                           |
+| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------- |
+| `GET locations`           | catalog.read                       | Con `path` legible y `qrCode`                                                   |
+| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                     |
+| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason` |
+| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación                                                       |
+| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                 |
+
+## Roles
+
+| Permiso        | Propietario | Administrador | Operador | Consulta |
+| -------------- | :---------: | :-----------: | :------: | :------: |
+| catalog.read   |      ✓      |       ✓       |    ✓     |    ✓     |
+| catalog.write  |      ✓      |       ✓       |          |          |
+| stock.move     |      ✓      |       ✓       |    ✓     |          |
+| stock.adjust   |      ✓      |       ✓       |          |          |
+| stock.negative |      ✓      |               |          |          |

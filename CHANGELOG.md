@@ -4,9 +4,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.2.0-alpha.1] — 2026-10-21
+
+Fase 2 · Inventario (primera entrega). Pendiente para `alpha.2`: fotografías de artículos e invitación de miembros.
+
+### Añadido
+
+- Cuentas: registro (crea organización y unidades base), inicio y cierre de sesión con Argon2id, cookie `HttpOnly`, límite de intentos y protección CSRF por cabecera.
+- Organizaciones con roles propietario, administrador, operador y consulta; matriz de permisos única en `@silopro/domain`.
+- Aislamiento por organización en tres capas: guard HTTP, Row Level Security forzado en PostgreSQL y claves foráneas compuestas.
+- Catálogo: artículos (SKU, código interno, fabricante, modelo, unidad, costo, precio, mínimo, proveedores, QR), categorías jerárquicas con atributos propios heredables y validados, proveedores y unidades.
+- Ubicaciones jerárquicas con ruta legible y reglas de tipos.
+- Existencias por ubicación y movimientos inmutables: entradas, salidas y ajustes por conteo, con bloqueo de fila y prueba de concurrencia.
+- Web: pantallas de acceso y registro, lista de artículos con búsqueda y filtros, alta y edición en panel lateral con atributos dinámicos, detalle con existencias e historial, categorías, proveedores y ubicaciones; menú de cuenta y cambio de organización.
+- Migraciones Drizzle versionadas (`0000_inicial`, `0001_aislamiento_organizaciones`) y documentación de la API (`docs/API.md`).
+- Mensajes de validación en español (zod) compartidos por API y web.
+
 ### Cambiado
 
 - Marca: se adopta el concepto B · S-Estante como logotipo oficial; la aplicación y el favicon lo usan.
+- `DATABASE_URL` pasa a ser obligatoria; Docker y CI usan un rol de aplicación sin superusuario.
+- Toda la aplicación web requiere sesión, incluido el catálogo de componentes.
 
 ## [0.1.0-alpha.1] — 2026-10-21
 

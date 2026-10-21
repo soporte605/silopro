@@ -4,26 +4,30 @@
 
 SiloPro conecta el inventario digital con la organización física: almacenes, estanterías, gabinetes, cajones y compartimentos se representan virtualmente y cada artículo tiene una ubicación identificable. Más adelante el sistema generará modelos CAD paramétricos para fabricar organizadores por impresión 3D.
 
-> Estado: **v0.1.0-alpha.1 — Fase 1 (Fundamentos)**. Aún no hay inventario persistente; ver [ROADMAP](docs/ROADMAP.md).
+> Estado: **v0.2.0-alpha.1 — Fase 2 (Inventario)**. Cuentas, organizaciones, catálogo y existencias funcionan; faltan las fotografías de artículos. Ver [ROADMAP](docs/ROADMAP.md).
 
 ## Qué hay hoy
 
-| Área                                                                                                                        | Estado                                |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Monorepo pnpm (Angular 22 + NestJS 12 + paquetes de dominio)                                                                | ✅                                    |
-| API: `GET /api/health`, configuración validada, errores uniformes, cabeceras de seguridad                                   | ✅                                    |
-| Motor de gabinetes (`@silopro/cabinet-engine`): cuadrícula, direccionamiento, fusión/división, planificación para impresora | ✅ con pruebas                        |
-| Reglas de dominio (`@silopro/domain`): jerarquía de ubicaciones, existencias y reservas                                     | ✅ con pruebas                        |
-| Design system: tokens (`@elikarsystems/tokens`) y componentes (`@elikarsystems/ui`)                                         | ✅ catálogo en `/sistema/componentes` |
-| Gabinete 2D de demostración (`/gabinetes/demo`, datos ficticios)                                                            | ✅                                    |
-| Identidad visual: 3 conceptos de logotipo × 10 variantes SVG                                                                | ✅ pendiente de elección              |
-| Docker Compose (web + API + PostgreSQL) y CI de GitHub Actions                                                              | ✅                                    |
+| Área                                                                                                                        | Estado                                 |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Monorepo pnpm (Angular 22 + NestJS 12 + paquetes de dominio)                                                                | ✅                                     |
+| Cuentas y organizaciones: registro, inicio de sesión, roles, aislamiento entre organizaciones (RLS)                         | ✅ con pruebas                         |
+| Catálogo: artículos, categorías jerárquicas con atributos propios, proveedores, unidades                                    | ✅ `/inventario`, `/categorias`        |
+| Ubicaciones y existencias: entradas, salidas, ajustes por conteo, historial, alertas de mínimo                              | ✅ `/ubicaciones`, detalle de artículo |
+| Fotografías de artículos                                                                                                    | ⏳ siguiente                           |
+| API: `GET /api/health`, configuración validada, errores uniformes, cabeceras de seguridad                                   | ✅                                     |
+| Motor de gabinetes (`@silopro/cabinet-engine`): cuadrícula, direccionamiento, fusión/división, planificación para impresora | ✅ con pruebas                         |
+| Reglas de dominio (`@silopro/domain`): jerarquía de ubicaciones, existencias y reservas                                     | ✅ con pruebas                         |
+| Design system: tokens (`@elikarsystems/tokens`) y componentes (`@elikarsystems/ui`)                                         | ✅ catálogo en `/sistema/componentes`  |
+| Gabinete 2D de demostración (`/gabinetes/demo`, datos ficticios)                                                            | ✅                                     |
+| Identidad visual: logotipo B · S-Estante (más 2 conceptos alternativos)                                                     | ✅ colores oficiales pendientes        |
+| Docker Compose (web + API + PostgreSQL) y CI de GitHub Actions                                                              | ✅                                     |
 
 ## Requisitos
 
 - Node.js **24 LTS** (≥ 24.15) — ver `.nvmrc`
 - pnpm **12** (`corepack enable`)
-- PostgreSQL 16+ (opcional en Fase 1) o Docker
+- PostgreSQL 16+ o Docker (la API necesita un rol **sin** superusuario; ver [Despliegue](docs/DEPLOYMENT.md))
 
 ## Inicio rápido
 
@@ -32,7 +36,8 @@ corepack enable
 pnpm install
 pnpm build:packages          # compila los paquetes de dominio compartidos
 
-pnpm dev:api                 # API en http://localhost:3000/api
+cp apps/api/.env.example apps/api/.env   # ajuste DATABASE_URL
+pnpm dev:api                 # API en http://localhost:3000/api (aplica migraciones)
 pnpm dev:web                 # Web en http://localhost:4200 (proxy /api → :3000)
 ```
 
@@ -72,7 +77,7 @@ infra/docker/        Dockerfiles, nginx y Compose
 
 ## Documentación
 
-[Visión](docs/PRODUCT_VISION.md) · [Hoja de ruta](docs/ROADMAP.md) · [Arquitectura](docs/ARCHITECTURE.md) · [Modelo de datos](docs/DATA_MODEL.md) · [Design system](docs/DESIGN_SYSTEM.md) · [Marca](docs/BRAND_GUIDELINES.md) · [Investigación](docs/RESEARCH.md) · [Seguridad](docs/SECURITY.md) · [Pruebas](docs/TESTING.md) · [Despliegue](docs/DEPLOYMENT.md) · [ADRs](docs/adr/) · [Contribuir](CONTRIBUTING.md) · [Cambios](CHANGELOG.md)
+[Visión](docs/PRODUCT_VISION.md) · [Hoja de ruta](docs/ROADMAP.md) · [Arquitectura](docs/ARCHITECTURE.md) · [Modelo de datos](docs/DATA_MODEL.md) · [API](docs/API.md) · [Design system](docs/DESIGN_SYSTEM.md) · [Marca](docs/BRAND_GUIDELINES.md) · [Investigación](docs/RESEARCH.md) · [Seguridad](docs/SECURITY.md) · [Pruebas](docs/TESTING.md) · [Despliegue](docs/DEPLOYMENT.md) · [ADRs](docs/adr/) · [Contribuir](CONTRIBUTING.md) · [Cambios](CHANGELOG.md)
 
 ## Licencia
 

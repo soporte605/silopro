@@ -19,11 +19,21 @@ Cada fase cierra con criterios de aceptación verificados, pruebas en verde y do
 
 Marca: concepto B · S-Estante adoptado. Pendiente: colores oficiales de ElikarSystems.
 
-## Fase 2 — Inventario · `v0.2.0`
+## Fase 2 — Inventario · `v0.2.0` · 🟡 `v0.2.0-alpha.1` (falta fotografías)
 
 Autenticación (sesiones seguras, Argon2id), organizaciones y membresías con roles, aislamiento por organización (RLS), categorías jerárquicas con plantillas de atributos, artículos (SKU, código interno, fabricante, modelo, unidades, precios, costos, proveedores, stock mínimo), fotografías con almacenamiento seguro, tabla de movimientos con escritura transaccional, Drizzle + migraciones versionadas.
 
 _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con validación; e2e de alta de artículo; migraciones reproducibles.
+
+| Criterio                              | Estado | Evidencia                                                |
+| ------------------------------------- | :----: | -------------------------------------------------------- |
+| Autorización entre organizaciones     |   ✅   | `apps/api/test/isolation.spec.ts`, e2e `auth.spec.ts`    |
+| CRUD con validación compartida        |   ✅   | `@silopro/contracts`, `apps/api/test/inventory.spec.ts`  |
+| e2e de alta de artículo y movimientos |   ✅   | `apps/web/e2e/inventory.spec.ts` (escritorio y móvil)    |
+| Migraciones reproducibles             |   ✅   | `apps/api/drizzle/`, aplicadas desde cero en cada prueba |
+| Concurrencia de existencias           |   ✅   | 12 salidas simultáneas sobre 5 → 5 aceptadas             |
+| Fotografías con almacenamiento seguro |   ⏳   | siguiente iteración (`v0.2.0-alpha.2`)                   |
+| Invitar miembros a una organización   |   ⏳   | los roles ya se aplican; falta la pantalla de invitación |
 
 ## Fase 3 — Almacenamiento · `v0.3.0`
 
