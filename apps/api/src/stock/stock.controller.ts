@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -16,11 +17,12 @@ import {
   locationUpdateSchema,
   movementInputSchema,
   qrReferenceSchema,
+  transferInputSchema,
 } from '@silopro/contracts';
 import type { z } from 'zod';
 import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.js';
 import type { OrgContext } from '../auth/request-context.js';
-import { notFound } from '../common/http.js';
+import { invalid, notFound } from '../common/http.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { LocationsService } from './locations.service.js';
 import { MovementsService } from './movements.service.js';
@@ -81,6 +83,23 @@ export class StockController {
     @Body(new ZodValidationPipe(movementInputSchema)) body: z.output<typeof movementInputSchema>,
   ) {
     return this.movementsSvc.record(ctx, body);
+  }
+
+  @Get('transfers')
+  transfers(@Org() ctx: OrgContext, @Query('itemId') itemId?: string) {
+    if (itemId !== undefined && !/^[0-9a-f-]{36}$/i.test(itemId)) {
+      throw invalid('itemId inválido');
+    }
+    return this.movementsSvc.transfers(ctx, itemId);
+  }
+
+  @Post('transfers')
+  @RequirePermission('stock.move')
+  transfer(
+    @Org() ctx: OrgContext,
+    @Body(new ZodValidationPipe(transferInputSchema)) body: z.output<typeof transferInputSchema>,
+  ) {
+    return this.movementsSvc.transfer(ctx, body);
   }
 
   @Get('items/:id/movements')

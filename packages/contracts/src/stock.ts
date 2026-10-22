@@ -118,6 +118,21 @@ export const movementInputSchema = z.discriminatedUnion('kind', [
 ]);
 export type MovementInput = z.input<typeof movementInputSchema>;
 
+/** Mueve `quantity` de una ubicación a otra en una sola operación (salida + entrada). */
+export const transferInputSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    fromLocationId: z.string().uuid('Elija el origen'),
+    toLocationId: z.string().uuid('Elija el destino'),
+    quantity: qty,
+    reason: z.string().trim().max(500).optional(),
+  })
+  .refine((v) => v.fromLocationId !== v.toLocationId, {
+    message: 'El destino debe ser distinto del origen',
+    path: ['toLocationId'],
+  });
+export type TransferInput = z.input<typeof transferInputSchema>;
+
 export interface Movement {
   id: string;
   kind: 'receipt' | 'issue' | 'adjustment' | 'transfer' | 'consumption';
@@ -127,8 +142,34 @@ export interface Movement {
   /** Cambio firmado en existencias físicas. */
   delta: number;
   reason: string | null;
+  /** Mismo valor en la salida y la entrada de una transferencia. */
+  transferId: string | null;
   actorName: string;
   occurredAt: string;
+}
+
+/** Una transferencia ya registrada, para el listado. */
+export interface TransferSummary {
+  id: string;
+  itemId: string;
+  sku: string;
+  itemName: string;
+  unitSymbol: string;
+  quantity: number;
+  fromLocationId: string;
+  fromPath: string;
+  toLocationId: string;
+  toPath: string;
+  reason: string | null;
+  actorName: string;
+  occurredAt: string;
+}
+
+/** Resultado de una transferencia: el movimiento de salida y el de entrada. */
+export interface Transfer {
+  id: string;
+  out: Movement;
+  in: Movement;
 }
 
 export interface StockByLocation {

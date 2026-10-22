@@ -378,10 +378,15 @@ export const stockMovements = pgTable(
       .references(() => locations.id),
     delta: qty('delta').notNull(),
     reason: text('reason'),
+    /** Une la salida y la entrada de una transferencia entre ubicaciones. */
+    transferId: uuid('transfer_id'),
     actorId: uuid('actor_id')
       .notNull()
       .references(() => users.id),
     occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('stock_movements_item_idx').on(t.itemId, t.occurredAt)],
+  (t) => [
+    index('stock_movements_item_idx').on(t.itemId, t.occurredAt),
+    index('stock_movements_transfer_idx').on(t.transferId),
+  ],
 );

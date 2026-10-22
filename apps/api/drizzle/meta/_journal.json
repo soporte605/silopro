@@ -57,6 +57,13 @@
       "when": 1792685175788,
       "tag": "0007_gabinetes_medidas",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792687117038,
+      "tag": "0008_transferencias",
+      "breakpoints": true
     }
   ]
 }

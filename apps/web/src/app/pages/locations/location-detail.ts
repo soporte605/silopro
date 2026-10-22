@@ -15,7 +15,13 @@ import {
   EsSkeleton,
   EsToastService,
 } from '@elikarsystems/ui';
-import { LucideGrid3x3, LucideMinus, LucidePackageOpen, LucidePlus } from '@lucide/angular';
+import {
+  LucideArrowLeftRight,
+  LucideGrid3x3,
+  LucideMinus,
+  LucidePackageOpen,
+  LucidePlus,
+} from '@lucide/angular';
 import type { CabinetSummary, Item, LocationDetail, StockByLocation } from '@silopro/contracts';
 import { LOCATION_KIND_LABELS } from '@silopro/domain';
 import { firstValueFrom } from 'rxjs';
@@ -27,6 +33,7 @@ import {
   type MovementDialogData,
   type MovementKindInput,
 } from '../items/movement-dialog';
+import { TransferDialog, type TransferDialogData } from '../transfers/transfer-dialog';
 import { ItemPicker } from './item-picker';
 
 /**
@@ -42,6 +49,7 @@ import { ItemPicker } from './item-picker';
     EsButton,
     EsEmptyState,
     EsSkeleton,
+    LucideArrowLeftRight,
     LucideGrid3x3,
     LucideMinus,
     LucidePackageOpen,
@@ -151,6 +159,14 @@ import { ItemPicker } from './item-picker';
                     >
                       <svg lucidePlus></svg>
                     </button>
+                    <button
+                      esButton
+                      iconOnly
+                      [attr.aria-label]="'Mover ' + e.itemName + ' a otra ubicación'"
+                      (click)="transfer(e.itemId)"
+                    >
+                      <svg lucideArrowLeftRight></svg>
+                    </button>
                   </span>
                 }
               </li>
@@ -202,6 +218,24 @@ export default class LocationDetailPage {
         this.api.get<StockByLocation[]>(`/items/${itemId}/stock`),
       ]);
       await this.openMovement(item, stock, kind);
+    } catch (e) {
+      this.toast.show(ApiRequestError.from(e).message, { tone: 'danger' });
+    }
+  }
+
+  protected async transfer(itemId: string): Promise<void> {
+    try {
+      const [item, stock] = await Promise.all([
+        this.api.get<Item>(`/items/${itemId}`),
+        this.api.get<StockByLocation[]>(`/items/${itemId}/stock`),
+      ]);
+      const done = await firstValueFrom(
+        this.dialog.open<boolean, TransferDialogData>(TransferDialog, {
+          data: { item, stock, fromLocationId: this.id() },
+          ariaLabel: 'Mover existencias',
+        }).closed,
+      );
+      if (done) this.loc.reload();
     } catch (e) {
       this.toast.show(ApiRequestError.from(e).message, { tone: 'danger' });
     }

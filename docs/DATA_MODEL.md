@@ -50,7 +50,7 @@ Un gabinete guarda su `CabinetLayout` (`@silopro/cabinet-engine`) y cada compart
 
 `stock_levels(item_id, location_id, on_hand, reserved, allow_negative)` con `CHECK (reserved >= 0 AND reserved <= on_hand)` y `CHECK (on_hand >= 0 OR allow_negative)`. Disponible = `on_hand − reserved`. Un artículo puede estar en varias ubicaciones y una ubicación contener varios artículos.
 
-`stock_movements(id, kind, item_id, location_id, delta, reason, actor_id, occurred_at)`; tipos implementados: `receipt`, `issue`, `adjustment` (fija la existencia al valor contado y exige motivo). Previstos: `transfer`, `consumption` (F5). Un trigger impide `UPDATE` y `DELETE`.
+`stock_movements(id, kind, item_id, location_id, delta, reason, transfer_id, actor_id, occurred_at)`; tipos implementados: `receipt`, `issue`, `adjustment` (fija la existencia al valor contado y exige motivo) y `transfer` (dos filas, salida y entrada, con el mismo `transfer_id`). Previsto: `consumption` (F5). Un trigger impide `UPDATE` y `DELETE`.
 
 Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no existe, se bloquea con `SELECT … FOR UPDATE`, se aplica `applyDelta` del dominio y se escriben nivel y movimiento. Prueba: 12 salidas concurrentes de 1 sobre una existencia de 5 → exactamente 5 aceptadas.
 

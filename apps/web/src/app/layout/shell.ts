@@ -281,6 +281,14 @@ import { SessionService } from '../core/session';
       >
         <svg lucideQrCode></svg> Etiquetas
       </a>
+      <a
+        esNavItem
+        routerLink="/transferencias"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideArrowLeftRight></svg> Transferencias
+      </a>
     </ng-template>
 
     <ng-template #userMenu>
@@ -309,10 +317,7 @@ export class Shell {
 
   protected readonly session = inject(SessionService);
 
-  protected readonly upcoming = [
-    { label: 'Transferencias', icon: 'moves', phase: 'F5' },
-    { label: 'Proyectos y BOM', icon: 'bom', phase: 'F6' },
-  ];
+  protected readonly upcoming = [{ label: 'Proyectos y BOM', icon: 'bom', phase: 'F6' }];
 
   constructor() {
     this.palette.register([
@@ -357,6 +362,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['qr', 'imprimir', 'pdf'],
         run: () => this.go('/etiquetas'),
+      },
+      {
+        id: 'nav.transfers',
+        label: 'Ir a Transferencias',
+        group: 'Navegación',
+        keywords: ['mover', 'traspaso', 'reubicar'],
+        run: () => this.go('/transferencias'),
       },
       {
         id: 'nav.cabinet',

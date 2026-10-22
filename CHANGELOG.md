@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.0-alpha.1] — 2026-10-22
+
+Fase 5 · Operaciones: transferencias.
+
+### Añadido
+
+- **Transferencias**: mover existencias de un artículo de una ubicación a otra en un solo paso. La salida y la entrada se registran juntas y quedan unidas en el historial. Si no alcanza lo disponible o el destino está lleno, no cambia nada. Solo se mueve lo disponible: lo reservado se queda donde está.
+- Página **Transferencias** (menú y paleta) con el historial y «Nueva transferencia». Botón **Mover** en el artículo y en cada artículo de la ficha de una ubicación o cajón, con «Todo» para llevarse lo disponible.
+- API `POST transfers` y `GET transfers`; `Movement.transferId`.
+- Migración `0008_transferencias`: columna `transfer_id` en `stock_movements`.
+- Bloqueo en orden fijo (ubicación de destino con capacidad y luego las dos existencias por id): transferencias cruzadas simultáneas no se interbloquean (probado con 16 en paralelo).
+
 ## [0.4.0] — 2026-10-22
 
 Cierre de la Fase 4 · Visualización 3D (incluye `0.4.0-alpha.1` y `0.4.0-alpha.2`). La Fase 3 se cierra como `v0.3.0` con el contenido de `0.3.0-alpha.5`.

@@ -52,16 +52,18 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 ## Ubicaciones y existencias · `/orgs/:orgId/…`
 
-| Método y ruta             | Permiso                            | Notas                                                                                            |
-| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)                        |
-| `GET locations/:id`       | catalog.read                       | Ficha: la ubicación, `parentCabinetId` (si es un cajón) y `contents` (artículos con existencias) |
-| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                                      |
-| `PATCH locations/:id`     | catalog.write                      | `code, name, parentId, version, maxItems?`; mueve el subárbol; `409 STALE_VERSION`               |
-| `DELETE locations/:id`    | catalog.write                      | Archiva con su contenido; `422 LOCATION_HAS_STOCK` si hay existencias                            |
-| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason`                  |
-| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                               |
-| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                                  |
+| Método y ruta             | Permiso                            | Notas                                                                                                                                                                                               |
+| ------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)                                                                                                                           |
+| `GET locations/:id`       | catalog.read                       | Ficha: la ubicación, `parentCabinetId` (si es un cajón) y `contents` (artículos con existencias)                                                                                                    |
+| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                                                                                                                                         |
+| `PATCH locations/:id`     | catalog.write                      | `code, name, parentId, version, maxItems?`; mueve el subárbol; `409 STALE_VERSION`                                                                                                                  |
+| `DELETE locations/:id`    | catalog.write                      | Archiva con su contenido; `422 LOCATION_HAS_STOCK` si hay existencias                                                                                                                               |
+| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason`                                                                                                                     |
+| `POST transfers`          | stock.move                         | `itemId, fromLocationId, toLocationId, quantity, reason?`: salida y entrada en una transacción, unidas por `transferId`; `422` si no alcanza lo disponible o el destino está lleno (no cambia nada) |
+| `GET transfers`           | catalog.read                       | Últimas 50 transferencias; `?itemId=` filtra por artículo                                                                                                                                           |
+| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                                                                                                                                  |
+| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                                                                                                                                     |
 
 ## Gabinetes · `/orgs/:orgId/cabinets`
 

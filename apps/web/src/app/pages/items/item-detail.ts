@@ -22,6 +22,7 @@ import {
 import {
   LucideArchive,
   LucideArrowDownToLine,
+  LucideArrowLeftRight,
   LucideArrowUpFromLine,
   LucideClipboardCheck,
   LucidePencil,
@@ -38,6 +39,7 @@ import { PageHeader } from '../page-header';
 import { ItemForm, type ItemFormData } from './item-form';
 import { ItemPhotos } from './item-photos';
 import { MovementDialog, type MovementDialogData, type MovementKindInput } from './movement-dialog';
+import { TransferDialog, type TransferDialogData } from '../transfers/transfer-dialog';
 
 const KIND_LABELS: Record<Movement['kind'], string> = {
   receipt: 'Entrada',
@@ -65,6 +67,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
     LucidePencil,
     LucideArchive,
     LucideArrowDownToLine,
+    LucideArrowLeftRight,
     LucideArrowUpFromLine,
     LucideClipboardCheck,
   ],
@@ -100,6 +103,9 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
               </button>
               <button esButton (click)="move('issue')" [disabled]="it.onHand <= 0">
                 <svg lucideArrowUpFromLine></svg> Salida
+              </button>
+              <button esButton (click)="transfer()" [disabled]="it.onHand <= 0">
+                <svg lucideArrowLeftRight></svg> Mover
               </button>
             }
             @if (session.canAdjust()) {
@@ -368,6 +374,21 @@ export default class ItemDetail {
       .closed.subscribe((done) => {
         if (!done) return;
         this.item.reload();
+        this.stock.reload();
+        this.movements.reload();
+      });
+  }
+
+  protected transfer(): void {
+    const it = this.item.value();
+    if (!it) return;
+    this.dialog
+      .open<boolean, TransferDialogData>(TransferDialog, {
+        data: { item: it, stock: this.stock.value() ?? [] },
+        ariaLabel: 'Mover existencias',
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
         this.stock.reload();
         this.movements.reload();
       });
