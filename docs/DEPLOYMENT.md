@@ -35,7 +35,7 @@ Detener: `docker compose -f infra/docker/compose.yaml down` (añadir `-v` **borr
 
 El contenedor de PostgreSQL crea al iniciarse por primera vez el rol de aplicación `silopro` sin privilegios especiales (`infra/docker/postgres-init.sh`); el superusuario `postgres` solo se usa para administración.
 
-## Servidor público (silopro.elikarsystems.com)
+## Servidor público (app.silopro.elikarsystems.com)
 
 Mismo modelo que los demás servicios Docker del servidor: el nginx del sistema termina HTTPS (Let's Encrypt) y reenvía a un puerto local; nada más queda expuesto.
 
@@ -52,7 +52,7 @@ Mismo modelo que los demás servicios Docker del servidor: el nginx del sistema 
 ```
 POSTGRES_ADMIN_PASSWORD=<aleatoria>
 POSTGRES_PASSWORD=<aleatoria>
-PUBLIC_WEB_URL=https://silopro.elikarsystems.com
+PUBLIC_WEB_URL=https://app.silopro.elikarsystems.com
 SILOPRO_WEB_PORT=3200
 ```
 
@@ -66,7 +66,7 @@ docker compose -p silopro -f infra/docker/compose.prod.yaml --env-file /opt/silo
 curl -s http://127.0.0.1:3200/api/health
 ```
 
-Una sola vez: copiar `infra/server/silopro.nginx.conf` a `/etc/nginx/sites-available/`, enlazarlo en `sites-enabled`, `nginx -t && systemctl reload nginx` y `certbot --nginx -d silopro.elikarsystems.com`. Respaldo diario con `infra/server/backup.sh` en el cron de root. Volver a la versión anterior: apuntar `current` a la release previa y repetir `up -d --build` (las migraciones solo agregan).
+Una sola vez: copiar `infra/server/silopro.nginx.conf` a `/etc/nginx/sites-available/`, enlazarlo en `sites-enabled`, `nginx -t && systemctl reload nginx` y `certbot --nginx -d app.silopro.elikarsystems.com`. Respaldo diario con `infra/server/backup.sh` en el cron de root. Volver a la versión anterior: apuntar `current` a la release previa y repetir `up -d --build` (las migraciones solo agregan).
 
 ## Desarrollo sin Docker
 

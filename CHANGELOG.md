@@ -11,7 +11,7 @@ Publicación en servidor.
 ### Añadido
 
 - `infra/docker/compose.prod.yaml`: SiloPro detrás del nginx del servidor con HTTPS. Solo la web escucha en `127.0.0.1:3200`; las contraseñas vienen de un `.env` del servidor y son obligatorias.
-- `infra/server/`: sitio de nginx para `silopro.elikarsystems.com` y respaldo diario (base de datos y fotografías, 14 días).
+- `infra/server/`: sitio de nginx para `app.silopro.elikarsystems.com` y respaldo diario (base de datos y fotografías, 14 días).
 - Variable `TRUST_PROXY_HOPS` para obtener la IP real del cliente detrás de dos proxies; el nginx del contenedor conserva el esquema HTTPS del proxy externo.
 
 ### Seguridad
