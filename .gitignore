@@ -14,3 +14,7 @@ test-results/
 playwright-report/
 # Fotografías subidas en desarrollo (UPLOADS_DIR)
 data/
+
+# Datos de acceso a servidores (contraseñas, llaves): nunca al repositorio
+deploy/
+*.local.env
