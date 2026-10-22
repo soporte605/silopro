@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeQrReference, encodeQrReference, generateShortCode } from './qr.js';
+import { decodeQrReference, encodeQrReference, generateShortCode, qrUrl } from './qr.js';
 import { paginationQuerySchema } from './common.js';
 
 describe('referencias QR', () => {
@@ -9,6 +9,18 @@ describe('referencias QR', () => {
     const payload = encodeQrReference({ type: 'location', code });
     expect(payload).toBe(`silo:location/${code}`);
     expect(decodeQrReference(payload)).toEqual({ type: 'location', code });
+  });
+
+  it('genera y lee el enlace impreso en la etiqueta', () => {
+    const code = generateShortCode();
+    const url = qrUrl('http://192.168.1.20:8080/', { type: 'location', code });
+    expect(url).toBe(`http://192.168.1.20:8080/q/u/${code}`);
+    expect(decodeQrReference(url)).toEqual({ type: 'location', code });
+    expect(decodeQrReference(`https://silo.test/q/a/${code.toLowerCase()}`)).toEqual({
+      type: 'item',
+      code,
+    });
+    expect(decodeQrReference('https://silo.test/q/x/0123456789')).toBeNull();
   });
 
   it('rechaza contenido ajeno o malformado', () => {

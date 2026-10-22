@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  input,
   resource,
   signal,
 } from '@angular/core';
@@ -271,6 +272,14 @@ export class LocationForm {
         title="Ubicaciones"
         description="Almacenes, estanterías, gabinetes y cajones. Los gabinetes en cuadrícula se diseñan en Gabinetes."
       >
+        <a
+          spActions
+          esButton
+          variant="ghost"
+          routerLink="/etiquetas"
+          [queryParams]="{ origen: 'ubicaciones' }"
+          >Imprimir etiquetas</a
+        >
         @if (session.canWrite()) {
           <button spActions esButton variant="primary" (click)="open(null)">
             <svg lucidePlus></svg> Nueva ubicación
@@ -305,7 +314,10 @@ export class LocationForm {
             </thead>
             <tbody>
               @for (r of rows(); track r.l.id) {
-                <tr>
+                <tr
+                  [class.bg-accent-soft]="r.l.id === resaltar()"
+                  [attr.aria-current]="r.l.id === resaltar() ? 'location' : null"
+                >
                   <td>
                     <span [style.padding-left.rem]="r.depth * 1.25">
                       <span class="font-mono text-xs text-fg-muted">{{ r.l.code }}</span>
@@ -376,6 +388,8 @@ export default class Locations {
   private readonly toast = inject(EsToastService);
   private readonly confirm = inject(ConfirmService);
   protected readonly session = inject(SessionService);
+  /** Ubicación a resaltar (p. ej. al abrir una etiqueta escaneada). */
+  readonly resaltar = input<string>();
 
   protected readonly list = resource({
     params: () => this.session.orgId(),

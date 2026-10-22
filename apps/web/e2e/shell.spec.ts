@@ -10,6 +10,8 @@ test('la página de inicio muestra la organización y la hoja de ruta', async ({
 test('la paleta de comandos navega con el teclado', async ({ page, isMobile, account: _ }) => {
   test.skip(isMobile, 'Atajo de teclado de escritorio');
   await page.goto('/');
+  // El atajo se registra cuando la app ya pintó el menú.
+  await expect(page.getByRole('navigation', { name: 'Principal' })).toBeVisible();
   await page.keyboard.press('Control+k');
   const input = page.getByRole('combobox');
   await expect(input).toBeFocused();

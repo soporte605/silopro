@@ -1,6 +1,6 @@
 {
   "name": "@silopro/web",
-  "version": "0.3.0-alpha.2",
+  "version": "0.3.0-alpha.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -28,6 +28,7 @@
     "@silopro/domain": "workspace:*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "uqr": "0.1.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {

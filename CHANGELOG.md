@@ -4,6 +4,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.3.0-alpha.3] — 2026-10-22
+
+Adelanto de la Fase 5: etiquetas QR.
+
+### Añadido
+
+- Página **Etiquetas** (`/etiquetas`): hojas con QR para los cajones de un gabinete, las ubicaciones o los artículos. Formatos Carta 30 por hoja (66,7 × 25,4 mm), A4 21 por hoja (63,5 × 38,1 mm) y rollo térmico 50 × 25 y 40 × 30 mm. Se imprime a tamaño real o se guarda como PDF desde el navegador; permite elegir qué etiquetas incluir y empezar en una posición de una hoja ya usada.
+- El QR lleva un enlace corto `…/q/u/<código>` o `…/q/a/<código>`: al escanearlo con la cámara del celular abre el gabinete con el cajón resaltado, la ubicación o el artículo. Sin sesión, pide iniciarla y vuelve.
+- API `GET qr/:type/:code` para resolver un código dentro de la organización.
+- Accesos: «Imprimir etiquetas» en el gabinete y en Ubicaciones, «Etiqueta» en el artículo, «Etiquetas» en el menú y en la paleta.
+- Docker: `SILOPRO_WEB_BIND` para abrir la web a la red local (por defecto sigue solo en esta PC).
+- Contratos: `qrUrl`, `qrTypeFromLetter`; `decodeQrReference` también acepta el enlace.
+
 ## [0.3.0-alpha.2] — 2026-10-21
 
 Fase 3 · Almacenamiento: ubicaciones editables y capacidad.

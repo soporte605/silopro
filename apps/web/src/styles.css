@@ -60,3 +60,27 @@
 .es-dialog-right > .cdk-dialog-container {
   border-width: 0 0 0 1px;
 }
+
+/* Etiquetas: la copia para imprimir vive en <body> y es lo único que se imprime. */
+@media screen {
+  .sp-print-root {
+    display: none;
+  }
+}
+@media print {
+  body:has(> .sp-print-root) > :not(.sp-print-root) {
+    display: none !important;
+  }
+  body:has(> .sp-print-root) {
+    background: #fff;
+  }
+  .sp-print-root sp-label-sheet {
+    display: block;
+  }
+  .sp-print-root .sp-label-page {
+    break-after: page;
+  }
+  .sp-print-root .sp-label-page:last-child {
+    break-after: auto;
+  }
+}

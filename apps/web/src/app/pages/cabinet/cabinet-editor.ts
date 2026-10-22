@@ -79,9 +79,21 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
         <es-breadcrumb
           [items]="[{ label: 'Gabinetes', link: '/gabinetes' }, { label: cabinet()?.code ?? '…' }]"
         />
-        @if (dirty()) {
-          <es-badge tone="warning" class="ml-auto">Cambios sin guardar</es-badge>
-        }
+        <div class="ml-auto flex items-center gap-2">
+          @if (dirty()) {
+            <es-badge tone="warning">Cambios sin guardar</es-badge>
+          }
+          @if (cabinet(); as cab) {
+            <a
+              esButton
+              variant="ghost"
+              size="sm"
+              routerLink="/etiquetas"
+              [queryParams]="{ gabinete: cab.id }"
+              >Imprimir etiquetas</a
+            >
+          }
+        </div>
       </div>
 
       @if (cabinet(); as cab) {

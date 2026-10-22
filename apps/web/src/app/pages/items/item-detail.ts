@@ -25,6 +25,7 @@ import {
   LucideArrowUpFromLine,
   LucideClipboardCheck,
   LucidePencil,
+  LucideQrCode,
 } from '@lucide/angular';
 import type { Category, Item, Movement, StockByLocation, Supplier } from '@silopro/contracts';
 import { effectiveAttributes } from '@silopro/domain';
@@ -49,6 +50,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
 @Component({
   selector: 'sp-item-detail',
   imports: [
+    LucideQrCode,
     RouterLink,
     PageHeader,
     ItemPhotos,
@@ -105,6 +107,9 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
                 <svg lucideClipboardCheck></svg> Ajuste
               </button>
             }
+            <a esButton routerLink="/etiquetas" [queryParams]="{ articulo: it.id }">
+              <svg lucideQrCode></svg> Etiqueta
+            </a>
             @if (session.canWrite()) {
               <button esButton (click)="edit(it)"><svg lucidePencil></svg> Editar</button>
               <button

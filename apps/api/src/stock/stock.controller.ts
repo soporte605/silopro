@@ -11,13 +11,20 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { locationInputSchema, locationUpdateSchema, movementInputSchema } from '@silopro/contracts';
+import {
+  locationInputSchema,
+  locationUpdateSchema,
+  movementInputSchema,
+  qrReferenceSchema,
+} from '@silopro/contracts';
 import type { z } from 'zod';
 import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.js';
 import type { OrgContext } from '../auth/request-context.js';
+import { notFound } from '../common/http.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { LocationsService } from './locations.service.js';
 import { MovementsService } from './movements.service.js';
+import { QrService } from './qr.service.js';
 
 const uuid = new ParseUUIDPipe({ version: '7' });
 
@@ -28,6 +35,7 @@ export class StockController {
   constructor(
     @Inject(LocationsService) private readonly locationsSvc: LocationsService,
     @Inject(MovementsService) private readonly movementsSvc: MovementsService,
+    @Inject(QrService) private readonly qrSvc: QrService,
   ) {}
 
   @Get('locations')
@@ -78,5 +86,13 @@ export class StockController {
   @Get('items/:id/stock')
   itemStock(@Org() ctx: OrgContext, @Param('id', uuid) id: string) {
     return this.movementsSvc.byLocation(ctx, id);
+  }
+
+  /** Resuelve una etiqueta escaneada: `type` es `item` o `location`. */
+  @Get('qr/:type/:code')
+  resolveQr(@Org() ctx: OrgContext, @Param('type') type: string, @Param('code') code: string) {
+    const ref = qrReferenceSchema.safeParse({ type, code: code.toUpperCase() });
+    if (!ref.success) throw notFound('Código');
+    return this.qrSvc.resolve(ctx, ref.data);
   }
 }

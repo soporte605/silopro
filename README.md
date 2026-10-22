@@ -4,7 +4,7 @@
 
 SiloPro conecta el inventario digital con la organización física: almacenes, estanterías, gabinetes, cajones y compartimentos se representan virtualmente y cada artículo tiene una ubicación identificable. Más adelante el sistema generará modelos CAD paramétricos para fabricar organizadores por impresión 3D.
 
-> Estado: **v0.3.0-alpha.2 — Fase 3 (Almacenamiento)**. Inventario completo (Fase 2), gabinetes guardados con editor 2D (cada cajón es una ubicación con sus existencias), ubicaciones editables y capacidad por cajón. Ver [ROADMAP](docs/ROADMAP.md).
+> Estado: **v0.3.0-alpha.3 — Fase 3 (Almacenamiento)**. Inventario completo (Fase 2), gabinetes guardados con editor 2D (cada cajón es una ubicación con sus existencias), ubicaciones editables, capacidad por cajón y etiquetas QR imprimibles. Ver [ROADMAP](docs/ROADMAP.md).
 
 ## Qué hay hoy
 
@@ -47,6 +47,8 @@ Con Docker:
 docker compose -f infra/docker/compose.yaml up -d --build
 # Web http://localhost:8080 · API http://localhost:3000/api/health
 ```
+
+Por defecto la web solo responde en esta PC. Para escanear etiquetas QR con el celular en la red local, cree `infra/docker/.env` con `SILOPRO_WEB_BIND=0.0.0.0`, vuelva a levantar el stack, permita el puerto 8080 en el firewall y use en Etiquetas la dirección de la PC en la red (p. ej. `http://192.168.1.50:8080`). Hágalo solo en una red de confianza.
 
 ## Comandos
 

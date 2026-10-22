@@ -55,7 +55,9 @@ services:
       dockerfile: infra/docker/web.Dockerfile
     restart: unless-stopped
     ports:
-      - '127.0.0.1:8080:80'
+      # Solo esta PC por defecto. Para escanear etiquetas con el celular en la red
+      # local: SILOPRO_WEB_BIND=0.0.0.0 en infra/docker/.env (ver README).
+      - '${SILOPRO_WEB_BIND:-127.0.0.1}:8080:80'
     depends_on:
       - api
 

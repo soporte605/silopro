@@ -72,6 +72,16 @@ export const routes: Routes = [
         title: 'Gabinete · SiloPro',
       },
       {
+        path: 'etiquetas',
+        loadComponent: () => import('./pages/labels/labels'),
+        title: 'Etiquetas · SiloPro',
+      },
+      {
+        path: 'q/:tipo/:codigo',
+        loadComponent: () => import('./pages/labels/qr-resolve'),
+        title: 'Abriendo etiqueta · SiloPro',
+      },
+      {
         path: 'sistema/componentes',
         loadComponent: () => import('./pages/catalog/catalog'),
         title: 'Componentes · SiloPro',

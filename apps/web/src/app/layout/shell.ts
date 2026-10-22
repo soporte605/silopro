@@ -28,6 +28,7 @@ import {
   LucideMapPin,
   LucideMonitor,
   LucideMoon,
+  LucideQrCode,
   LucideSearch,
   LucideSun,
   LucideTruck,
@@ -65,6 +66,7 @@ import { SessionService } from '../core/session';
     LucideLogOut,
     LucideTruck,
     LucideUsers,
+    LucideQrCode,
     CdkMenuTrigger,
     EsMenu,
     EsMenuItem,
@@ -271,6 +273,14 @@ import { SessionService } from '../core/session';
       >
         <svg lucideGrid3x3></svg> Gabinetes
       </a>
+      <a
+        esNavItem
+        routerLink="/etiquetas"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideQrCode></svg> Etiquetas
+      </a>
     </ng-template>
 
     <ng-template #userMenu>
@@ -340,6 +350,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['cajones', 'ubicacion', '2d'],
         run: () => this.go('/gabinetes'),
+      },
+      {
+        id: 'nav.labels',
+        label: 'Ir a Etiquetas',
+        group: 'Navegación',
+        keywords: ['qr', 'imprimir', 'pdf'],
+        run: () => this.go('/etiquetas'),
       },
       {
         id: 'nav.cabinet',

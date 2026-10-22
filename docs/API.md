@@ -77,6 +77,14 @@ Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubica
 
 Al guardar un diseño la API lo valida con `assertCanonicalLayout` (sin huecos ni superposiciones; cada id coincide con su celda), archiva los cajones que desaparecen **solo si están vacíos** y restaura con su mismo id los que reaparecen. El esquema de direccionamiento se fija al crear el gabinete.
 
+## Etiquetas QR · `/orgs/:orgId/qr`
+
+Cada artículo y ubicación tiene un código corto aleatorio (`qrCode`, base32 Crockford de 10 caracteres). La etiqueta impresa lleva el enlace `<dirección>/q/<letra>/<código>` (`a` artículo, `u` ubicación); la web lo resuelve con la sesión de quien escanea y abre el artículo, el gabinete (con el cajón resaltado) o la ubicación.
+
+| Método y ruta        | Permiso      | Notas                                                                                                  |
+| -------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
+| `GET qr/:type/:code` | catalog.read | `type` = `item` o `location`; devuelve `{ type, id, name, label, cabinetId }`; `404` si no existe aquí |
+
 ## Miembros e invitaciones · `/orgs/:orgId/…`
 
 | Método y ruta            | Permiso        | Notas                                                                                            |
