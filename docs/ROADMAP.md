@@ -35,7 +35,7 @@ _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con 
 | Fotografías con almacenamiento seguro |   ✅   | `apps/api/test/photos.spec.ts`, e2e `photos-members`     |
 | Invitar miembros a una organización   |   ✅   | `apps/api/test/members.spec.ts`, e2e `photos-members`    |
 
-## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.3`
+## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.4`
 
 Almacenes y árbol de ubicaciones (reglas de `@silopro/domain`), gabinetes persistidos con el modelo de `@silopro/cabinet-engine`, editor 2D completo (crear, redimensionar, fusionar, etiquetar), existencias por ubicación, búsqueda que resalta posiciones, estados de ocupación.
 

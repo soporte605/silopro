@@ -36,12 +36,13 @@ import {
 import { Api } from '../../core/api';
 import { SessionService } from '../../core/session';
 import { PageHeader } from '../page-header';
-import { LABEL_FORMATS, type LabelData, LabelSheet } from './label-sheet';
+import { LABEL_FORMATS, type LabelData, type LabelDesign, LabelSheet } from './label-sheet';
 
 type Source = 'gabinete' | 'ubicaciones' | 'articulos';
 
 const BASE_KEY = 'sp.etiquetas.direccion';
 const FORMAT_KEY = 'sp.etiquetas.formato';
+const DESIGN_KEY = 'sp.etiquetas.diseno';
 
 function readPref(key: string): string | null {
   try {
@@ -139,6 +140,17 @@ async function allItems(api: Api): Promise<Item[]> {
               </select>
             </es-form-field>
           }
+          <es-form-field label="Diseño" #d="esFormField">
+            <select
+              esSelect
+              [id]="d.controlId"
+              [value]="design()"
+              (change)="setDesign($any($event.target).value)"
+            >
+              <option value="cajon">Cajón · encabezado y dirección grande</option>
+              <option value="detalle">Detalle · QR con nombre y ruta</option>
+            </select>
+          </es-form-field>
           <es-form-field label="Formato" #f="esFormField">
             <select
               esSelect
@@ -246,14 +258,19 @@ async function allItems(api: Api): Promise<Item[]> {
               Tamaño real. Al imprimir elija escala 100 % («Tamaño real») y sin márgenes
               adicionales; también puede elegir «Guardar como PDF».
             </p>
-            <sp-label-sheet [labels]="sheet()" [format]="format()" [outline]="true" />
+            <sp-label-sheet
+              [labels]="sheet()"
+              [format]="format()"
+              [design]="design()"
+              [outline]="true"
+            />
           }
         </section>
       </div>
     </div>
 
     <div #printRoot class="sp-print-root">
-      <sp-label-sheet [labels]="sheet()" [format]="format()" />
+      <sp-label-sheet [labels]="sheet()" [format]="format()" [design]="design()" />
     </div>
   `,
 })
@@ -287,6 +304,9 @@ export default class Labels {
   );
   protected readonly format = computed(
     () => LABEL_FORMATS.find((f) => f.id === this.formatId()) ?? LABEL_FORMATS[0]!,
+  );
+  protected readonly design = signal<LabelDesign>(
+    readPref(DESIGN_KEY) === 'detalle' ? 'detalle' : 'cajon',
   );
   protected readonly perPage = computed(() => this.format().columns * this.format().rows);
   protected readonly isSheet = computed(() => this.perPage() > 1);
@@ -322,9 +342,16 @@ export default class Labels {
             title: c.address,
             name: c.name,
             sub: cab.path,
+            group: `${cab.code} · ${cab.name}`,
           }));
         return [
-          { key: `location/${cab.qrCode}`, title: cab.code, name: cab.name, sub: cab.path },
+          {
+            key: `location/${cab.qrCode}`,
+            title: cab.code,
+            name: cab.name,
+            sub: cab.path,
+            group: cab.name,
+          },
           ...drawers,
         ];
       }
@@ -333,7 +360,13 @@ export default class Labels {
         const cabinetLocations = new Set(list.filter((l) => l.cabinetId).map((l) => l.id));
         return list
           .filter((l) => !(l.kind === 'drawer' && l.parentId && cabinetLocations.has(l.parentId)))
-          .map((l) => ({ key: `location/${l.qrCode}`, title: l.code, name: l.name, sub: l.path }));
+          .map((l) => ({
+            key: `location/${l.qrCode}`,
+            title: l.code,
+            name: l.name,
+            sub: l.path,
+            group: l.path.includes(' / ') ? l.path.slice(0, l.path.lastIndexOf(' / ')) : l.name,
+          }));
       }
       const items = params.itemId
         ? [await this.api.get<Item>(`/items/${params.itemId}`)]
@@ -343,6 +376,7 @@ export default class Labels {
         title: i.sku,
         name: i.name,
         sub: [i.manufacturer, i.model].filter(Boolean).join(' · '),
+        group: i.name,
       }));
     },
   });
@@ -415,6 +449,11 @@ export default class Labels {
   protected setFormat(id: string): void {
     this.formatId.set(id);
     writePref(FORMAT_KEY, id);
+  }
+
+  protected setDesign(value: LabelDesign): void {
+    this.design.set(value);
+    writePref(DESIGN_KEY, value);
   }
 
   protected setBase(value: string): void {

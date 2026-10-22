@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.3.0-alpha.4] — 2026-10-22
+
+### Añadido
+
+- Diseño de etiqueta **Cajón** (nuevo predeterminado): encabezado con el gabinete y la dirección en grande junto al QR, legible de lejos en el frente del cajón. El diseño **Detalle** (QR con nombre y ruta) sigue disponible; la elección se recuerda.
+
 ## [0.3.0-alpha.3] — 2026-10-22
 
 Adelanto de la Fase 5: etiquetas QR.

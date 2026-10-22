@@ -10,7 +10,13 @@ export interface LabelData {
   name: string;
   /** Ruta o detalle secundario. */
   sub: string;
+  /** Encabezado del diseño «Cajón»: gabinete, ubicación padre o categoría. */
+  group?: string;
 }
+
+/** «Detalle»: QR y tres líneas. «Cajón»: encabezado y dirección grande, legible de lejos. */
+export type LabelDesign = 'detalle' | 'cajon';
+const MM_TO_PT = 2.835;
 
 /** Medidas en milímetros. Las hojas siguen plantillas comerciales comunes. */
 export interface LabelFormat {
@@ -123,7 +129,29 @@ export const LABEL_FORMATS: readonly LabelFormat[] = [
             [style.height.mm]="format().height"
             [attr.data-label]="l.title"
           >
-            @if (l.qr) {
+            @if (l.qr && design() === 'cajon') {
+              <div class="flex size-full min-w-0 flex-col">
+                <span
+                  class="truncate border-b border-black pb-[0.6mm] text-center font-bold tracking-wide uppercase"
+                  [style.font-size.pt]="groupSize()"
+                  >{{ l.group || l.name }}</span
+                >
+                <div class="flex min-h-0 flex-1 items-center gap-[1.5mm] pt-[1mm]">
+                  <sp-qr
+                    class="shrink-0"
+                    [value]="l.qr"
+                    [label]="'QR de ' + l.title"
+                    [style.width.mm]="bigQrSize()"
+                    [style.height.mm]="bigQrSize()"
+                  />
+                  <span
+                    class="min-w-0 flex-1 truncate text-right font-mono leading-none font-bold"
+                    [style.font-size.pt]="bigTitleSize(l.title)"
+                    >{{ l.title }}</span
+                  >
+                </div>
+              </div>
+            } @else if (l.qr) {
               <sp-qr
                 class="shrink-0"
                 [value]="l.qr"
@@ -152,6 +180,7 @@ export class LabelSheet {
   readonly format = input.required<LabelFormat>();
   /** Contorno punteado para ubicar las etiquetas en pantalla (no se imprime). */
   readonly outline = input(false);
+  readonly design = input<LabelDesign>('detalle');
 
   protected readonly pages = computed(() => {
     const per = this.format().columns * this.format().rows;
@@ -162,6 +191,20 @@ export class LabelSheet {
   });
   protected readonly qrSize = computed(() => this.format().height - 3);
   protected readonly titleSize = computed(() => (this.format().height >= 30 ? 14 : 11));
+  protected readonly groupSize = computed(() => (this.format().height >= 30 ? 10.5 : 8.5));
+  /** Alto útil bajo el encabezado del diseño «Cajón» (mm). */
+  private readonly bodyHeight = computed(
+    () => this.format().height - 3 - this.groupSize() / MM_TO_PT - 2,
+  );
+  protected readonly bigQrSize = computed(() => this.bodyHeight());
+
+  /** Dirección tan grande como quepa: limitada por el alto y por el ancho libre junto al QR. */
+  protected bigTitleSize(title: string): number {
+    const free = this.format().width - 3 - this.bigQrSize() - 1.5;
+    const byHeight = this.bodyHeight() * 0.8;
+    const byWidth = free / (Math.max(title.length, 2) * 0.62);
+    return Math.round(Math.min(byHeight, byWidth) * MM_TO_PT * 10) / 10;
+  }
 
   protected x(i: number): number {
     const f = this.format();
