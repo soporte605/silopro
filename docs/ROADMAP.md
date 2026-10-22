@@ -52,9 +52,11 @@ _Aceptación:_ gabinete de 60×40 fluido (< 16 ms por interacción); un artícul
 | Almacenes y árbol de ubicaciones editable                   |   ✅   | crear, renombrar, mover y archivar (`alpha.2`)                                                  |
 | Validaciones de capacidad                                   |   ✅   | artículos distintos por ubicación o cajón (`alpha.2`)                                           |
 
-## Fase 4 — Visualización 3D · `v0.4.0`
+## Fase 4 — Visualización 3D · `v0.4.0` · 🟡 `v0.4.0-alpha.1`
 
 Three.js con carga diferida, gabinete modular con frentes transparentes, cámara orbital, selección por _raycasting_, apertura animada de cajones, panel de artículo, sincronización con ubicaciones. Representación separada del dominio (adaptador sobre `cabinet-engine`).
+
+**Hecho en `v0.4.0-alpha.1`:** vista 3D en el editor del gabinete (botón «3D», se recuerda), Three.js en un fragmento aparte que solo se descarga al abrirla, modelo de escena en `cabinet-engine` (`cabinetSceneModel`, sin Three.js), cajones con `InstancedMesh`, frentes transparentes con la dirección impresa, cámara orbital (girar, acercar, encuadrar), selección por clic o con flechas del teclado, apertura animada, colores de ocupación iguales a la cuadrícula y el mismo panel de contenido. Pendiente: medidas físicas por gabinete (hoy se usan 40 × 30 × 120 mm por celda), abrir la vista 3D desde la ficha del artículo o de la ubicación y ver varios gabinetes de una estantería juntos.
 
 ## Fase 5 — Operaciones · `v0.5.0`
 

@@ -1,6 +1,6 @@
 {
   "name": "@silopro/web",
-  "version": "0.3.0-alpha.5",
+  "version": "0.4.0-alpha.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -27,6 +27,7 @@
     "@silopro/contracts": "workspace:*",
     "@silopro/domain": "workspace:*",
     "rxjs": "~7.8.0",
+    "three": "0.186.0",
     "tslib": "^2.3.0",
     "uqr": "0.1.2",
     "zod": "^4.6.7"
@@ -37,6 +38,7 @@
     "@angular/compiler-cli": "^22.2.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/three": "0.186.0",
     "jsdom": "^30.0.0",
     "postcss": "^8.5.31",
     "prettier": "^3.8.1",

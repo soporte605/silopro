@@ -7,6 +7,9 @@ const executablePath = process.env['PLAYWRIGHT_CHROMIUM_PATH'];
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
+  // Los flujos largos (registro, invitaciones, inventario) rondan los 30 s en
+  // máquinas de 4 núcleos con la suite en paralelo.
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,

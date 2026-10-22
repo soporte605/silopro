@@ -4,6 +4,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.4.0-alpha.1] — 2026-10-22
+
+Fase 4 · Visualización 3D.
+
+### Añadido
+
+- **Vista 3D del gabinete**: botón «Cuadrícula / 3D» en el editor (la elección se recuerda). Se gira arrastrando, se acerca con la rueda o pellizcando y «Encuadrar» vuelve a la vista inicial. Al elegir un cajón (clic, toque o flechas del teclado) sale con una animación y el panel lateral muestra su contenido; Enter o un segundo clic lo cierra. Frentes transparentes con la dirección del cajón, colores de ocupación iguales a la cuadrícula y la búsqueda atenúa los cajones que no coinciden.
+- Three.js 0.186.0 en un fragmento aparte (~119 kB comprimido) que solo se descarga al abrir la vista 3D. Si el navegador no tiene WebGL, se avisa y se sigue usando la cuadrícula.
+- `cabinet-engine`: `cabinetSceneModel` traduce el diseño a cajas en milímetros (paredes, separadores y cajones) sin depender de Three.js; `DEFAULT_PHYSICAL_SPEC`.
+
+### Cambiado
+
+- Aviso de tamaño del paquete inicial de 600 kB a 650 kB (el límite de error sigue en 1 MB).
+- Pruebas E2E: tiempo máximo por prueba de 30 s a 60 s; los flujos largos rozaban el límite con la suite en paralelo.
+
 ## [0.3.0-alpha.5] — 2026-10-22
 
 ### Añadido

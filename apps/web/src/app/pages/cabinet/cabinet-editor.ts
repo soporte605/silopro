@@ -38,7 +38,19 @@ import {
 import { ApiRequestError, Api } from '../../core/api';
 import { fmtQty } from '../../core/format';
 import { SessionService } from '../../core/session';
+import { Cabinet3d } from './cabinet-3d/cabinet-3d';
 import { CabinetGrid, selectionRect } from './cabinet-grid';
+
+type View = 'grid' | '3d';
+const VIEW_KEY = 'sp.gabinete.vista';
+
+function readView(): View {
+  try {
+    return localStorage.getItem(VIEW_KEY) === '3d' ? '3d' : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
 
 const toLayout = (c: Cabinet): CabinetLayout => ({
   rows: c.rows,
@@ -64,6 +76,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
   selector: 'sp-cabinet-editor',
   imports: [
     RouterLink,
+    Cabinet3d,
     CabinetGrid,
     EsBadge,
     EsBreadcrumb,
@@ -83,6 +96,26 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
           @if (dirty()) {
             <es-badge tone="warning">Cambios sin guardar</es-badge>
           }
+          <div class="flex rounded-md border border-border p-0.5" role="group" aria-label="Vista">
+            <button
+              esButton
+              size="sm"
+              [variant]="view() === 'grid' ? 'secondary' : 'ghost'"
+              [attr.aria-pressed]="view() === 'grid'"
+              (click)="setView('grid')"
+            >
+              Cuadrícula
+            </button>
+            <button
+              esButton
+              size="sm"
+              [variant]="view() === '3d' ? 'secondary' : 'ghost'"
+              [attr.aria-pressed]="view() === '3d'"
+              (click)="setView('3d')"
+            >
+              3D
+            </button>
+          </div>
           @if (cabinet(); as cab) {
             <a
               esButton
@@ -160,16 +193,28 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
           </div>
 
           <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
-            <div class="min-h-0 min-w-0 flex-1 overflow-auto bg-surface-sunken p-4">
-              <sp-cabinet-grid
-                [label]="'Gabinete ' + cab.name"
-                [layout]="lay"
-                [states]="states()"
-                [matches]="matches()"
-                [(selectedId)]="selectedId"
-                [(anchorId)]="anchorId"
-              />
-            </div>
+            @if (view() === '3d') {
+              <div class="h-[65vh] min-w-0 shrink-0 bg-surface-sunken lg:h-auto lg:flex-1">
+                <sp-cabinet-3d
+                  [label]="'Gabinete ' + cab.name"
+                  [layout]="lay"
+                  [states]="states()"
+                  [matches]="matches()"
+                  [(selectedId)]="selectedId"
+                />
+              </div>
+            } @else {
+              <div class="min-h-0 min-w-0 flex-1 overflow-auto bg-surface-sunken p-4">
+                <sp-cabinet-grid
+                  [label]="'Gabinete ' + cab.name"
+                  [layout]="lay"
+                  [states]="states()"
+                  [matches]="matches()"
+                  [(selectedId)]="selectedId"
+                  [(anchorId)]="anchorId"
+                />
+              </div>
+            }
 
             <aside
               class="w-full shrink-0 overflow-y-auto border-t border-border bg-surface lg:w-80 lg:border-t-0 lg:border-l"
@@ -327,6 +372,7 @@ export default class CabinetEditor {
     return false;
   });
   protected readonly query = signal('');
+  protected readonly view = signal<View>(readView());
   protected readonly selectedId = signal<string | null>(null);
   protected readonly anchorId = signal<string | null>(null);
   protected readonly saving = signal(false);
@@ -403,6 +449,15 @@ export default class CabinetEditor {
       this.anchorId.set(target.id);
       if (this.resaltar()) setTimeout(() => this.grid()?.scrollTo(target.id));
     });
+  }
+
+  protected setView(v: View): void {
+    this.view.set(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* Sin almacenamiento: solo no se recuerda la vista. */
+    }
   }
 
   protected saved(id: string): CabinetCompartment | undefined {
