@@ -18,3 +18,4 @@ data/
 # Datos de acceso a servidores (contraseñas, llaves): nunca al repositorio
 deploy/
 *.local.env
+.playwright/

@@ -147,7 +147,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
 export default class Home {
   private readonly http = inject(HttpClient);
   protected readonly session = inject(SessionService);
-  protected readonly currentPhase = 3;
+  protected readonly currentPhase = 6;
   protected readonly steps = [
     {
       n: 1,

@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.0] — 2026-10-22
+
+Cierra la Fase 5 · Operaciones.
+
+### Añadido
+
+- **Escanear etiqueta** (`/escanear`, en el menú y en la barra del celular): lee el QR con la cámara trasera sin salir de la app y abre el cajón, la ubicación o el artículo. Usa el lector nativo del navegador y, si no hay, jsQR (se descarga solo al usarlo). Sin cámara o sin permiso, se puede pegar el enlace de la etiqueta. Necesita HTTPS, como en app.silopro.elikarsystems.com.
+- Prueba de punta a punta con una cámara falsa que muestra un QR.
+
 ## [0.5.0-alpha.5] — 2026-10-22
 
 Fase 5 · Operaciones: auditoría y diario de movimientos.

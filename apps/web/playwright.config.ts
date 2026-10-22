@@ -1,8 +1,15 @@
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+import { writeQrCamera } from './e2e/support/qr-camera';
 
 // En entornos con Chromium preinstalado puede indicarse su ruta con
 // PLAYWRIGHT_CHROMIUM_PATH (p. ej. /opt/pw-browsers/chromium).
 const executablePath = process.env['PLAYWRIGHT_CHROMIUM_PATH'];
+
+// Cámara falsa que muestra un QR, para probar el escáner de la app.
+// Fuera de test-results, que Playwright vacía al empezar.
+const qrCamera = resolve('.playwright/qr-camera.y4m');
+writeQrCamera(qrCamera);
 
 export default defineConfig({
   testDir: 'e2e',
@@ -17,7 +24,15 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4300',
     trace: 'retain-on-failure',
-    ...(executablePath ? { launchOptions: { executablePath } } : {}),
+    permissions: ['camera'],
+    launchOptions: {
+      ...(executablePath ? { executablePath } : {}),
+      args: [
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+        `--use-file-for-fake-video-capture=${qrCamera}`,
+      ],
+    },
   },
   projects: [
     { name: 'escritorio', use: { ...devices['Desktop Chrome'] } },

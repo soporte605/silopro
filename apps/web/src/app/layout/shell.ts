@@ -18,6 +18,7 @@ import {
   LucideArrowLeftRight,
   LucideBookmark,
   LucideBox,
+  LucideScanLine,
   LucideHistory,
   LucideShieldCheck,
   LucideBuilding2,
@@ -62,6 +63,7 @@ import { SessionService } from '../core/session';
     LucideMapPin,
     LucideArrowLeftRight,
     LucideBookmark,
+    LucideScanLine,
     LucideHistory,
     LucideShieldCheck,
     LucideClipboardList,
@@ -108,6 +110,12 @@ import { SessionService } from '../core/session';
           <span class="flex-1 text-left">Buscar…</span>
           <kbd esKbd>Ctrl K</kbd>
         </button>
+        <a
+          routerLink="/escanear"
+          class="mt-1.5 flex h-7 w-full items-center gap-2 rounded-md px-2 text-sm text-fg-muted hover:bg-surface-hover"
+        >
+          <svg lucideScanLine [size]="14"></svg> Escanear etiqueta
+        </a>
       </div>
       <nav class="flex flex-col gap-0.5 px-2" aria-label="Principal">
         <ng-container *ngTemplateOutlet="navLinks" />
@@ -195,6 +203,9 @@ import { SessionService } from '../core/session';
         >
           <svg lucideSearch></svg>
         </button>
+        <a esButton variant="ghost" iconOnly aria-label="Escanear etiqueta" routerLink="/escanear">
+          <svg lucideScanLine></svg>
+        </a>
         <button
           esButton
           variant="ghost"
@@ -410,6 +421,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['historial', 'diario', 'csv', 'exportar', 'kardex'],
         run: () => this.go('/movimientos'),
+      },
+      {
+        id: 'nav.scan',
+        label: 'Escanear etiqueta',
+        group: 'Navegación',
+        keywords: ['qr', 'cámara', 'leer', 'código'],
+        run: () => this.go('/escanear'),
       },
       {
         id: 'nav.audit',

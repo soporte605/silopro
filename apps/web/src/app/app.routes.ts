@@ -87,6 +87,11 @@ export const routes: Routes = [
         title: 'Transferencias · SiloPro',
       },
       {
+        path: 'escanear',
+        loadComponent: () => import('./pages/scan/scanner'),
+        title: 'Escanear etiqueta · SiloPro',
+      },
+      {
         path: 'movimientos',
         loadComponent: () => import('./pages/journal/movements-journal'),
         title: 'Movimientos · SiloPro',
