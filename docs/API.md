@@ -69,7 +69,7 @@ Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubica
 
 | Método y ruta                         | Permiso       | Notas                                                                                                             |
 | ------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `GET cabinets`                        | catalog.read  | Con tamaño, número de cajones y cajones ocupados                                                                  |
+| `GET cabinets`                        | catalog.read  | Con tamaño, `parentId` (dónde está), número de cajones y ocupados                                                 |
 | `POST cabinets`                       | catalog.write | `parentId, code, name, rows (1–60), columns (1–60), addressing?, rowOrigin?`; crea un cajón por celda             |
 | `GET cabinets/:id`                    | catalog.read  | Diseño completo; cada compartimento con `locationId`, `name`, `qrCode`, `itemCount` y `state`                     |
 | `GET cabinets/:id/stock`              | catalog.read  | Una fila por artículo y cajón, con `lowStock`                                                                     |

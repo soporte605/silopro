@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.4.0] — 2026-10-22
+
+Cierre de la Fase 4 · Visualización 3D (incluye `0.4.0-alpha.1` y `0.4.0-alpha.2`). La Fase 3 se cierra como `v0.3.0` con el contenido de `0.3.0-alpha.5`.
+
+### Añadido
+
+- **Estante en 3D** (`/gabinetes/estante/:id`): todos los gabinetes de un mismo lugar, uno junto a otro sobre una tabla, con el código de cada uno encima. La búsqueda «¿Dónde está?» (artículo, SKU o cajón) atenúa los cajones que no coinciden y cuenta las coincidencias. Al tocar un cajón se abre y el panel muestra su contenido y «Abrir gabinete». Con las flechas se pasa de un gabinete al vecino.
+- Accesos: «Ver N gabinetes en 3D» en la ficha de la ubicación que los contiene y «Estante en 3D» en el editor del gabinete.
+- API: `parentId` en el resumen y el detalle del gabinete.
+
 ## [0.4.0-alpha.2] — 2026-10-22
 
 ### Añadido

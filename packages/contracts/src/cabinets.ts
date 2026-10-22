@@ -72,6 +72,8 @@ export type CabinetPhysicalUpdate = z.input<typeof cabinetPhysicalUpdateSchema>;
 export interface CabinetSummary {
   id: string;
   locationId: string;
+  /** Dónde está el gabinete (estante, zona…): agrupa la vista 3D de varios gabinetes. */
+  parentId: string | null;
   code: string;
   name: string;
   path: string;

@@ -182,7 +182,7 @@ export class Cabinet3d {
     const p = this.press;
     this.press = null;
     if (!p || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 6) return;
-    const id = this.viewer?.pick(e.clientX, e.clientY);
+    const id = this.viewer?.pick(e.clientX, e.clientY)?.id;
     if (!id) return;
     if (id === this.selectedId()) this.toggle();
     else this.selectedId.set(id);
@@ -190,7 +190,7 @@ export class Cabinet3d {
 
   protected hover(e: PointerEvent): void {
     if (e.buttons || !this.viewer) return;
-    const id = this.viewer.pick(e.clientX, e.clientY);
+    const id = this.viewer.pick(e.clientX, e.clientY)?.id;
     this.hovered.set(id ? this.addressOf(id) : null);
   }
 

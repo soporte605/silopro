@@ -72,6 +72,11 @@ export const routes: Routes = [
         title: 'Gabinete (demo) · SiloPro',
       },
       {
+        path: 'gabinetes/estante/:id',
+        loadComponent: () => import('./pages/cabinet/shelf-3d'),
+        title: 'Gabinetes en 3D · SiloPro',
+      },
+      {
         path: 'gabinetes/:id',
         loadComponent: () => import('./pages/cabinet/cabinet-editor'),
         title: 'Gabinete · SiloPro',

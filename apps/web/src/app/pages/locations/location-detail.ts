@@ -16,7 +16,7 @@ import {
   EsToastService,
 } from '@elikarsystems/ui';
 import { LucideGrid3x3, LucideMinus, LucidePackageOpen, LucidePlus } from '@lucide/angular';
-import type { Item, LocationDetail, StockByLocation } from '@silopro/contracts';
+import type { CabinetSummary, Item, LocationDetail, StockByLocation } from '@silopro/contracts';
 import { LOCATION_KIND_LABELS } from '@silopro/domain';
 import { firstValueFrom } from 'rxjs';
 import { ApiRequestError, Api } from '../../core/api';
@@ -102,6 +102,12 @@ import { ItemPicker } from './item-picker';
           }
         </div>
 
+        @if (cabinetsHere(); as n) {
+          <a esButton [routerLink]="['/gabinetes/estante', l.id]" class="self-start">
+            <svg lucideGrid3x3></svg> Ver {{ n }} {{ n === 1 ? 'gabinete' : 'gabinetes' }} en 3D
+          </a>
+        }
+
         @if (!l.contents.length) {
           <es-empty-state
             title="Vacío"
@@ -168,6 +174,14 @@ export default class LocationDetailPage {
     params: () => ({ id: this.id(), org: this.session.orgId() }),
     loader: ({ params }) => this.api.get<LocationDetail>(`/locations/${params.id}`),
   });
+  /** Gabinetes guardados dentro de esta ubicación (para la vista 3D del estante). */
+  private readonly cabinets = resource({
+    params: () => ({ org: this.session.orgId() }),
+    loader: () => this.api.get<CabinetSummary[]>('/cabinets'),
+  });
+  protected readonly cabinetsHere = computed(
+    () => (this.cabinets.value() ?? []).filter((c) => c.parentId === this.id()).length,
+  );
   protected readonly parentPath = computed(() => {
     const path = this.loc.value()?.path ?? '';
     return path.includes(' / ') ? path.slice(0, path.lastIndexOf(' / ')) : '';

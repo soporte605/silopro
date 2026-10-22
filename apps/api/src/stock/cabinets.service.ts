@@ -63,7 +63,12 @@ export class CabinetsService {
       const rows = await tx
         .select({
           c: cabinets,
-          loc: { code: locations.code, name: locations.name, path: locations.path },
+          loc: {
+            code: locations.code,
+            name: locations.name,
+            path: locations.path,
+            parentId: locations.parentId,
+          },
           occupied: sql<number>`(
             select count(distinct sl.location_id)::int from ${stockLevels} sl
             join ${locations} d on d.id = sl.location_id
@@ -329,6 +334,7 @@ export class CabinetsService {
           code: locations.code,
           name: locations.name,
           path: locations.path,
+          parentId: locations.parentId,
           qrCode: locations.qrCode,
         },
       })
@@ -401,12 +407,13 @@ export class CabinetsService {
 
   private summary(
     c: CabinetRow,
-    loc: { code: string; name: string; path: string },
+    loc: { code: string; name: string; path: string; parentId: string | null },
     occupied: number,
   ): CabinetSummary {
     return {
       id: c.id,
       locationId: c.locationId,
+      parentId: loc.parentId,
       code: loc.code,
       name: loc.name,
       path: loc.path,

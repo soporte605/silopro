@@ -35,7 +35,7 @@ _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con 
 | Fotografías con almacenamiento seguro |   ✅   | `apps/api/test/photos.spec.ts`, e2e `photos-members`     |
 | Invitar miembros a una organización   |   ✅   | `apps/api/test/members.spec.ts`, e2e `photos-members`    |
 
-## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.5`
+## Fase 3 — Almacenamiento · `v0.3.0` · ✅ cerrada (contenido de `v0.3.0-alpha.5`)
 
 Almacenes y árbol de ubicaciones (reglas de `@silopro/domain`), gabinetes persistidos con el modelo de `@silopro/cabinet-engine`, editor 2D completo (crear, redimensionar, fusionar, etiquetar), existencias por ubicación, búsqueda que resalta posiciones, estados de ocupación.
 
@@ -52,13 +52,15 @@ _Aceptación:_ gabinete de 60×40 fluido (< 16 ms por interacción); un artícul
 | Almacenes y árbol de ubicaciones editable                   |   ✅   | crear, renombrar, mover y archivar (`alpha.2`)                                                  |
 | Validaciones de capacidad                                   |   ✅   | artículos distintos por ubicación o cajón (`alpha.2`)                                           |
 
-## Fase 4 — Visualización 3D · `v0.4.0` · 🟡 `v0.4.0-alpha.2`
+## Fase 4 — Visualización 3D · `v0.4.0` · ✅
 
 Three.js con carga diferida, gabinete modular con frentes transparentes, cámara orbital, selección por _raycasting_, apertura animada de cajones, panel de artículo, sincronización con ubicaciones. Representación separada del dominio (adaptador sobre `cabinet-engine`).
 
 **Hecho en `v0.4.0-alpha.1`:** vista 3D en el editor del gabinete (botón «3D», se recuerda), Three.js en un fragmento aparte que solo se descarga al abrirla, modelo de escena en `cabinet-engine` (`cabinetSceneModel`, sin Three.js), cajones con `InstancedMesh`, frentes transparentes con la dirección impresa, cámara orbital (girar, acercar, encuadrar), selección por clic o con flechas del teclado, apertura animada, colores de ocupación iguales a la cuadrícula y el mismo panel de contenido.
 
-**Hecho en `v0.4.0-alpha.2`:** medidas físicas por gabinete (ancho y alto de celda, profundidad y pared, en mm) con medidas exteriores y cuántos módulos imprime la Ender-3 V3 KE; la vista 3D usa la escala real. «Ver en 3D» desde la ficha del artículo y de la ubicación abre el gabinete con el cajón afuera. Pendiente (opcional antes de cerrar `v0.4.0`): ver juntos varios gabinetes de una estantería.
+**Hecho en `v0.4.0-alpha.2`:** medidas físicas por gabinete (ancho y alto de celda, profundidad y pared, en mm) con medidas exteriores y cuántos módulos imprime la Ender-3 V3 KE; la vista 3D usa la escala real. «Ver en 3D» desde la ficha del artículo y de la ubicación abre el gabinete con el cajón afuera.
+
+**Cerrada en `v0.4.0`:** vista 3D de un estante o lugar con todos sus gabinetes juntos (`/gabinetes/estante/:id`), con el código de cada uno, búsqueda «¿Dónde está?» que atenúa lo que no coincide y paso con flechas de un gabinete al vecino.
 
 ## Fase 5 — Operaciones · `v0.5.0`
 

@@ -120,6 +120,11 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
               3D
             </button>
           </div>
+          @if (cabinet()?.parentId; as parentId) {
+            <a esButton variant="ghost" size="sm" [routerLink]="['/gabinetes/estante', parentId]"
+              >Estante en 3D</a
+            >
+          }
           @if (cabinet(); as cab) {
             <a
               esButton

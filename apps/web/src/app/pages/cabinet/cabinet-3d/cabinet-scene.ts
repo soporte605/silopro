@@ -1,15 +1,12 @@
 import type { CabinetSceneModel, SceneBox } from '@silopro/cabinet-engine';
 import type { CompartmentState } from '@silopro/contracts';
 import {
-  AmbientLight,
   BoxGeometry,
   CanvasTexture,
   Color,
-  DirectionalLight,
   DynamicDrawUsage,
   EdgesGeometry,
   Group,
-  HemisphereLight,
   InstancedMesh,
   LineBasicMaterial,
   LineSegments,
@@ -20,7 +17,6 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
   type Raycaster,
-  Scene,
   SRGBColorSpace,
 } from 'three';
 
@@ -54,8 +50,8 @@ const boxMatrix = (b: SceneBox, dz = 0): Matrix4 =>
  * aunque el gabinete tenga cientos de cajones.
  */
 export class CabinetScene {
-  readonly scene = new Scene();
-  private readonly root = new Group();
+  /** Raíz del gabinete; el visor la coloca en su escena (varios gabinetes, uno junto a otro). */
+  readonly object = new Group();
   private readonly panels: InstancedMesh;
   private readonly bodies: InstancedMesh;
   private readonly fronts: InstancedMesh;
@@ -105,17 +101,8 @@ export class CabinetScene {
     this.outline.visible = false;
     this.outline.renderOrder = 2;
 
-    this.root.add(this.panels, this.bodies, this.fronts, this.outline);
+    this.object.add(this.panels, this.bodies, this.fronts, this.outline);
     if (n <= MAX_LABELS) this.buildLabels();
-
-    this.scene.add(
-      this.root,
-      new HemisphereLight(0xffffff, 0x8899aa, 1.6),
-      new AmbientLight(0xffffff, 0.4),
-    );
-    const sun = new DirectionalLight(0xffffff, 1.6);
-    sun.position.set(0.6, 1, 1.2).multiplyScalar(model.outer.width + model.outer.height);
-    this.scene.add(sun);
 
     this.setPalette(palette);
     this.updateMatrices();
@@ -169,7 +156,7 @@ export class CabinetScene {
       label.raycast = () => undefined;
       label.renderOrder = 3;
       this.labels.push(label);
-      this.root.add(label);
+      this.object.add(label);
     });
   }
 
@@ -229,9 +216,19 @@ export class CabinetScene {
 
   /** Id del cajón que toca el rayo, o `null`. */
   pick(raycaster: Raycaster): string | null {
+    return this.hit(raycaster)?.id ?? null;
+  }
+
+  /** Primer impacto del rayo: cajón (`id`) o pared (`id: null`), con su distancia. */
+  hit(raycaster: Raycaster): { id: string | null; distance: number } | null {
+    this.object.updateMatrixWorld();
     const hit = raycaster.intersectObjects([this.fronts, this.bodies, this.panels], false)[0];
-    if (!hit || hit.object === this.panels || hit.instanceId === undefined) return null;
-    return this.model.drawers[hit.instanceId]?.id ?? null;
+    if (!hit) return null;
+    const id =
+      hit.object === this.panels || hit.instanceId === undefined
+        ? null
+        : (this.model.drawers[hit.instanceId]?.id ?? null);
+    return { id, distance: hit.distance };
   }
 
   /** Posición del frente de un cajón (cerrado), para encuadrarlo con la cámara. */

@@ -1,6 +1,23 @@
 import type { CabinetSceneModel } from '@silopro/cabinet-engine';
 import type { CompartmentState } from '@silopro/contracts';
-import { PerspectiveCamera, Raycaster, Vector2, Vector3, WebGLRenderer } from 'three';
+import {
+  AmbientLight,
+  BoxGeometry,
+  CanvasTexture,
+  DirectionalLight,
+  HemisphereLight,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Raycaster,
+  Scene,
+  SRGBColorSpace,
+  Vector2,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CabinetScene, type ScenePalette } from './cabinet-scene';
 
@@ -37,19 +54,59 @@ export function readPalette(host: HTMLElement): ScenePalette {
   return palette;
 }
 
+/** Un gabinete dentro del visor; `key` lo distingue cuando hay varios. */
+export interface ViewerEntry {
+  key: string;
+  model: CabinetSceneModel;
+  /** Rótulo sobre el gabinete (su código) cuando hay varios. */
+  title?: string;
+}
+
+/** Cartel con el código del gabinete, para distinguirlos en un estante. */
+function titlePlane(text: string, width: number): Mesh {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 96;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 512, 96);
+    ctx.fillStyle = '#111111';
+    ctx.font = '700 64px ui-monospace, "Geist Mono Variable", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 50, 490);
+  }
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  const w = Math.min(width * 0.9, 140);
+  return new Mesh(new PlaneGeometry(w, w * (96 / 512)), new MeshBasicMaterial({ map: texture }));
+}
+
+/** Separación entre gabinetes vecinos de un estante (mm). */
+const GAP = 40;
+/** Grosor de la tabla del estante que se dibuja bajo varios gabinetes (mm). */
+const SHELF = 15;
+
 /**
- * Renderizador, cámara orbital y bucle de dibujo de un {@link CabinetScene}.
- * Solo dibuja cuando algo cambia (giro, animación, datos), para no gastar
- * batería en el celular. Es el único módulo que importa Three.js en tiempo de
- * ejecución y se carga de forma diferida.
+ * Renderizador, cámara orbital y bucle de dibujo de uno o varios
+ * {@link CabinetScene} (los gabinetes de un estante, uno junto a otro, con los
+ * frentes alineados). Solo dibuja cuando algo cambia (giro, animación, datos),
+ * para no gastar batería en el celular. Es el único módulo que importa
+ * Three.js en tiempo de ejecución y se carga de forma diferida.
  */
 export class CabinetViewer {
   private readonly renderer: WebGLRenderer;
+  private readonly scene = new Scene();
   private readonly camera = new PerspectiveCamera(FOV, 1, 1, 10_000);
   private readonly controls: OrbitControls;
   private readonly raycaster = new Raycaster();
+  private readonly sun = new DirectionalLight(0xffffff, 1.6);
   private palette: ScenePalette;
-  private scene: CabinetScene | null = null;
+  private entries: { key: string; scene: CabinetScene }[] = [];
+  private shelf: Mesh | null = null;
+  private titles: Mesh[] = [];
+  private bounds = { width: 1, height: 1, depth: 1 };
   private fittedSize = '';
   private frame = 0;
   private last = 0;
@@ -65,13 +122,68 @@ export class CabinetViewer {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.addEventListener('change', () => this.request());
+    this.scene.add(
+      new HemisphereLight(0xffffff, 0x8899aa, 1.6),
+      new AmbientLight(0xffffff, 0.4),
+      this.sun,
+    );
   }
 
-  /** Reconstruye la escena; solo reencuadra si cambió el tamaño, para no perder el giro. */
+  /** Un solo gabinete (editor). */
   setModel(model: CabinetSceneModel): void {
-    this.scene?.dispose();
-    this.scene = new CabinetScene(model, this.palette);
-    const size = `${model.outer.width}x${model.outer.height}`;
+    this.setModels([{ key: '', model }]);
+  }
+
+  /**
+   * Reconstruye la escena con los gabinetes de izquierda a derecha, apoyados
+   * en la misma base y con los frentes alineados. Solo reencuadra si cambió el
+   * tamaño total, para no perder el giro del usuario.
+   */
+  setModels(list: readonly ViewerEntry[]): void {
+    for (const e of this.entries) {
+      this.scene.remove(e.scene.object);
+      e.scene.dispose();
+    }
+    for (const t of this.titles) this.disposeTitle(t);
+    this.titles = [];
+    if (this.shelf) {
+      this.scene.remove(this.shelf);
+      this.shelf.geometry.dispose();
+      (this.shelf.material as MeshStandardMaterial).dispose();
+      this.shelf = null;
+    }
+    const maxH = Math.max(1, ...list.map((e) => e.model.outer.height));
+    const maxD = Math.max(1, ...list.map((e) => e.model.outer.depth));
+    const total =
+      list.reduce((sum, e) => sum + e.model.outer.width, 0) + GAP * Math.max(0, list.length - 1);
+    let x = -total / 2;
+    this.entries = list.map(({ key, model, title }) => {
+      const scene = new CabinetScene(model, this.palette);
+      const { width, height, depth } = model.outer;
+      scene.object.position.set(x + width / 2, (height - maxH) / 2, (maxD - depth) / 2);
+      if (title && list.length > 1) {
+        const t = titlePlane(title, width);
+        const h = (t.geometry as PlaneGeometry).parameters.height;
+        t.position.set(x + width / 2, height - maxH / 2 + h / 2 + 4, maxD / 2);
+        t.raycast = () => undefined;
+        this.titles.push(t);
+        this.scene.add(t);
+      }
+      x += width + GAP;
+      this.scene.add(scene.object);
+      return { key, scene };
+    });
+    if (list.length > 1) {
+      this.shelf = new Mesh(
+        new BoxGeometry(total + GAP, SHELF, maxD + GAP / 2),
+        new MeshStandardMaterial({ color: this.palette.frame, roughness: 0.8 }),
+      );
+      this.shelf.position.set(0, -maxH / 2 - SHELF / 2, 0);
+      this.scene.add(this.shelf);
+    }
+    this.bounds = { width: Math.max(total, 1), height: maxH, depth: maxD };
+    this.sun.position.set(0.6, 1, 1.2).multiplyScalar(this.bounds.width + maxH);
+    const size = `${Math.round(total)}x${Math.round(maxH)}`;
     if (size !== this.fittedSize) {
       this.fittedSize = size;
       this.fit();
@@ -79,42 +191,51 @@ export class CabinetViewer {
     this.request();
   }
 
-  setStates(states: ReadonlyMap<string, CompartmentState>): void {
-    this.scene?.setStates(states);
+  private get(key: string): CabinetScene | undefined {
+    return this.entries.find((e) => e.key === key)?.scene;
+  }
+
+  setStates(states: ReadonlyMap<string, CompartmentState>, key = ''): void {
+    this.get(key)?.setStates(states);
     this.request();
   }
 
-  setMatches(matches: ReadonlySet<string>): void {
-    this.scene?.setMatches(matches);
+  setMatches(matches: ReadonlySet<string>, key = ''): void {
+    this.get(key)?.setMatches(matches);
     this.request();
   }
 
-  setSelected(id: string | null): void {
-    this.scene?.setSelected(id);
+  /** Selecciona (y abre) un cajón de un gabinete; los de los demás se cierran. */
+  setSelected(id: string | null, key = ''): void {
+    for (const e of this.entries) e.scene.setSelected(e.key === key ? id : null);
     this.request();
   }
 
   /** Abre o cierra el cajón seleccionado; devuelve si quedó abierto. */
-  toggleSelected(id: string): boolean {
-    this.scene?.toggleSelected();
+  toggleSelected(id: string, key = ''): boolean {
+    this.get(key)?.toggleSelected();
     this.request();
-    return this.isOpen(id);
+    return this.isOpen(id, key);
   }
 
-  isOpen(id: string): boolean {
-    return this.scene?.isOpen(id) ?? false;
+  isOpen(id: string, key = ''): boolean {
+    return this.get(key)?.isOpen(id) ?? false;
   }
 
   /** Cajón bajo un punto de la pantalla (coordenadas de cliente). */
-  pick(clientX: number, clientY: number): string | null {
-    if (!this.scene) return null;
+  pick(clientX: number, clientY: number): { key: string; id: string } | null {
     const rect = this.canvas.getBoundingClientRect();
     const ndc = new Vector2(
       ((clientX - rect.left) / rect.width) * 2 - 1,
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
     this.raycaster.setFromCamera(ndc, this.camera);
-    return this.scene.pick(this.raycaster);
+    let best: { key: string; id: string | null; distance: number } | null = null;
+    for (const e of this.entries) {
+      const h = e.scene.hit(this.raycaster);
+      if (h && (!best || h.distance < best.distance)) best = { key: e.key, ...h };
+    }
+    return best?.id ? { key: best.key, id: best.id } : null;
   }
 
   resize(): void {
@@ -126,10 +247,9 @@ export class CabinetViewer {
     this.request();
   }
 
-  /** Encuadra el gabinete completo. */
+  /** Encuadra todos los gabinetes. */
   fit(): void {
-    if (!this.scene) return;
-    const { width, height, depth } = this.scene.model.outer;
+    const { width, height, depth } = this.bounds;
     const half = Math.tan(((FOV / 2) * Math.PI) / 180);
     const dist =
       (Math.max(height, width / Math.max(this.camera.aspect, 0.3)) / 2 / half) * 1.35 + depth;
@@ -138,7 +258,7 @@ export class CabinetViewer {
     this.camera.far = dist * 10;
     this.camera.updateProjectionMatrix();
     this.controls.target.set(0, 0, 0);
-    this.controls.minDistance = Math.max(width, height) * 0.3;
+    this.controls.minDistance = Math.max(width, height) * 0.2;
     this.controls.maxDistance = dist * 4;
     this.controls.update();
     this.request();
@@ -147,7 +267,8 @@ export class CabinetViewer {
   /** Relee los colores del tema (claro/oscuro). */
   repaint(): void {
     this.palette = readPalette(this.host);
-    this.scene?.setPalette(this.palette);
+    for (const e of this.entries) e.scene.setPalette(this.palette);
+    (this.shelf?.material as MeshStandardMaterial | undefined)?.color.set(this.palette.frame);
     this.request();
   }
 
@@ -157,11 +278,11 @@ export class CabinetViewer {
 
   private tick(t: number): void {
     this.frame = 0;
-    if (!this.scene) return;
     const dt = this.last ? Math.min(0.05, (t - this.last) / 1000) : 1 / 60;
-    const moving = this.scene.step(dt);
+    let moving = false;
+    for (const e of this.entries) moving = e.scene.step(dt) || moving;
     const changed = this.controls.update();
-    this.renderer.render(this.scene.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
     if (moving || changed) {
       this.last = t;
       this.request();
@@ -170,10 +291,20 @@ export class CabinetViewer {
     }
   }
 
+  private disposeTitle(t: Mesh): void {
+    this.scene.remove(t);
+    t.geometry.dispose();
+    const m = t.material as MeshBasicMaterial;
+    m.map?.dispose();
+    m.dispose();
+  }
+
   dispose(): void {
     if (this.frame) cancelAnimationFrame(this.frame);
+    for (const t of this.titles) this.disposeTitle(t);
     this.controls.dispose();
-    this.scene?.dispose();
+    for (const e of this.entries) e.scene.dispose();
+    this.shelf?.geometry.dispose();
     this.renderer.dispose();
   }
 }
