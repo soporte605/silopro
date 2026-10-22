@@ -306,6 +306,14 @@ import { SessionService } from '../core/session';
       >
         <svg lucideArrowLeftRight></svg> Transferencias
       </a>
+      <a
+        esNavItem
+        routerLink="/proyectos"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideClipboardList></svg> Proyectos
+      </a>
       <a esNavItem routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
         <svg lucideBookmark></svg> Reservas
       </a>
@@ -355,7 +363,10 @@ export class Shell {
 
   protected readonly session = inject(SessionService);
 
-  protected readonly upcoming = [{ label: 'Proyectos y BOM', icon: 'bom', phase: 'F6' }];
+  protected readonly upcoming = [
+    { label: 'Lista de compras', icon: 'bom', phase: 'F6' },
+    { label: 'Importar CSV / Excel', icon: 'grid', phase: 'F6' },
+  ];
 
   constructor() {
     this.palette.register([
@@ -407,6 +418,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['mover', 'traspaso', 'reubicar'],
         run: () => this.go('/transferencias'),
+      },
+      {
+        id: 'nav.projects',
+        label: 'Ir a Proyectos',
+        group: 'Navegación',
+        keywords: ['bom', 'lista de materiales', 'pedido', 'orden de trabajo', 'faltantes'],
+        run: () => this.go('/proyectos'),
       },
       {
         id: 'nav.reservations',

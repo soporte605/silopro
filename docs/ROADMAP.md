@@ -74,6 +74,8 @@ Entradas, salidas, ajustes, transferencias, reservas, consumos; bloqueo optimist
 
 Proyectos y listas de materiales (necesario / disponible / faltante / ubicación), reservas por proyecto, lista de compra, alertas de stock bajo, reportes operativos, importación CSV/Excel con vista previa y validación.
 
+**Hecho en `v0.6.0-alpha.1`:** proyectos con lista de materiales: por cada artículo, lo necesario, consumido, reservado, disponible, faltante y en qué ubicaciones está; «Reservar lo disponible» aparta todo lo que haya libre para el proyecto con un clic, y «Liberar todo lo apartado» lo devuelve.
+
 ## Fase 7 — Fabricación · `v0.7.0`
 
 Servicio CAD (CadQuery), modelos paramétricos de cajones, gabinetes, separadores y uniones; exportación STL/3MF; validación geométrica (manifold, espesores mínimos, volumen de impresión); división en piezas ensamblables; prototipos físicos en PLA/PETG en la Ender-3 V3 KE.

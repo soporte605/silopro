@@ -8,6 +8,7 @@ import { ENV, type Env } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MembersModule } from './members/members.module.js';
+import { ProjectsModule } from './projects/projects.module.js';
 import { StockModule } from './stock/stock.module.js';
 
 @Global()
@@ -31,6 +32,7 @@ export class AppModule {
         CatalogModule,
         StockModule,
         MembersModule,
+        ProjectsModule,
         AuditModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],

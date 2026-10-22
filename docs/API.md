@@ -66,11 +66,27 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 | `GET audit`                     | members.manage                     | Bitácora: `actorId?, entityId?, from?, to?, limit, before`; `{ entries, nextCursor }`                                                                                                               |
 | `GET transfers`                 | catalog.read                       | Últimas 50 transferencias; `?itemId=` filtra por artículo                                                                                                                                           |
 | `GET reservations`              | catalog.read                       | Últimas 200 reservas; `?status=active\|released\|consumed` e `?itemId=` filtran                                                                                                                     |
-| `POST reservations`             | stock.move                         | `itemId, locationId, quantity, purpose`: aparta de lo disponible (`422` si no alcanza)                                                                                                              |
+| `POST reservations`             | stock.move                         | `itemId, locationId, quantity, purpose, projectId?`: aparta de lo disponible (`422` si no alcanza)                                                                                                  |
 | `POST reservations/:id/consume` | stock.move                         | `quantity?, reason?` (por omisión, todo lo que queda): movimiento `consumption` unido por `reservationId`; `422 EXCEEDS_RESERVATION` / `RESERVATION_CLOSED`                                         |
 | `POST reservations/:id/release` | stock.move                         | Devuelve lo que queda a disponible y cierra la reserva                                                                                                                                              |
 | `GET items/:id/stock`           | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                                                                                                                                  |
 | `GET items/:id/movements`       | catalog.read                       | Historial, más reciente primero                                                                                                                                                                     |
+
+## Proyectos y lista de materiales · `/orgs/:orgId/projects`
+
+Un proyecto (o pedido, orden de trabajo) tiene `code` único por organización, `status` (`draft`, `active`, `done`, `cancelled`) y `dueDate?` (AAAA-MM-DD). Cada línea de su lista de materiales indica cuánto necesita de un artículo. El estado de cada línea se calcula al consultarla: `consumed` y `reserved` salen de las reservas con ese `projectId`, `available` es lo libre en todo el almacén, `pending = max(required − consumed − reserved, 0)` y `shortage = max(pending − available, 0)`. `sources` lista las ubicaciones con existencias libres (con `cabinetId` si es un cajón), de más a menos.
+
+| Método y ruta                       | Permiso      | Notas                                                                                                                         |
+| ----------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `GET projects`                      | catalog.read | Resumen con `lineCount`, `coveredCount` y `shortageCount`; `?status=` filtra                                                  |
+| `POST projects`                     | stock.move   | `code, name, description?, status?, dueDate?`; `409 DUPLICATE` si el código existe                                            |
+| `GET projects/:id`                  | catalog.read | Detalle: resumen, `lines` con su estado y `sources`, y `reservations` del proyecto                                            |
+| `PATCH projects/:id`                | stock.move   | Los mismos campos más `version`; `409 STALE_VERSION`                                                                          |
+| `POST projects/:id/lines`           | stock.move   | `itemId, quantity, notes?`; si el artículo ya está, suma la cantidad                                                          |
+| `PATCH projects/:id/lines/:lineId`  | stock.move   | `quantity, notes?`                                                                                                            |
+| `DELETE projects/:id/lines/:lineId` | stock.move   | Quita la línea; sus reservas siguen activas                                                                                   |
+| `POST projects/:id/reserve-all`     | stock.move   | Aparta todo lo pendiente que haya libre, de las ubicaciones con más existencias; `{ project, created }`; `422 PROJECT_CLOSED` |
+| `POST projects/:id/release-all`     | stock.move   | Libera las reservas activas del proyecto                                                                                      |
 
 ## Gabinetes · `/orgs/:orgId/cabinets`
 

@@ -11,5 +11,6 @@ import { StockController } from './stock.controller.js';
 @Module({
   controllers: [StockController, CabinetsController, ReservationsController],
   providers: [LocationsService, MovementsService, CabinetsService, QrService, ReservationsService],
+  exports: [MovementsService, ReservationsService],
 })
 export class StockModule {}

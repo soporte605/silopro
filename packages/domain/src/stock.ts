@@ -89,6 +89,42 @@ export function shortage(required: number, availableQty: number): number {
   return Math.max(0, required - Math.max(0, availableQty));
 }
 
+/**
+ * Estado de una línea de lista de materiales (todas las cantidades escaladas):
+ * lo pendiente es lo que falta consumir o apartar; el faltante, lo pendiente
+ * que no alcanza a cubrir lo disponible en el almacén.
+ */
+export function bomLineStatus(line: {
+  required: number;
+  consumed: number;
+  reserved: number;
+  available: number;
+}): { pending: number; shortage: number } {
+  const pending = Math.max(0, line.required - line.consumed - line.reserved);
+  return { pending, shortage: shortage(pending, line.available) };
+}
+
+/**
+ * Reparte `quantity` entre fuentes en orden, tomando de cada una lo que tenga.
+ * Devuelve lo que se toma de cada fuente (sin ceros) y lo que quedó sin cubrir.
+ */
+export function allocate<T extends { available: number }>(
+  quantity: number,
+  sources: readonly T[],
+): { picks: { source: T; quantity: number }[]; missing: number } {
+  const picks: { source: T; quantity: number }[] = [];
+  let left = Math.max(0, quantity);
+  for (const source of sources) {
+    if (left <= 0) break;
+    const take = Math.min(left, Math.max(0, source.available));
+    if (take > 0) {
+      picks.push({ source, quantity: take });
+      left -= take;
+    }
+  }
+  return { picks, missing: left };
+}
+
 export function isLowStock(totalAvailable: number, minimum: number | null): boolean {
   return minimum != null && minimum > 0 && totalAvailable <= minimum;
 }

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { checkPlacement, type LocationNodeRef } from './locations.js';
 import {
+  allocate,
   applyDelta,
+  bomLineStatus,
   exceedsCapacity,
   available,
   fromScaled,
@@ -99,5 +101,33 @@ describe('exceedsCapacity', () => {
     expect(exceedsCapacity({ maxItems: 1, distinctItems: 1, itemAlreadyThere: false })).toBe(true);
     // Reponer un artículo que ya está no ocupa un lugar nuevo.
     expect(exceedsCapacity({ maxItems: 1, distinctItems: 1, itemAlreadyThere: true })).toBe(false);
+  });
+});
+
+describe('lista de materiales', () => {
+  it('pendiente descuenta lo consumido y lo reservado; el faltante, lo disponible', () => {
+    expect(bomLineStatus({ required: 10, consumed: 2, reserved: 3, available: 4 })).toEqual({
+      pending: 5,
+      shortage: 1,
+    });
+    expect(bomLineStatus({ required: 10, consumed: 8, reserved: 4, available: 0 })).toEqual({
+      pending: 0,
+      shortage: 0,
+    });
+  });
+
+  it('reparte una cantidad entre fuentes en orden', () => {
+    const a = { id: 'a', available: 3 };
+    const b = { id: 'b', available: 0 };
+    const c = { id: 'c', available: 5 };
+    expect(allocate(6, [a, b, c])).toEqual({
+      picks: [
+        { source: a, quantity: 3 },
+        { source: c, quantity: 3 },
+      ],
+      missing: 0,
+    });
+    expect(allocate(10, [a, c]).missing).toBe(2);
+    expect(allocate(0, [a]).picks).toEqual([]);
   });
 });

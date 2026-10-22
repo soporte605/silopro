@@ -36,58 +36,72 @@ export class ReservationsService {
 
   list(
     ctx: OrgContext,
-    filter: { status?: ReservationStatus; itemId?: string },
+    filter: { status?: ReservationStatus; itemId?: string; projectId?: string },
   ): Promise<Reservation[]> {
-    return this.dbs.tenant(ctx, (tx) => {
-      const where: SQL[] = [];
-      if (filter.status) where.push(eq(reservations.status, filter.status));
-      if (filter.itemId) where.push(eq(reservations.itemId, filter.itemId));
-      return this.query(tx, and(...where), 200);
-    });
+    return this.dbs.tenant(ctx, (tx) => this.listInTx(tx, filter));
+  }
+
+  listInTx(
+    tx: Tx,
+    filter: { status?: ReservationStatus; itemId?: string; projectId?: string },
+  ): Promise<Reservation[]> {
+    const where: SQL[] = [];
+    if (filter.status) where.push(eq(reservations.status, filter.status));
+    if (filter.itemId) where.push(eq(reservations.itemId, filter.itemId));
+    if (filter.projectId) where.push(eq(reservations.projectId, filter.projectId));
+    return this.query(tx, and(...where), 200);
   }
 
   create(ctx: OrgContext, input: ReserveData): Promise<Reservation> {
-    return this.dbs.tenant(ctx, async (tx) => {
-      const item = await this.movements.item(tx, input.itemId);
-      const loc = await this.movements.location(tx, input.locationId);
-      const level = await this.movements.lockLevel(tx, ctx, item.id, loc.id);
-      let next;
-      try {
-        next = reserve(
-          { onHand: toScaled(num0(level.onHand)), reserved: toScaled(num0(level.reserved)) },
-          toScaled(input.quantity),
-        );
-      } catch (e) {
-        throw asStockError(e, loc.path);
-      }
-      await this.setReserved(tx, item.id, loc.id, next.reserved);
-      const [row] = await tx
-        .insert(reservations)
-        .values({
-          organizationId: ctx.organizationId,
-          itemId: item.id,
-          locationId: loc.id,
-          quantity: String(input.quantity),
-          purpose: input.purpose,
-          createdBy: ctx.userId,
-        })
-        .returning({ id: reservations.id });
-      return this.one(tx, row!.id);
-    });
+    return this.dbs.tenant(ctx, async (tx) => this.one(tx, await this.createInTx(tx, ctx, input)));
+  }
+
+  /** Aparta dentro de una transacción ya abierta; devuelve el id de la reserva. */
+  async createInTx(tx: Tx, ctx: OrgContext, input: ReserveData): Promise<string> {
+    const item = await this.movements.item(tx, input.itemId);
+    const loc = await this.movements.location(tx, input.locationId);
+    const level = await this.movements.lockLevel(tx, ctx, item.id, loc.id);
+    let next;
+    try {
+      next = reserve(
+        { onHand: toScaled(num0(level.onHand)), reserved: toScaled(num0(level.reserved)) },
+        toScaled(input.quantity),
+      );
+    } catch (e) {
+      throw asStockError(e, loc.path);
+    }
+    await this.setReserved(tx, item.id, loc.id, next.reserved);
+    const [row] = await tx
+      .insert(reservations)
+      .values({
+        organizationId: ctx.organizationId,
+        itemId: item.id,
+        locationId: loc.id,
+        quantity: String(input.quantity),
+        purpose: input.purpose,
+        projectId: input.projectId ?? null,
+        createdBy: ctx.userId,
+      })
+      .returning({ id: reservations.id });
+    return row!.id;
   }
 
   /** Devuelve a disponible lo que quede apartado. */
   release(ctx: OrgContext, id: string): Promise<Reservation> {
     return this.dbs.tenant(ctx, async (tx) => {
-      const r = await this.lockActive(tx, id);
-      const remaining = toScaled(num0(r.quantity)) - toScaled(num0(r.consumed));
-      await this.unreserve(tx, ctx, r, remaining);
-      await tx
-        .update(reservations)
-        .set({ status: 'released', closedAt: new Date(), updatedAt: new Date() })
-        .where(eq(reservations.id, id));
+      await this.releaseInTx(tx, ctx, id);
       return this.one(tx, id);
     });
+  }
+
+  async releaseInTx(tx: Tx, ctx: OrgContext, id: string): Promise<void> {
+    const r = await this.lockActive(tx, id);
+    const remaining = toScaled(num0(r.quantity)) - toScaled(num0(r.consumed));
+    await this.unreserve(tx, ctx, r, remaining);
+    await tx
+      .update(reservations)
+      .set({ status: 'released', closedAt: new Date(), updatedAt: new Date() })
+      .where(eq(reservations.id, id));
   }
 
   /** Saca del inventario parte o todo lo apartado, como movimiento `consumption`. */
@@ -203,6 +217,7 @@ export class ReservationsService {
         remaining: r.status === 'active' ? fromScaled(toScaled(quantity) - toScaled(consumed)) : 0,
         status: r.status,
         purpose: r.purpose,
+        projectId: r.projectId,
         createdByName: x.createdByName,
         createdAt: iso(r.createdAt),
         closedAt: r.closedAt ? iso(r.closedAt) : null,

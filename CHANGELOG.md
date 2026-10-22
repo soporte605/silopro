@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.6.0-alpha.1] — 2026-10-22
+
+Fase 6 · Productividad: proyectos y lista de materiales.
+
+### Añadido
+
+- **Proyectos** (`/proyectos`, en el menú y en la paleta): proyecto, pedido u orden de trabajo con código, estado (borrador, en curso, terminado, cancelado) y fecha de entrega.
+- **Lista de materiales**: por cada artículo se ve lo necesario, lo consumido, lo reservado para el proyecto, lo disponible en el almacén, el faltante y en qué ubicaciones está (con enlace al cajón resaltado).
+- **Reservar lo disponible**: un clic aparta para el proyecto todo lo pendiente que haya libre, tomando primero de donde hay más. Lo que no alcanza queda como faltante. **Liberar todo lo apartado** lo devuelve.
+- Las reservas pueden ligarse a un proyecto (`projectId`), y consumirlas cuenta como avance.
+- API `projects` (ver docs/API.md). Migración `0012_proyectos`: tablas `projects` y `bom_lines` y la columna `reservations.project_id`, con aislamiento por organización. No borra datos.
+
 ## [0.5.1] — 2026-10-22
 
 ### Corregido

@@ -192,6 +192,8 @@ export const reservationInputSchema = z.object({
   locationId: z.string().uuid('Elija la ubicación'),
   quantity: qty,
   purpose: z.string().trim().min(1, 'Indique para qué es').max(200),
+  /** Proyecto al que se carga la reserva (opcional). */
+  projectId: z.string().uuid().nullish(),
 });
 export type ReservationInput = z.input<typeof reservationInputSchema>;
 
@@ -219,6 +221,8 @@ export interface Reservation {
   remaining: number;
   status: ReservationStatus;
   purpose: string;
+  /** Proyecto para el que se apartó, si viene de su lista de materiales. */
+  projectId: string | null;
   createdByName: string;
   createdAt: string;
   closedAt: string | null;

@@ -9,6 +9,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -390,6 +391,8 @@ export const reservations = pgTable(
     consumed: qty('consumed').notNull().default('0'),
     status: reservationStatusEnum('status').notNull().default('active'),
     purpose: text('purpose').notNull(),
+    /** Proyecto para el que se apartó, si viene de su lista de materiales. */
+    projectId: uuid('project_id').references(() => projects.id),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id),
@@ -399,6 +402,7 @@ export const reservations = pgTable(
   (t) => [
     index('reservations_item_idx').on(t.itemId, t.status),
     index('reservations_status_idx').on(t.status, t.createdAt),
+    index('reservations_project_idx').on(t.projectId),
     check(
       'reservations_quantities_valid',
       sql`${t.quantity} > 0 and ${t.consumed} >= 0 and ${t.consumed} <= ${t.quantity}`,
@@ -462,5 +466,50 @@ export const auditLog = pgTable(
   (t) => [
     index('audit_log_org_time_idx').on(t.organizationId, t.occurredAt),
     index('audit_log_entity_idx').on(t.entityId),
+  ],
+);
+
+export const projectStatusEnum = pgEnum('project_status', ['draft', 'active', 'done', 'cancelled']);
+
+/** Proyectos (o pedidos, órdenes de trabajo) con su lista de materiales. */
+export const projects = pgTable(
+  'projects',
+  {
+    id: id(),
+    organizationId: orgId(),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    status: projectStatusEnum('status').notNull().default('active'),
+    dueDate: date('due_date'),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    version: integer('version').notNull().default(1),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('projects_org_code_key').on(t.organizationId, t.code)],
+);
+
+/** Líneas de la lista de materiales: cuánto de cada artículo necesita el proyecto. */
+export const bomLines = pgTable(
+  'bom_lines',
+  {
+    id: id(),
+    organizationId: orgId(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    quantity: qty('quantity').notNull(),
+    notes: text('notes'),
+    position: integer('position').notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('bom_lines_project_item_key').on(t.projectId, t.itemId),
+    check('bom_lines_quantity_positive', sql`${t.quantity} > 0`),
   ],
 );

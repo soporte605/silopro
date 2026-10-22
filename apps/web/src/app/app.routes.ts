@@ -102,6 +102,16 @@ export const routes: Routes = [
         title: 'Auditoría · SiloPro',
       },
       {
+        path: 'proyectos',
+        loadComponent: () => import('./pages/projects/projects'),
+        title: 'Proyectos · SiloPro',
+      },
+      {
+        path: 'proyectos/:id',
+        loadComponent: () => import('./pages/projects/project-detail'),
+        title: 'Proyecto · SiloPro',
+      },
+      {
         path: 'reservas',
         loadComponent: () => import('./pages/reservations/reservations'),
         title: 'Reservas · SiloPro',

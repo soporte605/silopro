@@ -34,7 +34,7 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                ├─ stock_levels (item × location)                              ✅
                ├─ stock_movements (registro inmutable, trigger)               ✅
                ├─ reservations (activa → consumida / liberada)                ✅
-               ├─ projects ── bom_lines                                       ⏳ F6
+               ├─ projects ── bom_lines (reservations.project_id)             ✅
                └─ audit_log (solo inserción, trigger)                         ✅
 ```
 
@@ -57,6 +57,13 @@ Un gabinete guarda su `CabinetLayout` (`@silopro/cabinet-engine`) y cada compart
 `audit_log(id, actor_id, action, entity_id, label, details, ip, occurred_at)` (migración `0011`, RLS forzada, trigger que impide `UPDATE`/`DELETE`). Un interceptor global registra cada `POST`/`PUT`/`PATCH`/`DELETE` aceptado dentro de una organización: `action` es el método y la ruta sin prefijo (`PATCH items/:id`), `label` el SKU/código/nombre y `details` lo enviado sin campos con `pass`, `token` o `secret` (recortado a los nombres de campo si supera 4 KB). Se escribe tras la operación: si fallara, la operación no se revierte y queda en el registro de errores.
 
 Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no existe, se bloquea con `SELECT … FOR UPDATE`, se aplica `applyDelta` del dominio y se escriben nivel y movimiento. Prueba: 12 salidas concurrentes de 1 sobre una existencia de 5 → exactamente 5 aceptadas.
+
+### Proyectos y lista de materiales (migración `0012`)
+
+- `projects(id, code, name, description, status, due_date, created_by, version)`: `code` único por organización; `status` es el enum `project_status`.
+- `bom_lines(id, project_id, item_id, quantity, notes, position)`: único `(project_id, item_id)`, `quantity > 0` (CHECK); se borra con su proyecto.
+- `reservations.project_id` (opcional) une una reserva a su proyecto. Lo consumido, lo reservado y el faltante no se guardan: se calculan de las reservas y de `stock_levels` al consultar, así que no se desincronizan.
+- FK compuestas `(organization_id, …)` a `projects` e `items`, y RLS forzada en ambas tablas.
 
 ### Artículos y categorías
 

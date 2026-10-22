@@ -12,5 +12,6 @@ export * from './common.js';
 export * from './health.js';
 export * from './members.js';
 export * from './photos.js';
+export * from './projects.js';
 export * from './qr.js';
 export * from './stock.js';
