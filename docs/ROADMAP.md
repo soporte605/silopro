@@ -68,7 +68,7 @@ Entradas, salidas, ajustes, transferencias, reservas, consumos; bloqueo optimist
 
 **Adelantado en `v0.3.0-alpha.3`:** etiquetas QR imprimibles (Carta, A4 y rollo térmico; imprimir o PDF) por gabinete, ubicaciones o artículos, y enlace `/q/…` que al escanearlo con la cámara del celular abre el cajón o el artículo. En `v0.3.0-alpha.5`, la etiqueta de un cajón abre su ficha para el celular con el contenido y entradas/salidas rápidas.
 
-**Hecho en `v0.5.0-alpha.1`:** transferencias entre ubicaciones (salida y entrada atómicas y unidas; bloqueo en orden fijo, sin interbloqueos con transferencias cruzadas), página Transferencias y botón «Mover» en el artículo y en la ficha de la ubicación. Pendiente: reservas y consumos (`alpha.2`), auditoría inmutable y diario de movimientos (`alpha.3`) y escáner dentro de la app (requiere HTTPS para usar la cámara desde el navegador).
+**Hecho en `v0.5.0-alpha.1`:** transferencias entre ubicaciones (salida y entrada atómicas y unidas; bloqueo en orden fijo, sin interbloqueos con transferencias cruzadas), página Transferencias y botón «Mover» en el artículo y en la ficha de la ubicación. **Hecho en `v0.5.0-alpha.2`:** reservas con consumo parcial o total y liberación (todo en una transacción con bloqueo de la reserva), página Reservas y botón «Reservar» en el artículo. Pendiente: auditoría inmutable y diario de movimientos (`alpha.3`) y escáner dentro de la app (requiere HTTPS para usar la cámara desde el navegador).
 
 ## Fase 6 — Productividad · `v0.6.0`
 

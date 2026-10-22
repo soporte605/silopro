@@ -144,6 +144,8 @@ export interface Movement {
   reason: string | null;
   /** Mismo valor en la salida y la entrada de una transferencia. */
   transferId: string | null;
+  /** Reserva que originó un consumo. */
+  reservationId: string | null;
   actorName: string;
   occurredAt: string;
 }
@@ -180,4 +182,44 @@ export interface StockByLocation {
   onHand: number;
   reserved: number;
   available: number;
+}
+
+// ── Reservas ────────────────────────────────────────────────────────────────
+
+/** Aparta `quantity` de un artículo en una ubicación para un uso. */
+export const reservationInputSchema = z.object({
+  itemId: z.string().uuid(),
+  locationId: z.string().uuid('Elija la ubicación'),
+  quantity: qty,
+  purpose: z.string().trim().min(1, 'Indique para qué es').max(200),
+});
+export type ReservationInput = z.input<typeof reservationInputSchema>;
+
+/** Consume (saca del inventario) parte o todo lo que queda de una reserva. */
+export const reservationConsumeSchema = z.object({
+  quantity: qty.optional(),
+  reason: z.string().trim().max(500).optional(),
+});
+export type ReservationConsume = z.input<typeof reservationConsumeSchema>;
+
+export const RESERVATION_STATUS_VALUES = ['active', 'released', 'consumed'] as const;
+export type ReservationStatus = (typeof RESERVATION_STATUS_VALUES)[number];
+
+export interface Reservation {
+  id: string;
+  itemId: string;
+  sku: string;
+  itemName: string;
+  unitSymbol: string;
+  locationId: string;
+  locationPath: string;
+  quantity: number;
+  consumed: number;
+  /** Lo que sigue apartado: `quantity - consumed` si está activa; 0 si no. */
+  remaining: number;
+  status: ReservationStatus;
+  purpose: string;
+  createdByName: string;
+  createdAt: string;
+  closedAt: string | null;
 }

@@ -54,6 +54,11 @@ export const locationKindEnum = pgEnum('location_kind', [
   'bin',
   'other',
 ]);
+export const reservationStatusEnum = pgEnum('reservation_status', [
+  'active',
+  'released',
+  'consumed',
+]);
 export const movementKindEnum = pgEnum('movement_kind', [
   'receipt',
   'issue',
@@ -363,6 +368,41 @@ export const stockLevels = pgTable(
   ],
 );
 
+/**
+ * Reserva de existencias para un uso (proyecto, pedido…). Mientras está activa,
+ * `quantity - consumed` cuenta en `stock_levels.reserved` de su ubicación.
+ */
+export const reservations = pgTable(
+  'reservations',
+  {
+    id: id(),
+    organizationId: orgId(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    locationId: uuid('location_id')
+      .notNull()
+      .references(() => locations.id),
+    quantity: qty('quantity').notNull(),
+    consumed: qty('consumed').notNull().default('0'),
+    status: reservationStatusEnum('status').notNull().default('active'),
+    purpose: text('purpose').notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index('reservations_item_idx').on(t.itemId, t.status),
+    index('reservations_status_idx').on(t.status, t.createdAt),
+    check(
+      'reservations_quantities_valid',
+      sql`${t.quantity} > 0 and ${t.consumed} >= 0 and ${t.consumed} <= ${t.quantity}`,
+    ),
+  ],
+);
+
 /** Registro inmutable de movimientos: fuente de verdad de las existencias (ADR-0006). */
 export const stockMovements = pgTable(
   'stock_movements',
@@ -380,6 +420,8 @@ export const stockMovements = pgTable(
     reason: text('reason'),
     /** Une la salida y la entrada de una transferencia entre ubicaciones. */
     transferId: uuid('transfer_id'),
+    /** Reserva que originó un consumo. */
+    reservationId: uuid('reservation_id'),
     actorId: uuid('actor_id')
       .notNull()
       .references(() => users.id),

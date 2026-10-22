@@ -16,6 +16,7 @@ import {
 } from '@elikarsystems/ui';
 import {
   LucideArrowLeftRight,
+  LucideBookmark,
   LucideBox,
   LucideBuilding2,
   LucideCheck,
@@ -58,6 +59,7 @@ import { SessionService } from '../core/session';
     LucideMonitor,
     LucideMapPin,
     LucideArrowLeftRight,
+    LucideBookmark,
     LucideClipboardList,
     LucideBox,
     LucideBuilding2,
@@ -289,6 +291,9 @@ import { SessionService } from '../core/session';
       >
         <svg lucideArrowLeftRight></svg> Transferencias
       </a>
+      <a esNavItem routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <svg lucideBookmark></svg> Reservas
+      </a>
     </ng-template>
 
     <ng-template #userMenu>
@@ -369,6 +374,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['mover', 'traspaso', 'reubicar'],
         run: () => this.go('/transferencias'),
+      },
+      {
+        id: 'nav.reservations',
+        label: 'Ir a Reservas',
+        group: 'Navegación',
+        keywords: ['apartar', 'consumir', 'proyecto'],
+        run: () => this.go('/reservas'),
       },
       {
         id: 'nav.cabinet',

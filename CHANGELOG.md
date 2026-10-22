@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.0-alpha.2] — 2026-10-22
+
+Fase 5 · Operaciones: reservas y consumos.
+
+### Añadido
+
+- **Reservas**: apartar existencias de una ubicación para un proyecto o pedido. Lo reservado deja de estar disponible: no se puede sacar ni mover hasta consumirlo o liberarlo.
+- **Consumir** una reserva, en parte o completa, registra una salida de tipo consumo con el motivo de la reserva; **liberar** devuelve lo que queda a disponible.
+- Página **Reservas** (menú y paleta) con filtro «Activas» / «Todas» y «Nueva reserva». Botón **Reservar** en el artículo.
+- API `GET/POST reservations`, `POST reservations/:id/consume` y `POST reservations/:id/release`; `Movement.reservationId`.
+- Migración `0009_reservas`: tabla `reservations` (con aislamiento por organización) y columna `reservation_id` en `stock_movements`. No borra datos.
+
 ## [0.5.0-alpha.1] — 2026-10-22
 
 Fase 5 · Operaciones: transferencias.

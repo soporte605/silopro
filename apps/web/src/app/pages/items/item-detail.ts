@@ -24,6 +24,7 @@ import {
   LucideArrowDownToLine,
   LucideArrowLeftRight,
   LucideArrowUpFromLine,
+  LucideBookmark,
   LucideClipboardCheck,
   LucidePencil,
   LucideQrCode,
@@ -39,6 +40,7 @@ import { PageHeader } from '../page-header';
 import { ItemForm, type ItemFormData } from './item-form';
 import { ItemPhotos } from './item-photos';
 import { MovementDialog, type MovementDialogData, type MovementKindInput } from './movement-dialog';
+import { ReserveDialog, type ReserveDialogData } from '../reservations/reserve-dialog';
 import { TransferDialog, type TransferDialogData } from '../transfers/transfer-dialog';
 
 const KIND_LABELS: Record<Movement['kind'], string> = {
@@ -69,6 +71,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
     LucideArrowDownToLine,
     LucideArrowLeftRight,
     LucideArrowUpFromLine,
+    LucideBookmark,
     LucideClipboardCheck,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,6 +109,9 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
               </button>
               <button esButton (click)="transfer()" [disabled]="it.onHand <= 0">
                 <svg lucideArrowLeftRight></svg> Mover
+              </button>
+              <button esButton (click)="reserve()" [disabled]="it.available <= 0">
+                <svg lucideBookmark></svg> Reservar
               </button>
             }
             @if (session.canAdjust()) {
@@ -391,6 +397,21 @@ export default class ItemDetail {
         if (!done) return;
         this.stock.reload();
         this.movements.reload();
+      });
+  }
+
+  protected reserve(): void {
+    const it = this.item.value();
+    if (!it) return;
+    this.dialog
+      .open<boolean, ReserveDialogData>(ReserveDialog, {
+        data: { item: it, stock: this.stock.value() ?? [] },
+        ariaLabel: 'Reservar existencias',
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.item.reload();
+        this.stock.reload();
       });
   }
 

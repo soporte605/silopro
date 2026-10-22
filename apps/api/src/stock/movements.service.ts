@@ -26,7 +26,7 @@ import { cabinets, items, locations, stockLevels, stockMovements, users } from '
 
 type MovementData = z.output<typeof movementInputSchema>;
 type TransferData = z.output<typeof transferInputSchema>;
-type Loc = { id: string; path: string; maxItems: number | null };
+export type Loc = { id: string; path: string; maxItems: number | null };
 
 /**
  * Movimientos de existencias. Cada movimiento:
@@ -50,7 +50,7 @@ export class MovementsService {
     return this.dbs.tenant(ctx, async (tx) => {
       const item = await this.item(tx, input.itemId);
       const loc = await this.location(tx, input.locationId);
-      return this.apply(tx, ctx, {
+      return this.applyInTx(tx, ctx, {
         kind: input.kind,
         itemId: item.id,
         loc,
@@ -90,7 +90,7 @@ export class MovementsService {
       const transferId = uuidv7();
       const quantity = toScaled(input.quantity);
       const reason = input.reason ?? null;
-      const out = await this.apply(tx, ctx, {
+      const out = await this.applyInTx(tx, ctx, {
         kind: 'transfer',
         itemId: item.id,
         loc: from,
@@ -98,7 +98,7 @@ export class MovementsService {
         reason,
         transferId,
       });
-      const inn = await this.apply(tx, ctx, {
+      const inn = await this.applyInTx(tx, ctx, {
         kind: 'transfer',
         itemId: item.id,
         loc: to,
@@ -161,7 +161,7 @@ export class MovementsService {
     });
   }
 
-  private async item(tx: Tx, id: string): Promise<{ id: string }> {
+  async item(tx: Tx, id: string): Promise<{ id: string }> {
     const [item] = await tx
       .select({ id: items.id })
       .from(items)
@@ -170,7 +170,7 @@ export class MovementsService {
     return item;
   }
 
-  private async location(tx: Tx, id: string): Promise<Loc> {
+  async location(tx: Tx, id: string): Promise<Loc> {
     const [loc] = await tx
       .select({ id: locations.id, path: locations.path, maxItems: locations.maxItems })
       .from(locations)
@@ -180,7 +180,7 @@ export class MovementsService {
   }
 
   /** Crea si hace falta y bloquea la fila de existencias (artículo × ubicación). */
-  private async lockLevel(tx: Tx, ctx: OrgContext, itemId: string, locationId: string) {
+  async lockLevel(tx: Tx, ctx: OrgContext, itemId: string, locationId: string) {
     await tx
       .insert(stockLevels)
       .values({ organizationId: ctx.organizationId, itemId, locationId })
@@ -193,8 +193,11 @@ export class MovementsService {
     return level!;
   }
 
-  /** Aplica un cambio a una existencia con todas las reglas y registra el movimiento. */
-  private async apply(
+  /**
+   * Aplica un cambio a una existencia con todas las reglas y registra el
+   * movimiento, dentro de una transacción ya abierta (también la usan las reservas).
+   */
+  async applyInTx(
     tx: Tx,
     ctx: OrgContext,
     p: {
@@ -204,6 +207,7 @@ export class MovementsService {
       delta: (current: { onHand: number; reserved: number }) => number;
       reason: string | null;
       transferId: string | null;
+      reservationId?: string | null;
     },
   ): Promise<Movement> {
     const { loc, itemId } = p;
@@ -271,6 +275,7 @@ export class MovementsService {
         delta: String(fromScaled(delta)),
         reason: p.reason,
         transferId: p.transferId,
+        reservationId: p.reservationId ?? null,
         actorId: ctx.userId,
       })
       .returning();
@@ -287,6 +292,7 @@ export class MovementsService {
       delta: fromScaled(delta),
       reason: mov!.reason,
       transferId: mov!.transferId,
+      reservationId: mov!.reservationId,
       actorName: actor?.name ?? '',
       occurredAt: iso(mov!.occurredAt),
     };
@@ -311,6 +317,7 @@ export class MovementsService {
         delta: num0(r.m.delta),
         reason: r.m.reason,
         transferId: r.m.transferId,
+        reservationId: r.m.reservationId,
         actorName: r.actorName,
         occurredAt: iso(r.m.occurredAt),
       }));

@@ -33,7 +33,7 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                │     └─ cabinets (diseño jsonb del motor; cajones = locations) ✅
                ├─ stock_levels (item × location)                              ✅
                ├─ stock_movements (registro inmutable, trigger)               ✅
-               ├─ reservations                                                ⏳ F5
+               ├─ reservations (activa → consumida / liberada)                ✅
                ├─ projects ── bom_lines                                       ⏳ F6
                └─ audit_log                                                   ⏳ F5
 ```
@@ -50,7 +50,9 @@ Un gabinete guarda su `CabinetLayout` (`@silopro/cabinet-engine`) y cada compart
 
 `stock_levels(item_id, location_id, on_hand, reserved, allow_negative)` con `CHECK (reserved >= 0 AND reserved <= on_hand)` y `CHECK (on_hand >= 0 OR allow_negative)`. Disponible = `on_hand − reserved`. Un artículo puede estar en varias ubicaciones y una ubicación contener varios artículos.
 
-`stock_movements(id, kind, item_id, location_id, delta, reason, transfer_id, actor_id, occurred_at)`; tipos implementados: `receipt`, `issue`, `adjustment` (fija la existencia al valor contado y exige motivo) y `transfer` (dos filas, salida y entrada, con el mismo `transfer_id`). Previsto: `consumption` (F5). Un trigger impide `UPDATE` y `DELETE`.
+`stock_movements(id, kind, item_id, location_id, delta, reason, transfer_id, reservation_id, actor_id, occurred_at)`; tipos implementados: `receipt`, `issue`, `adjustment` (fija la existencia al valor contado y exige motivo), `transfer` (dos filas, salida y entrada, con el mismo `transfer_id`) y `consumption` (salida desde una reserva, con su `reservation_id`). Un trigger impide `UPDATE` y `DELETE`.
+
+`reservations(id, item_id, location_id, quantity, consumed, status, purpose, created_by, closed_at)` (migración `0009`, con RLS) con `CHECK (quantity > 0 AND consumed >= 0 AND consumed <= quantity)`. Mientras está activa, lo que queda (`quantity − consumed`) suma en `stock_levels.reserved`. Consumir libera esa parte y la saca como `consumption` en la misma transacción; liberar devuelve el resto a disponible. Ambos bloquean la reserva con `FOR UPDATE`.
 
 Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no existe, se bloquea con `SELECT … FOR UPDATE`, se aplica `applyDelta` del dominio y se escriben nivel y movimiento. Prueba: 12 salidas concurrentes de 1 sobre una existencia de 5 → exactamente 5 aceptadas.
 
