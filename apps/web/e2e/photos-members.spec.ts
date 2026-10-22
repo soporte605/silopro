@@ -31,6 +31,22 @@ test('fotografías: subir, ver como portada y eliminar', async ({ page, account:
   await expect
     .poll(() => gallery.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBeGreaterThan(0);
+  await expect(gallery.locator('img')).toHaveAttribute('data-state', 'loaded');
+
+  // Con una red lenta se ve el esqueleto de carga hasta que llega la imagen.
+  let release = () => {};
+  const gate = new Promise<void>((r) => (release = r));
+  await page.route('**/photos/*/thumb', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.reload();
+  await page.getByRole('tab', { name: 'Fotografías' }).click();
+  await expect(gallery.locator('img')).toHaveAttribute('data-state', 'loading');
+  await expect(gallery.locator('img')).toHaveAttribute('aria-busy', 'true');
+  release();
+  await expect(gallery.locator('img')).toHaveAttribute('data-state', 'loaded');
+  await page.unroute('**/photos/*/thumb');
 
   // Un archivo que no es imagen se rechaza.
   await page

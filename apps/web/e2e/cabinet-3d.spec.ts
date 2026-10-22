@@ -103,3 +103,36 @@ test('vista 3D: abre cajones con teclado y clic, y muestra su contenido', async 
   await page.getByRole('button', { name: 'Cuadrícula' }).click();
   await expect(page.locator('[data-address="A1"]')).toBeVisible();
 });
+
+test('vista 3D sin WebGL: explica cómo activarlo y ofrece la cuadrícula', async ({
+  page,
+  account: _,
+}) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, id: string, ...a) {
+      return id.startsWith('webgl') ? null : original.call(this, id, ...a);
+    } as typeof original;
+  });
+  const me = await (await page.request.get('/api/auth/me')).json();
+  const base = `/api/orgs/${me.memberships[0].organizationId}`;
+  const wh = await (
+    await page.request.post(`${base}/locations`, {
+      headers: H,
+      data: { kind: 'warehouse', code: 'SINGL', name: 'Sin WebGL' },
+    })
+  ).json();
+  const cab = await (
+    await page.request.post(`${base}/cabinets`, {
+      headers: H,
+      data: { parentId: wh.id, code: 'GAB-NOGL', name: 'Sin GL', rows: 2, columns: 2 },
+    })
+  ).json();
+  await page.goto(`/gabinetes/${cab.id}`);
+  await page.getByRole('button', { name: '3D', exact: true }).click();
+  const view = page.locator('canvas[aria-roledescription="Vista 3D"]');
+  await expect(view).toHaveAttribute('data-status', 'failed');
+  const alert = page.getByRole('alert').filter({ hasText: 'WebGL no disponible' });
+  await expect(alert).toContainText('Use la cuadrícula.');
+  await expect(alert).toContainText('aceleración por hardware');
+});

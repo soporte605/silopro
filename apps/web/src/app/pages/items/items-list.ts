@@ -28,12 +28,14 @@ import { fmtQty } from '../../core/format';
 import { SessionService } from '../../core/session';
 import { PageHeader } from '../page-header';
 import { ItemForm, type ItemFormData } from './item-form';
+import { LoadingImage } from '../../core/loading-image';
 
 const PAGE_SIZE = 50;
 
 @Component({
   selector: 'sp-items-list',
   imports: [
+    LoadingImage,
     PageHeader,
     RouterLink,
     EsBadge,
@@ -155,6 +157,7 @@ const PAGE_SIZE = 50;
                     >
                       @if (item.coverPhotoId) {
                         <img
+                          spLoading
                           [src]="
                             api.url('/items/' + item.id + '/photos/' + item.coverPhotoId + '/thumb')
                           "

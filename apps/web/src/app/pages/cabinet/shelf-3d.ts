@@ -36,6 +36,8 @@ import { Api } from '../../core/api';
 import { fmtQty } from '../../core/format';
 import { SessionService } from '../../core/session';
 import type { CabinetViewer } from './cabinet-3d/cabinet-viewer';
+import { loadViewer, type ViewerFailure } from './cabinet-3d/load-viewer';
+import { ViewerFailureNotice } from './cabinet-3d/viewer-failure';
 
 interface ShelfCabinet {
   cabinet: Cabinet;
@@ -68,6 +70,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
     EsBadge,
     EsBreadcrumb,
     EsButton,
+    ViewerFailureNotice,
     EsEmptyState,
     EsFormField,
     EsInput,
@@ -141,12 +144,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
               (keydown)="key($event)"
             ></canvas>
             @if (status() === 'failed') {
-              <p
-                class="absolute inset-x-4 top-4 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger"
-                role="alert"
-              >
-                Este navegador no puede mostrar la vista 3D (WebGL no disponible).
-              </p>
+              <sp-viewer-failure [reason]="failure()" />
             } @else if (status() === 'loading') {
               <p class="absolute top-4 left-4 text-sm text-fg-muted" role="status">
                 Cargando vista 3D…
@@ -252,6 +250,7 @@ export default class Shelf3d {
 
   private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
   protected readonly status = signal<'loading' | 'ready' | 'failed'>('loading');
+  protected readonly failure = signal<ViewerFailure>('webgl');
   protected readonly query = signal('');
   protected readonly selected = signal<Selection | null>(null);
   protected readonly open = signal(false);
@@ -346,15 +345,14 @@ export default class Shelf3d {
   }
 
   private async init(canvas: HTMLCanvasElement): Promise<void> {
-    try {
-      const { CabinetViewer } = await import('./cabinet-3d/cabinet-viewer');
-      if (this.destroyed) return;
-      this.viewer = new CabinetViewer(canvas, canvas.parentElement!);
-    } catch {
+    const res = await loadViewer(canvas, canvas.parentElement!);
+    if ('failure' in res) {
+      this.failure.set(res.failure);
       this.status.set('failed');
       return;
     }
-    const viewer = this.viewer;
+    if (this.destroyed) return res.viewer.dispose();
+    const viewer = (this.viewer = res.viewer);
     const resize = new ResizeObserver(() => viewer.resize());
     resize.observe(canvas.parentElement!);
     const theme = new MutationObserver(() => viewer.repaint());

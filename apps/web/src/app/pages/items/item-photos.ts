@@ -15,6 +15,7 @@ import {
   EsDialogService,
   EsDialogShell,
   EsEmptyState,
+  EsSkeleton,
   EsToastService,
 } from '@elikarsystems/ui';
 import { LucideCamera, LucideImage, LucideStar, LucideTrash2 } from '@lucide/angular';
@@ -26,6 +27,7 @@ import {
 } from '@silopro/contracts';
 import { Api, ApiRequestError } from '../../core/api';
 import { ConfirmService } from '../../core/confirm';
+import { LoadingImage } from '../../core/loading-image';
 
 interface ViewerData {
   src: string;
@@ -34,24 +36,44 @@ interface ViewerData {
 
 @Component({
   selector: 'sp-photo-viewer',
-  imports: [EsDialogShell],
+  imports: [EsDialogShell, EsSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex h-full w-full' },
   template: `
     <es-dialog-shell [title]="data.title">
-      <img [src]="data.src" [alt]="data.title" class="mx-auto max-h-[70vh] w-auto rounded-md" />
+      @if (!loaded()) {
+        <es-skeleton class="mx-auto aspect-square w-full max-w-[min(70vh,100%)] rounded-md" />
+      }
+      <img
+        [src]="data.src"
+        [alt]="data.title"
+        class="mx-auto max-h-[70vh] w-auto rounded-md"
+        [class.hidden]="!loaded()"
+        (load)="loaded.set(true)"
+        (error)="loaded.set(true)"
+      />
     </es-dialog-shell>
   `,
 })
 class PhotoViewer {
   protected readonly data = inject<ViewerData>(DIALOG_DATA);
   protected readonly ref = inject(DialogRef);
+  protected readonly loaded = signal(false);
 }
 
 /** Galería de fotografías de un artículo con subida, portada y borrado. */
 @Component({
   selector: 'sp-item-photos',
-  imports: [EsButton, EsEmptyState, LucideCamera, LucideImage, LucideStar, LucideTrash2],
+  imports: [
+    EsButton,
+    EsEmptyState,
+    EsSkeleton,
+    LoadingImage,
+    LucideCamera,
+    LucideImage,
+    LucideStar,
+    LucideTrash2,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col gap-3">
@@ -80,7 +102,17 @@ class PhotoViewer {
           </span>
         </div>
       }
-      @if (!photos().length && list.hasValue()) {
+      @if (!photos().length && list.isLoading()) {
+        <ul
+          class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5"
+          aria-label="Cargando fotografías"
+          aria-busy="true"
+        >
+          @for (n of [1, 2, 3, 4]; track n) {
+            <li><es-skeleton class="aspect-square w-full rounded-lg" /></li>
+          }
+        </ul>
+      } @else if (!photos().length && list.hasValue()) {
         <es-empty-state
           title="Sin fotografías"
           description="Una foto ayuda a reconocer la pieza en el cajón."
@@ -98,6 +130,7 @@ class PhotoViewer {
                 (click)="view(p, $index)"
               >
                 <img
+                  spLoading
                   [src]="src(p, 'thumb')"
                   alt=""
                   loading="lazy"

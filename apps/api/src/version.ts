@@ -1,2 +1,2 @@
 /** Versión de la aplicación. Se mantiene sincronizada con package.json (SemVer). */
-export const APP_VERSION = '0.5.0';
+export const APP_VERSION = '0.5.1';

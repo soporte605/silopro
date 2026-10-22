@@ -99,7 +99,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
           </div>
           <div class="px-3 py-2.5">
             <dt class="text-xs text-fg-muted">Fase actual</dt>
-            <dd class="mt-1">3 · Almacenamiento</dd>
+            <dd class="mt-1">{{ currentPhase }} · {{ phases[currentPhase - 1]!.name }}</dd>
           </div>
         </dl>
       </section>

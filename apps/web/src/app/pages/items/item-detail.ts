@@ -42,6 +42,7 @@ import { ItemPhotos } from './item-photos';
 import { MovementDialog, type MovementDialogData, type MovementKindInput } from './movement-dialog';
 import { ReserveDialog, type ReserveDialogData } from '../reservations/reserve-dialog';
 import { TransferDialog, type TransferDialogData } from '../transfers/transfer-dialog';
+import { LoadingImage } from '../../core/loading-image';
 
 const KIND_LABELS: Record<Movement['kind'], string> = {
   receipt: 'Entrada',
@@ -54,6 +55,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
 @Component({
   selector: 'sp-item-detail',
   imports: [
+    LoadingImage,
     LucideQrCode,
     RouterLink,
     PageHeader,
@@ -92,6 +94,7 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
           @if (it.coverPhotoId) {
             <img
               spBefore
+              spLoading
               [src]="api.url('/items/' + it.id + '/photos/' + it.coverPhotoId + '/thumb')"
               alt=""
               class="mb-2 size-16 rounded-md border border-border object-cover"

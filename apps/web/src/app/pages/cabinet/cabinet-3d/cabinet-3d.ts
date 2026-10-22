@@ -23,6 +23,8 @@ import {
 } from '@silopro/cabinet-engine';
 import type { CompartmentState } from '@silopro/contracts';
 import type { CabinetViewer } from './cabinet-viewer';
+import { loadViewer, type ViewerFailure } from './load-viewer';
+import { ViewerFailureNotice } from './viewer-failure';
 
 type Status = 'loading' | 'ready' | 'failed';
 
@@ -34,7 +36,7 @@ type Status = 'loading' | 'ready' | 'failed';
  */
 @Component({
   selector: 'sp-cabinet-3d',
-  imports: [EsButton],
+  imports: [EsButton, ViewerFailureNotice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block size-full min-h-80' },
   template: `
@@ -62,12 +64,7 @@ type Status = 'loading' | 'ready' | 'failed';
         <p class="absolute top-4 left-4 text-sm text-fg-muted" role="status">Cargando vista 3D…</p>
       }
       @case ('failed') {
-        <p
-          class="absolute inset-x-4 top-4 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger"
-          role="alert"
-        >
-          Este navegador no puede mostrar la vista 3D (WebGL no disponible). Use la cuadrícula.
-        </p>
+        <sp-viewer-failure [reason]="failure()" fallback="Use la cuadrícula." />
       }
       @default {
         @if (hovered(); as h) {
@@ -106,6 +103,7 @@ export class Cabinet3d {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   protected readonly status = signal<Status>('loading');
+  protected readonly failure = signal<ViewerFailure>('webgl');
   protected readonly hovered = signal<string | null>(null);
   /** Cajón abierto; se expone en `data-open` para pruebas. */
   protected readonly openId = signal<string | null>(null);
@@ -152,15 +150,14 @@ export class Cabinet3d {
   }
 
   private async init(): Promise<void> {
-    try {
-      const { CabinetViewer } = await import('./cabinet-viewer');
-      if (this.destroyed) return;
-      this.viewer = new CabinetViewer(this.canvas().nativeElement, this.host);
-    } catch {
+    const res = await loadViewer(this.canvas().nativeElement, this.host);
+    if ('failure' in res) {
+      this.failure.set(res.failure);
       this.status.set('failed');
       return;
     }
-    const viewer = this.viewer;
+    if (this.destroyed) return res.viewer.dispose();
+    const viewer = (this.viewer = res.viewer);
     const resize = new ResizeObserver(() => viewer.resize());
     resize.observe(this.host);
     // Cambio de tema (claro/oscuro): se releen los colores.

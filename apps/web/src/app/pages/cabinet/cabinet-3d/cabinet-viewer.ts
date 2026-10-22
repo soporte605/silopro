@@ -116,7 +116,12 @@ export class CabinetViewer {
     private readonly canvas: HTMLCanvasElement,
     private readonly host: HTMLElement,
   ) {
-    this.renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
+    try {
+      this.renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
+    } catch {
+      // Algunas GPU o controladores rechazan el antialiasing; se intenta sin él.
+      this.renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true });
+    }
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.palette = readPalette(host);
     this.controls = new OrbitControls(this.camera, canvas);

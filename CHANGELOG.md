@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.1] — 2026-10-22
+
+### Corregido
+
+- **Fotografías**: mientras se descargan se ve un esqueleto de carga, en la galería, en la foto ampliada, en la portada del artículo y en la lista de artículos.
+- **Vista 3D**: el aviso ya no dice «WebGL no disponible» cuando lo que falló fue descargar el visor (pasa si la página quedó abierta mientras se publicaba una versión); ahora lo dice y ofrece **Recargar la página**. Si de verdad falta WebGL, explica que hay que activar la aceleración por hardware del navegador. Si la GPU rechaza el antialiasing, se intenta sin él.
+- El servidor web ya no deja `index.html` en caché, para que tras publicar el navegador pida los archivos nuevos.
+- Inicio: «Fase actual» mostraba la fase 3; ahora sale de la hoja de ruta.
+
 ## [0.5.0] — 2026-10-22
 
 Cierra la Fase 5 · Operaciones.
