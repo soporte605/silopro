@@ -4,7 +4,7 @@
 
 SiloPro conecta el inventario digital con la organización física: almacenes, estanterías, gabinetes, cajones y compartimentos se representan virtualmente y cada artículo tiene una ubicación identificable. Más adelante el sistema generará modelos CAD paramétricos para fabricar organizadores por impresión 3D.
 
-> Estado: **v0.3.0-alpha.4 — Fase 3 (Almacenamiento)**. Inventario completo (Fase 2), gabinetes guardados con editor 2D (cada cajón es una ubicación con sus existencias), ubicaciones editables, capacidad por cajón y etiquetas QR imprimibles. Ver [ROADMAP](docs/ROADMAP.md).
+> Estado: **v0.3.0-alpha.5 — Fase 3 (Almacenamiento)**. Inventario completo (Fase 2), gabinetes guardados con editor 2D (cada cajón es una ubicación con sus existencias), ubicaciones editables, capacidad por cajón y etiquetas QR imprimibles. Ver [ROADMAP](docs/ROADMAP.md).
 
 ## Qué hay hoy
 

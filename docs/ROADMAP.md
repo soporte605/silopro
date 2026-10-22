@@ -35,7 +35,7 @@ _Aceptación:_ pruebas de autorización entre organizaciones; CRUD completo con 
 | Fotografías con almacenamiento seguro |   ✅   | `apps/api/test/photos.spec.ts`, e2e `photos-members`     |
 | Invitar miembros a una organización   |   ✅   | `apps/api/test/members.spec.ts`, e2e `photos-members`    |
 
-## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.4`
+## Fase 3 — Almacenamiento · `v0.3.0` · 🟡 `v0.3.0-alpha.5`
 
 Almacenes y árbol de ubicaciones (reglas de `@silopro/domain`), gabinetes persistidos con el modelo de `@silopro/cabinet-engine`, editor 2D completo (crear, redimensionar, fusionar, etiquetar), existencias por ubicación, búsqueda que resalta posiciones, estados de ocupación.
 
@@ -60,7 +60,7 @@ Three.js con carga diferida, gabinete modular con frentes transparentes, cámara
 
 Entradas, salidas, ajustes, transferencias, reservas, consumos; bloqueo optimista/pesimista; auditoría inmutable; QR por artículo/ubicación; etiquetas PDF individuales y por lotes; escaneo desde móvil.
 
-**Adelantado en `v0.3.0-alpha.3`:** etiquetas QR imprimibles (Carta, A4 y rollo térmico; imprimir o PDF) por gabinete, ubicaciones o artículos, y enlace `/q/…` que al escanearlo con la cámara del celular abre el cajón o el artículo. Pendiente en esta fase: escáner dentro de la app y operaciones al escanear (entrada/salida rápida).
+**Adelantado en `v0.3.0-alpha.3`:** etiquetas QR imprimibles (Carta, A4 y rollo térmico; imprimir o PDF) por gabinete, ubicaciones o artículos, y enlace `/q/…` que al escanearlo con la cámara del celular abre el cajón o el artículo. En `v0.3.0-alpha.5`, la etiqueta de un cajón abre su ficha para el celular con el contenido y entradas/salidas rápidas. Pendiente en esta fase: escáner dentro de la app (requiere HTTPS para usar la cámara desde el navegador).
 
 ## Fase 6 — Productividad · `v0.6.0`
 

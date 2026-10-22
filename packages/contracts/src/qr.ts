@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Location } from './stock.js';
 
 /**
  * Contenido de las etiquetas QR.
@@ -84,4 +85,6 @@ export interface QrTarget {
   label: string;
   /** Gabinete que abrir: el propio (si la ubicación es un gabinete) o el que contiene el cajón. */
   cabinetId: string | null;
+  /** Tipo de ubicación (`null` en artículos). */
+  locationKind: Location['kind'] | null;
 }

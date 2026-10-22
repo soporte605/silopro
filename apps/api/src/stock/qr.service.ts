@@ -23,7 +23,14 @@ export class QrService {
           .from(items)
           .where(and(eq(items.qrCode, ref.code), isNull(items.archivedAt)));
         if (!item) throw notFound('Código');
-        return { type: 'item', id: item.id, name: item.name, label: item.sku, cabinetId: null };
+        return {
+          type: 'item',
+          id: item.id,
+          name: item.name,
+          label: item.sku,
+          cabinetId: null,
+          locationKind: null,
+        };
       }
       const own = alias(cabinets, 'own');
       const parent = alias(cabinets, 'parent');
@@ -32,6 +39,7 @@ export class QrService {
           id: locations.id,
           name: locations.name,
           path: locations.path,
+          kind: locations.kind,
           ownCabinet: own.id,
           parentCabinet: parent.id,
         })
@@ -49,6 +57,7 @@ export class QrService {
         name: loc.name,
         label: loc.path,
         cabinetId: loc.ownCabinet ?? loc.parentCabinet ?? null,
+        locationKind: loc.kind,
       };
     });
   }

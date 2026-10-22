@@ -33,10 +33,12 @@ describe.skipIf(!TEST_DB)('etiquetas QR', () => {
       name: 'Sensor',
       label: 'QR-1',
       cabinetId: null,
+      locationKind: null,
     });
     expect((await s.get(`/qr/location/${cab.qrCode}`).expect(200)).body).toMatchObject({
       label: 'T / GAB',
       cabinetId: cab.id,
+      locationKind: 'cabinet',
     });
     const a2 = cab.compartments.find((c) => c.id === 'A2')!;
     expect((await s.get(`/qr/location/${a2.qrCode.toLowerCase()}`).expect(200)).body).toMatchObject(

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { locationInputSchema, maxItemsSchema } from './stock.js';
+import { locationInputSchema, type LocationStockEntry, maxItemsSchema } from './stock.js';
 
 /** Límites de un gabinete guardado (el motor admite más; esto acota la carga). */
 export const CABINET_MAX_ROWS = 60;
@@ -94,12 +94,4 @@ export interface Cabinet extends CabinetSummary {
 }
 
 /** Existencias de un gabinete, una fila por artículo y cajón. */
-export interface CabinetStockEntry {
-  locationId: string;
-  itemId: string;
-  sku: string;
-  itemName: string;
-  onHand: number;
-  unitSymbol: string;
-  lowStock: boolean;
-}
+export type CabinetStockEntry = LocationStockEntry;

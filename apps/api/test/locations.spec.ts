@@ -149,4 +149,30 @@ describe.skipIf(!TEST_DB)('edición de ubicaciones y capacidad', () => {
     expect((await s.get(`/cabinets/${cab.id}`).expect(200)).body.path).toBe('ALM-F / GAB');
     expect(await byPath('ALM-F / GAB / A1')).toBeDefined();
   });
+
+  it('la ficha de una ubicación muestra su contenido y el gabinete del cajón', async () => {
+    const w = await loc({ kind: 'warehouse', code: 'ALM-G', name: 'G' });
+    const cab: Cabinet = (
+      await s
+        .post('/cabinets')
+        .send({ parentId: w.id, code: 'GAB', name: 'Gab', rows: 1, columns: 1 })
+        .expect(201)
+    ).body;
+    const a1 = cab.compartments[0]!;
+    const itemId = await item('FICHA-1');
+    await receive(itemId, a1.locationId, 3).expect(201);
+    const detail = (await s.get(`/locations/${a1.locationId}`).expect(200)).body;
+    expect(detail).toMatchObject({
+      path: 'ALM-G / GAB / A1',
+      kind: 'drawer',
+      parentCabinetId: cab.id,
+      contents: [expect.objectContaining({ itemId, sku: 'FICHA-1', onHand: 3 })],
+    });
+    expect((await s.get(`/locations/${w.id}`).expect(200)).body).toMatchObject({
+      parentCabinetId: null,
+      contents: [],
+    });
+    const other = await signUp(app, 'Otra ficha');
+    await other.get(`/locations/${w.id}`).expect(404);
+  });
 });

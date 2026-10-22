@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   generateShortCode,
   type Location,
+  type LocationDetail,
   type locationInputSchema,
   type locationUpdateSchema,
 } from '@silopro/contracts';
@@ -18,6 +19,7 @@ import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound, staleVersion } from '../common/http.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { cabinets, locations } from '../db/schema.js';
+import { locationStock } from './stock-queries.js';
 
 const MESSAGES: Record<string, string> = {
   ROOT_MUST_BE_WAREHOUSE: 'Una ubicación sin padre debe ser un almacén',
@@ -145,6 +147,29 @@ export class LocationsService {
       await tx.execute(
         sql`update locations set archived_at = now(), updated_at = now() where id in ${subtree}`,
       );
+    });
+  }
+
+  /** Ficha con su contenido; para cajones indica el gabinete que los contiene. */
+  detail(ctx: OrgContext, id: string): Promise<LocationDetail> {
+    return this.dbs.tenant(ctx, async (tx) => {
+      const [row] = await tx
+        .select({ ...columns, cabinetId: cabinets.id })
+        .from(locations)
+        .leftJoin(cabinets, eq(cabinets.locationId, locations.id))
+        .where(and(eq(locations.id, id), isNull(locations.archivedAt)));
+      if (!row) throw notFound('Ubicación');
+      const loc = row;
+      let parentCabinetId: string | null = null;
+      if (loc.kind === 'drawer' && loc.parentId) {
+        const [cab] = await tx
+          .select({ id: cabinets.id })
+          .from(cabinets)
+          .where(eq(cabinets.locationId, loc.parentId));
+        parentCabinetId = cab?.id ?? null;
+      }
+      const contents = await locationStock(tx, sql`d.id = ${id}`);
+      return { ...loc, parentCabinetId, contents };
     });
   }
 

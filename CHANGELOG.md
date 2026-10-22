@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.3.0-alpha.5] — 2026-10-22
+
+### Añadido
+
+- **Ficha de ubicación** (`/ubicaciones/:id`), pensada para el celular: qué hay dentro con cantidades y aviso de stock bajo, capacidad usada, botones de entrada (+) y salida (−) por artículo y «Guardar un artículo aquí» con buscador. Enlace «Ver en el gabinete» para los cajones.
+- Escanear la etiqueta de un cajón o de una ubicación abre su ficha; la de un gabinete, su editor.
+- API `GET locations/:id` con el contenido; `QrTarget.locationKind`.
+- En Ubicaciones, el nombre de cada una enlaza a su ficha.
+
 ## [0.3.0-alpha.4] — 2026-10-22
 
 ### Añadido

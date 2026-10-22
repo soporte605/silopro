@@ -52,15 +52,16 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 ## Ubicaciones y existencias · `/orgs/:orgId/…`
 
-| Método y ruta             | Permiso                            | Notas                                                                              |
-| ------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)          |
-| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                        |
-| `PATCH locations/:id`     | catalog.write                      | `code, name, parentId, version, maxItems?`; mueve el subárbol; `409 STALE_VERSION` |
-| `DELETE locations/:id`    | catalog.write                      | Archiva con su contenido; `422 LOCATION_HAS_STOCK` si hay existencias              |
-| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason`    |
-| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                 |
-| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                    |
+| Método y ruta             | Permiso                            | Notas                                                                                            |
+| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `GET locations`           | catalog.read                       | Con `path` legible, `qrCode` y `cabinetId` (si es un gabinete con diseño)                        |
+| `GET locations/:id`       | catalog.read                       | Ficha: la ubicación, `parentCabinetId` (si es un cajón) y `contents` (artículos con existencias) |
+| `POST locations`          | catalog.write                      | `kind, code, name, parentId?`; reglas de `ALLOWED_CHILDREN`                                      |
+| `PATCH locations/:id`     | catalog.write                      | `code, name, parentId, version, maxItems?`; mueve el subárbol; `409 STALE_VERSION`               |
+| `DELETE locations/:id`    | catalog.write                      | Archiva con su contenido; `422 LOCATION_HAS_STOCK` si hay existencias                            |
+| `POST movements`          | stock.move (ajustes: stock.adjust) | `receipt`/`issue` con `quantity`; `adjustment` con `countedQuantity` y `reason`                  |
+| `GET items/:id/stock`     | catalog.read                       | Existencias por ubicación; `cabinetId` si la ubicación es un cajón                               |
+| `GET items/:id/movements` | catalog.read                       | Historial, más reciente primero                                                                  |
 
 ## Gabinetes · `/orgs/:orgId/cabinets`
 
@@ -79,11 +80,11 @@ Al guardar un diseño la API lo valida con `assertCanonicalLayout` (sin huecos n
 
 ## Etiquetas QR · `/orgs/:orgId/qr`
 
-Cada artículo y ubicación tiene un código corto aleatorio (`qrCode`, base32 Crockford de 10 caracteres). La etiqueta impresa lleva el enlace `<dirección>/q/<letra>/<código>` (`a` artículo, `u` ubicación); la web lo resuelve con la sesión de quien escanea y abre el artículo, el gabinete (con el cajón resaltado) o la ubicación.
+Cada artículo y ubicación tiene un código corto aleatorio (`qrCode`, base32 Crockford de 10 caracteres). La etiqueta impresa lleva el enlace `<dirección>/q/<letra>/<código>` (`a` artículo, `u` ubicación); la web lo resuelve con la sesión de quien escanea y abre el artículo, el editor del gabinete o la ficha de la ubicación o cajón.
 
-| Método y ruta        | Permiso      | Notas                                                                                                  |
-| -------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
-| `GET qr/:type/:code` | catalog.read | `type` = `item` o `location`; devuelve `{ type, id, name, label, cabinetId }`; `404` si no existe aquí |
+| Método y ruta        | Permiso      | Notas                                                                                                                |
+| -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `GET qr/:type/:code` | catalog.read | `type` = `item` o `location`; devuelve `{ type, id, name, label, cabinetId, locationKind }`; `404` si no existe aquí |
 
 ## Miembros e invitaciones · `/orgs/:orgId/…`
 

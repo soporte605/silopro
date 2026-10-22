@@ -321,7 +321,11 @@ export class LocationForm {
                   <td>
                     <span [style.padding-left.rem]="r.depth * 1.25">
                       <span class="font-mono text-xs text-fg-muted">{{ r.l.code }}</span>
-                      <span class="ml-2 font-medium">{{ r.l.name }}</span>
+                      <a
+                        class="ml-2 font-medium hover:underline"
+                        [routerLink]="['/ubicaciones', r.l.id]"
+                        >{{ r.l.name }}</a
+                      >
                     </span>
                     @if (r.l.cabinetId) {
                       <a

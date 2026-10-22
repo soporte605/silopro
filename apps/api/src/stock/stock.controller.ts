@@ -43,6 +43,11 @@ export class StockController {
     return this.locationsSvc.list(ctx);
   }
 
+  @Get('locations/:id')
+  locationDetail(@Org() ctx: OrgContext, @Param('id', uuid) id: string) {
+    return this.locationsSvc.detail(ctx, id);
+  }
+
   @Post('locations')
   @RequirePermission('catalog.write')
   createLocation(

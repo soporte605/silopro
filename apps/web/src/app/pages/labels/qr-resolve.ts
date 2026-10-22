@@ -9,10 +9,12 @@ import { SessionService } from '../../core/session';
 /** Adónde lleva una etiqueta resuelta. */
 export function qrDestination(t: QrTarget): { commands: string[]; queryParams?: object } {
   if (t.type === 'item') return { commands: ['/inventario', t.id] };
-  if (t.cabinetId) {
-    return { commands: ['/gabinetes', t.cabinetId], queryParams: { resaltar: t.id } };
+  // Un gabinete abre su editor; un cajón u otra ubicación, su ficha (pensada
+  // para el celular: contenido y entradas/salidas rápidas).
+  if (t.locationKind === 'cabinet' && t.cabinetId) {
+    return { commands: ['/gabinetes', t.cabinetId] };
   }
-  return { commands: ['/ubicaciones'], queryParams: { resaltar: t.id } };
+  return { commands: ['/ubicaciones', t.id] };
 }
 
 /**

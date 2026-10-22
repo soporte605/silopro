@@ -61,6 +61,24 @@ export interface Location {
   version: number;
 }
 
+/** Un artículo con existencias en una ubicación. */
+export interface LocationStockEntry {
+  locationId: string;
+  itemId: string;
+  sku: string;
+  itemName: string;
+  onHand: number;
+  unitSymbol: string;
+  lowStock: boolean;
+}
+
+/** Ficha de una ubicación: lo que se abre al escanear su etiqueta. */
+export interface LocationDetail extends Location {
+  /** Gabinete que contiene este cajón (si es un cajón de gabinete). */
+  parentCabinetId: string | null;
+  contents: LocationStockEntry[];
+}
+
 export const MOVEMENT_KIND_VALUES = ['receipt', 'issue', 'adjustment'] as const;
 
 const qty = z.coerce

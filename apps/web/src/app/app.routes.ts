@@ -52,6 +52,11 @@ export const routes: Routes = [
         title: 'Ubicaciones · SiloPro',
       },
       {
+        path: 'ubicaciones/:id',
+        loadComponent: () => import('./pages/locations/location-detail'),
+        title: 'Ubicación · SiloPro',
+      },
+      {
         path: 'miembros',
         loadComponent: () => import('./pages/members/members'),
         title: 'Miembros · SiloPro',

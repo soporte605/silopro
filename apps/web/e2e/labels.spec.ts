@@ -3,6 +3,7 @@ import { expect, test } from './fixtures';
 const H = { 'X-SiloPro-Request': '1' };
 
 test('etiquetas: hoja de un gabinete y escaneo que abre el cajón', async ({ page, account: _ }) => {
+  test.setTimeout(90_000);
   const me = await (await page.request.get('/api/auth/me')).json();
   const base = `/api/orgs/${me.memberships[0].organizationId}`;
   const w = await (
@@ -17,6 +18,12 @@ test('etiquetas: hoja de un gabinete y escaneo que abre el cajón', async ({ pag
       data: { parentId: w.id, code: 'GAB-1', name: 'Electrónica', rows: 2, columns: 3 },
     })
   ).json();
+  const units = await (await page.request.get(`${base}/units`)).json();
+  const unitId = units.find((u: { code: string }) => u.code === 'pza').id;
+  await page.request.post(`${base}/items`, {
+    headers: H,
+    data: { sku: 'SEN-DHT22', name: 'Sensor DHT22', unitId },
+  });
 
   // Desde el gabinete, «Imprimir etiquetas» abre la hoja con el gabinete y sus 6 cajones.
   await page.goto(`/gabinetes/${cab.id}`);
@@ -44,12 +51,36 @@ test('etiquetas: hoja de un gabinete y escaneo que abre el cajón', async ({ pag
   await expect(page.getByRole('navigation', { name: 'Principal' })).toBeHidden();
   await page.emulateMedia({ media: 'screen' });
 
-  // Escanear la etiqueta de B2 abre el gabinete con ese cajón seleccionado.
+  // Escanear la etiqueta del gabinete abre su editor.
+  await page.goto(`/q/u/${cab.qrCode}`);
+  await expect(page).toHaveURL(new RegExp(`/gabinetes/${cab.id}$`));
+
+  // Escanear la de B2 abre la ficha del cajón: guardar un artículo y sacar uno.
   const b2 = cab.compartments.find((c: { id: string }) => c.id === 'B2');
   await page.goto(`/q/u/${b2.qrCode}`);
+  await expect(page).toHaveURL(new RegExp(`/ubicaciones/${b2.locationId}$`));
+  await expect(page.getByRole('heading', { name: 'B2' })).toBeVisible();
+  await expect(page.getByText('Vacío', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar un artículo aquí' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /Sensor DHT22/ })
+    .click();
+  const mov = page.getByRole('dialog');
+  await expect(mov.getByLabel('Ubicación')).toHaveValue(b2.locationId);
+  await mov.getByLabel('Cantidad').fill('5');
+  await mov.getByRole('button', { name: 'Registrar' }).click();
+  await expect(mov).toBeHidden();
+  const contents = page.getByRole('list', { name: 'Contenido' });
+  await expect(contents).toContainText('Sensor DHT22');
+  await expect(contents).toContainText('5');
+  await page.getByRole('button', { name: 'Salida de Sensor DHT22' }).click();
+  await mov.getByLabel('Cantidad').fill('2');
+  await mov.getByRole('button', { name: 'Registrar' }).click();
+  await expect(mov).toBeHidden();
+  await expect(contents.getByText('3', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Ver en el gabinete' }).click();
   await expect(page).toHaveURL(new RegExp(`/gabinetes/${cab.id}\\?resaltar=${b2.locationId}`));
-  const detail = page.getByRole('complementary', { name: 'Detalle del cajón' });
-  await expect(detail.getByText('B2', { exact: true })).toBeVisible();
 
   // Un código inexistente avisa claramente.
   await page.goto('/q/a/0123456789');
