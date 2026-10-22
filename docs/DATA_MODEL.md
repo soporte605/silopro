@@ -66,8 +66,9 @@ Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no 
 - `invitations`: correo en minúsculas (CHECK), rol, `token_hash` único, `expires_at`, `accepted_at/by`, `revoked_at`. El estado se deriva de esas columnas.
 - Ambas tablas tienen RLS forzada como el resto de tablas de negocio.
 
-### Gabinetes (migraciones `0004` y `0005`)
+### Gabinetes y anaqueles (migraciones `0004`, `0005`, `0007` y `0010`)
 
 - `cabinets`: `location_id` único (la ubicación de tipo `cabinet`), `rows` y `columns` (1–60, CHECK), `addressing`, `row_origin` y `compartments` jsonb con el diseño de `@silopro/cabinet-engine`; medidas físicas en mm `cell_width`, `cell_height`, `depth`, `wall_thickness` (`real`, con CHECK de rango; por omisión 40, 30, 120 y 2); `version` para bloqueo optimista. FK compuesta a `locations` y RLS forzada.
 - `locations.max_items` (NULL o 1–999, CHECK): capacidad en artículos distintos; la valida `MovementsService` al registrar entradas y ajustes, bloqueando la ubicación. El índice único `(organization_id, parent_id, code)` es parcial (`archived_at is null`).
-- Cada compartimento es una fila de `locations` de tipo `drawer`, hija del gabinete, con la dirección como `code` y ruta `ALMACÉN / GABINETE / A1`. Al fusionar, los cajones absorbidos se archivan (`archived_at`); al dividir se restauran, conservando su id, QR e historial.
+- `cabinets.style` (`drawers` o `shelves`, CHECK): un gabinete es una ubicación `cabinet` con cajones `drawer`; un anaquel es una ubicación `shelving` con charolas `bin`, una fila por repisa (medidas por omisión 300 × 250 × 300 mm y 15 mm de repisa).
+- Cada compartimento es una fila de `locations` de tipo `drawer` (o `bin` en un anaquel), hija del gabinete, con la dirección como `code` y ruta `ALMACÉN / GABINETE / A1`. Al fusionar, los cajones absorbidos se archivan (`archived_at`); al dividir se restauran, conservando su id, QR e historial.

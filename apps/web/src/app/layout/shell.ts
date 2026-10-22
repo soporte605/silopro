@@ -273,7 +273,7 @@ import { SessionService } from '../core/session';
         routerLinkActive="is-active"
         ariaCurrentWhenActive="page"
       >
-        <svg lucideGrid3x3></svg> Gabinetes
+        <svg lucideGrid3x3></svg> Gabinetes y anaqueles
       </a>
       <a
         esNavItem
@@ -356,9 +356,9 @@ export class Shell {
       },
       {
         id: 'nav.cabinets',
-        label: 'Ir a Gabinetes',
+        label: 'Ir a Gabinetes y anaqueles',
         group: 'Navegación',
-        keywords: ['cajones', 'ubicacion', '2d'],
+        keywords: ['cajones', 'ubicacion', '2d', 'anaquel', 'charolas', 'repisas'],
         run: () => this.go('/gabinetes'),
       },
       {

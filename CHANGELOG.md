@@ -4,6 +4,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.0-alpha.3] — 2026-10-22
+
+Anaqueles con charolas.
+
+### Añadido
+
+- **Anaqueles**: al crear un mueble se elige **Gabinete** (cajones) o **Anaquel** (repisas con charolas). En el anaquel cada fila es una repisa y cada celda una charola, que es una ubicación con su QR, igual que un cajón.
+- El editor, la búsqueda, la capacidad, las etiquetas y «Ver en 3D» funcionan igual que en los gabinetes. La vista 3D dibuja el anaquel abierto, con las charolas que se deslizan hacia afuera.
+- Medidas por omisión de taller para anaqueles: charolas de 300 × 250 mm y repisas de 300 mm de fondo.
+- Migración `0010_anaqueles`: columna `style` en `cabinets` (los gabinetes existentes quedan como `drawers`). No borra datos.
+
+### Cambiado
+
+- La sección **Gabinetes** pasa a llamarse **Gabinetes y anaqueles**.
+
 ## [0.5.0-alpha.2] — 2026-10-22
 
 Fase 5 · Operaciones: reservas y consumos.

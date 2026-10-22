@@ -331,7 +331,11 @@ export class LocationForm {
                       <a
                         class="ml-2 text-xs text-accent hover:underline"
                         [routerLink]="['/gabinetes', r.l.cabinetId]"
-                        >Abrir gabinete · {{ drawerCount().get(r.l.id) ?? 0 }} cajones</a
+                        >{{
+                          r.l.kind === 'shelving'
+                            ? 'Abrir anaquel · ' + (drawerCount().get(r.l.id) ?? 0) + ' charolas'
+                            : 'Abrir gabinete · ' + (drawerCount().get(r.l.id) ?? 0) + ' cajones'
+                        }}</a
                       >
                     }
                   </td>
@@ -400,10 +404,15 @@ export default class Locations {
     loader: () => this.api.get<Location[]>('/locations'),
   });
 
+  /** Cajones (o charolas) de cada gabinete o anaquel con diseño. */
   protected readonly drawerCount = computed(() => {
+    const all = this.list.value() ?? [];
+    const cabinets = new Set(all.filter((l) => l.cabinetId).map((l) => l.id));
     const out = new Map<string, number>();
-    for (const l of this.list.value() ?? []) {
-      if (l.kind === 'drawer' && l.parentId) out.set(l.parentId, (out.get(l.parentId) ?? 0) + 1);
+    for (const l of all) {
+      if ((l.kind === 'drawer' || l.kind === 'bin') && l.parentId && cabinets.has(l.parentId)) {
+        out.set(l.parentId, (out.get(l.parentId) ?? 0) + 1);
+      }
     }
     return out;
   });

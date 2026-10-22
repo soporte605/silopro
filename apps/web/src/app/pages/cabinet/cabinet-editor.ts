@@ -23,6 +23,7 @@ import {
 import {
   type Cabinet,
   type CabinetCompartment,
+  CABINET_STYLE_INFO,
   type CabinetPhysical,
   cabinetPhysicalSchema,
   type CabinetStockEntry,
@@ -94,7 +95,10 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
     <div class="flex h-full min-h-0 flex-col">
       <div class="flex h-11 shrink-0 items-center gap-3 border-b border-border px-4">
         <es-breadcrumb
-          [items]="[{ label: 'Gabinetes', link: '/gabinetes' }, { label: cabinet()?.code ?? '…' }]"
+          [items]="[
+            { label: 'Gabinetes y anaqueles', link: '/gabinetes' },
+            { label: cabinet()?.code ?? '…' },
+          ]"
         />
         <div class="ml-auto flex items-center gap-2">
           @if (dirty()) {
@@ -148,7 +152,11 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
               </p>
             </div>
             @if (session.canWrite()) {
-              <es-form-field label="Filas" #fr="esFormField" class="w-20">
+              <es-form-field
+                [label]="cab.style === 'shelves' ? 'Repisas' : 'Filas'"
+                #fr="esFormField"
+                class="w-20"
+              >
                 <input
                   esInput
                   type="number"
@@ -159,7 +167,11 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   (change)="resize($any($event.target).value, lay.columns)"
                 />
               </es-form-field>
-              <es-form-field label="Columnas" #fc="esFormField" class="w-20">
+              <es-form-field
+                [label]="cab.style === 'shelves' ? 'Charolas' : 'Columnas'"
+                #fc="esFormField"
+                class="w-20"
+              >
                 <input
                   esInput
                   type="number"
@@ -171,7 +183,11 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                 />
               </es-form-field>
             }
-            <es-form-field label="Buscar artículo, SKU o cajón" #fs="esFormField" class="w-64">
+            <es-form-field
+              [label]="'Buscar artículo, SKU o ' + t().cell"
+              #fs="esFormField"
+              class="w-64"
+            >
               <input
                 esInput
                 type="search"
@@ -205,18 +221,19 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
             @if (view() === '3d') {
               <div class="h-[65vh] min-w-0 shrink-0 bg-surface-sunken lg:h-auto lg:flex-1">
                 <sp-cabinet-3d
-                  [label]="'Gabinete ' + cab.name"
+                  [label]="t().label + ' ' + cab.name"
                   [layout]="lay"
                   [states]="states()"
                   [matches]="matches()"
                   [spec]="cab.physical"
+                  [style]="cab.style"
                   [(selectedId)]="selectedId"
                 />
               </div>
             } @else {
               <div class="min-h-0 min-w-0 flex-1 overflow-auto bg-surface-sunken p-4">
                 <sp-cabinet-grid
-                  [label]="'Gabinete ' + cab.name"
+                  [label]="t().label + ' ' + cab.name"
                   [layout]="lay"
                   [states]="states()"
                   [matches]="matches()"
@@ -228,12 +245,12 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
 
             <aside
               class="w-full shrink-0 overflow-y-auto border-t border-border bg-surface lg:w-80 lg:border-t-0 lg:border-l"
-              aria-label="Detalle del cajón"
+              [attr.aria-label]="'Detalle ' + t().ofCell"
             >
               <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
               @if (selected(); as c) {
                 <div class="border-b border-border px-4 py-3">
-                  <p class="text-xs text-fg-muted">Cajón</p>
+                  <p class="text-xs text-fg-muted">{{ t().cellLabel }}</p>
                   <p class="font-mono text-lg font-semibold">{{ c.address }}</p>
                   <p class="text-xs text-fg-muted">
                     {{ c.rowSpan }}×{{ c.columnSpan }} celdas · fila {{ c.row + 1 }}, columna
@@ -247,7 +264,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                         class="grid grid-cols-[1fr_5.5rem] items-end gap-2"
                         (submit)="$event.preventDefault(); saveCompartment(c.id)"
                       >
-                        <es-form-field label="Nombre del cajón" #fn="esFormField">
+                        <es-form-field [label]="'Nombre ' + t().ofCell" #fn="esFormField">
                           <input
                             esInput
                             [id]="fn.controlId"
@@ -285,7 +302,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                           [disabled]="dirty()"
                           [loading]="renaming()"
                         >
-                          Guardar cajón
+                          Guardar {{ t().cell }}
                         </button>
                       </form>
                     } @else {
@@ -296,7 +313,10 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                     </p>
                   </div>
                   @if (contents().get(sc.locationId); as entries) {
-                    <ul class="divide-y divide-border" aria-label="Contenido del cajón">
+                    <ul
+                      class="divide-y divide-border"
+                      [attr.aria-label]="'Contenido ' + t().ofCell"
+                    >
                       @for (e of entries; track e.itemId) {
                         <li class="flex items-start justify-between gap-3 px-4 py-2.5 text-sm">
                           <a
@@ -317,33 +337,33 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                     </ul>
                   } @else {
                     <p class="px-4 py-3 text-sm text-fg-muted">
-                      Cajón vacío. Para guardar algo aquí registre una entrada desde el artículo y
-                      elija «{{ cab.path }} / {{ c.id }}».
+                      {{ t().emptyCell }}. Para guardar algo aquí registre una entrada desde el
+                      artículo y elija «{{ cab.path }} / {{ c.id }}».
                     </p>
                   }
                 } @else {
                   <p class="px-4 py-3 text-sm text-fg-muted">
-                    Este cajón es nuevo: guarde el diseño para crearlo.
+                    {{ t().newCell }}: guarde el diseño para crearlo.
                   </p>
                 }
               } @else {
                 <p class="px-4 py-6 text-sm text-fg-muted">
-                  Seleccione un cajón para ver su contenido.
+                  Seleccione {{ t().aCell }} para ver su contenido.
                 </p>
               }
               <div class="border-t border-border px-4 py-3 text-xs text-fg-muted">
-                {{ lay.compartments.length }} cajones · {{ cab.occupiedCount }} ocupados ·
+                {{ lay.compartments.length }} {{ t().cells }} · {{ cab.occupiedCount }} ocupados ·
                 {{ matches().size }} coincidencias
               </div>
               <details class="group border-t border-border" [open]="view() === '3d'">
                 <summary
                   class="cursor-pointer px-4 py-3 text-sm font-medium select-none hover:bg-surface-hover"
                 >
-                  Medidas del gabinete
+                  Medidas {{ t().ofContainer }}
                 </summary>
                 <form
                   class="grid grid-cols-2 gap-2 px-4 pb-4"
-                  aria-label="Medidas del gabinete"
+                  [attr.aria-label]="'Medidas ' + t().ofContainer"
                   (submit)="$event.preventDefault(); savePhysical()"
                 >
                   @for (f of physicalFields; track f.key) {
@@ -365,7 +385,9 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   <p class="col-span-full text-xs text-fg-muted" aria-live="polite">
                     @if (outer(); as o) {
                       Exterior: {{ o.width }} × {{ o.height }} × {{ o.depth }} mm.
-                      @if (modules(); as m) {
+                      @if (cab.style === 'shelves') {
+                        Cada fila es una repisa; las medidas son de cada charola.
+                      } @else if (modules(); as m) {
                         Se imprime en {{ m.modules }} {{ m.modules === 1 ? 'pieza' : 'módulos' }} en
                         la Ender-3 V3 KE.
                       } @else {
@@ -424,6 +446,8 @@ export default class CabinetEditor {
     loader: ({ params }) => this.api.get<CabinetStockEntry[]>(`/cabinets/${params.id}/stock`),
   });
 
+  /** Nombres según el mueble: gabinete/cajón o anaquel/charola. */
+  protected readonly t = computed(() => CABINET_STYLE_INFO[this.cabinet()?.style ?? 'drawers']);
   protected readonly cabinet = computed(() =>
     this.server.hasValue() ? this.server.value() : null,
   );
@@ -598,7 +622,7 @@ export default class CabinetEditor {
       this.toast.show('No se pudieron guardar las medidas', {
         description:
           err.code === 'STALE_VERSION'
-            ? 'Otra persona cambió este gabinete; recargue.'
+            ? `Otra persona cambió este ${this.t().label.toLowerCase()}; recargue.`
             : err.message,
         tone: 'danger',
       });
@@ -678,12 +702,12 @@ export default class CabinetEditor {
       this.stock.reload();
       this.toast.show('Diseño guardado', {
         tone: 'success',
-        description: `${next.compartments.length} cajones`,
+        description: `${next.compartments.length} ${this.t().cells}`,
       });
     } catch (e) {
       const err = ApiRequestError.from(e);
       if (err.code === 'STALE_VERSION') {
-        this.toast.show('Otra persona cambió este gabinete', {
+        this.toast.show(`Otra persona cambió este ${this.t().label.toLowerCase()}`, {
           description: 'Se cargó la versión actual; repita sus cambios.',
           tone: 'danger',
         });
@@ -707,7 +731,7 @@ export default class CabinetEditor {
     });
     if (!cab) return;
     if (!parsed.success) {
-      this.toast.show('Revise el cajón', {
+      this.toast.show(`Revise ${this.t().theCell}`, {
         description: 'El nombre es obligatorio y la capacidad va de 1 a 999.',
         tone: 'danger',
       });
@@ -721,9 +745,9 @@ export default class CabinetEditor {
           parsed.data,
         ),
       );
-      this.toast.show('Cajón guardado', { tone: 'success' });
+      this.toast.show(this.t().savedCell, { tone: 'success' });
     } catch (e) {
-      this.toast.show('No se pudo guardar el cajón', {
+      this.toast.show(`No se pudo guardar ${this.t().theCell}`, {
         description: ApiRequestError.from(e).message,
         tone: 'danger',
       });

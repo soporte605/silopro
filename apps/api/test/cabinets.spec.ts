@@ -242,4 +242,62 @@ describe.skipIf(!TEST_DB)('gabinetes', () => {
       .expect(403);
     await viewer.patch(`${base}/${cab.id}/compartments/A1`).send({ name: 'x' }).expect(403);
   });
+
+  it('anaquel: ubicación shelving con una charola (bin) por celda y medidas de taller', async () => {
+    const res = await s
+      .post('/cabinets')
+      .send({
+        style: 'shelves',
+        parentId: warehouseId,
+        code: 'ANQ-1',
+        name: 'Anaquel de charolas',
+        rows: 4,
+        columns: 3,
+      })
+      .expect(201);
+    const anq: Cabinet = res.body;
+    expect(anq.style).toBe('shelves');
+    expect(anq.compartments).toHaveLength(12);
+    expect(anq.compartments[0]).toMatchObject({ id: 'A1', name: 'Charola A1' });
+    expect(anq.physical).toMatchObject({ cellWidth: 300, depth: 300 });
+
+    const all = (await s.get('/locations').expect(200)).body as {
+      id: string;
+      kind: string;
+      path: string;
+      cabinetId: string | null;
+    }[];
+    expect(all.find((l) => l.path === 'TALLER / ANQ-1')).toMatchObject({
+      kind: 'shelving',
+      cabinetId: anq.id,
+    });
+    expect(all.find((l) => l.path === 'TALLER / ANQ-1 / B2')?.kind).toBe('bin');
+
+    // La ficha de una charola enlaza a su anaquel; las charolas se fusionan igual.
+    const b2 = anq.compartments.find((c) => c.id === 'B2')!;
+    const detail = (await s.get(`/locations/${b2.locationId}`).expect(200)).body;
+    expect(detail.parentCabinetId).toBe(anq.id);
+    const merged = mergeCompartments(layoutOf(anq), {
+      row: 0,
+      column: 0,
+      rowSpan: 1,
+      columnSpan: 3,
+    });
+    const saved: Cabinet = (
+      await s
+        .put(`/cabinets/${anq.id}/layout`)
+        .send({
+          version: anq.version,
+          rows: merged.rows,
+          columns: merged.columns,
+          compartments: merged.compartments,
+        })
+        .expect(200)
+    ).body;
+    expect(saved.compartments).toHaveLength(10);
+    expect(saved.compartments.every((c) => c.locationId)).toBe(true);
+    expect(
+      (await s.get('/cabinets').expect(200)).body.find((c: Cabinet) => c.id === anq.id),
+    ).toMatchObject({ style: 'shelves', compartmentCount: 10 });
+  });
 });

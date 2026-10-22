@@ -18,6 +18,7 @@ import {
   type CabinetLayout,
   type CabinetPhysicalSpec,
   cabinetSceneModel,
+  type CabinetStyle,
   DEFAULT_PHYSICAL_SPEC,
 } from '@silopro/cabinet-engine';
 import type { CompartmentState } from '@silopro/contracts';
@@ -44,7 +45,7 @@ type Status = 'loading' | 'ready' | 'failed';
       role="application"
       aria-roledescription="Vista 3D"
       [attr.aria-label]="
-        label() + '. Flechas para recorrer los cajones, Enter para abrir o cerrar.'
+        label() + '. Flechas para moverse entre ' + cellWord() + ', Enter para abrir o cerrar.'
       "
       [attr.data-status]="status()"
       [attr.data-selected]="selectedId()"
@@ -81,7 +82,8 @@ type Status = 'loading' | 'ready' | 'failed';
         <p
           class="pointer-events-none absolute bottom-2 left-3 hidden text-xs text-fg-muted sm:block"
         >
-          Arrastre para girar · rueda o pellizco para acercar · clic en un cajón para abrirlo
+          Arrastre para girar · rueda o pellizco para acercar · clic en
+          {{ style() === 'shelves' ? 'una charola para sacarla' : 'un cajón para abrirlo' }}
         </p>
       }
     }
@@ -94,6 +96,11 @@ export class Cabinet3d {
   readonly label = input('Gabinete');
   /** Medidas reales del gabinete (mm). */
   readonly spec = input<CabinetPhysicalSpec>(DEFAULT_PHYSICAL_SPEC);
+  /** Gabinete de cajones o anaquel abierto con charolas. */
+  readonly style = input<CabinetStyle>('drawers');
+  protected readonly cellWord = computed(() =>
+    this.style() === 'shelves' ? 'charolas' : 'cajones',
+  );
   readonly selectedId = model<string | null>(null);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -103,7 +110,9 @@ export class Cabinet3d {
   /** Cajón abierto; se expone en `data-open` para pruebas. */
   protected readonly openId = signal<string | null>(null);
 
-  private readonly sceneModel = computed(() => cabinetSceneModel(this.layout(), this.spec()));
+  private readonly sceneModel = computed(() =>
+    cabinetSceneModel(this.layout(), this.spec(), this.style()),
+  );
   private readonly cells = computed(() => buildCellIndex(this.layout()));
   protected viewer: CabinetViewer | null = null;
   private destroyed = false;

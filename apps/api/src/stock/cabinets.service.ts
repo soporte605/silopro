@@ -4,14 +4,17 @@ import {
   type CabinetLayout,
   type Compartment,
   createGridLayout,
+  defaultPhysicalSpec,
   LayoutError,
 } from '@silopro/cabinet-engine';
 import {
   type Cabinet,
+  CABINET_STYLE_INFO,
   type CabinetCompartment,
   type cabinetInputSchema,
   type cabinetLayoutUpdateSchema,
   type CabinetStockEntry,
+  type CabinetStyleValue,
   type CabinetSummary,
   type CompartmentState,
   type cabinetPhysicalUpdateSchema,
@@ -39,13 +42,17 @@ type LocationRow = {
   maxItems: number | null;
 };
 
-const drawerName = (address: string) => `Cajón ${address}`;
+const styleOf = (c: { style: string }) => c.style as CabinetStyleValue;
+const cellKindOf = (c: { style: string }) => CABINET_STYLE_INFO[styleOf(c)].cellKind;
+const cellName = (style: CabinetStyleValue, address: string) =>
+  `${CABINET_STYLE_INFO[style].cellLabel} ${address}`;
 
 /**
- * Gabinetes con diseño guardado. El gabinete es una ubicación de tipo
- * `cabinet` y cada compartimento una ubicación hija de tipo `drawer` con la
- * dirección como código, de modo que las existencias se registran en cajones
- * igual que en cualquier otra ubicación.
+ * Gabinetes y anaqueles con diseño guardado. El mueble es una ubicación de
+ * tipo `cabinet` (o `shelving` si es un anaquel) y cada compartimento una
+ * ubicación hija de tipo `drawer` (o `bin`, una charola) con la dirección como
+ * código, de modo que las existencias se registran en cajones y charolas igual
+ * que en cualquier otra ubicación.
  *
  * Al guardar un diseño (fusionar, dividir, redimensionar) se sincronizan los
  * cajones: los que desaparecen se archivan solo si están vacíos, y los que
@@ -90,7 +97,7 @@ export class CabinetsService {
   create(ctx: OrgContext, input: z.output<typeof cabinetInputSchema>): Promise<Cabinet> {
     return this.dbs.tenant(ctx, async (tx) => {
       const loc = await this.locationsSvc.insert(tx, ctx, {
-        kind: 'cabinet',
+        kind: CABINET_STYLE_INFO[input.style].containerKind,
         code: input.code,
         name: input.name,
         parentId: input.parentId,
@@ -109,6 +116,8 @@ export class CabinetsService {
         .values({
           organizationId: ctx.organizationId,
           locationId: loc.id,
+          style: input.style,
+          ...defaultPhysicalSpec(input.style),
           rows: layout.rows,
           columns: layout.columns,
           addressing: layout.addressing,
@@ -116,7 +125,7 @@ export class CabinetsService {
           compartments: layout.compartments,
         })
         .returning({ id: cabinets.id });
-      await this.insertDrawers(tx, ctx, loc, layout.compartments);
+      await this.insertDrawers(tx, ctx, loc, input.style, layout.compartments);
       return this.load(tx, cab!.id);
     });
   }
@@ -158,7 +167,7 @@ export class CabinetsService {
       const children = await tx
         .select({ id: locations.id, code: locations.code, archivedAt: locations.archivedAt })
         .from(locations)
-        .where(and(eq(locations.parentId, cab.locationId), eq(locations.kind, 'drawer')));
+        .where(and(eq(locations.parentId, cab.locationId), eq(locations.kind, cellKindOf(cab))));
       const wanted = new Set(layout.compartments.map((c) => c.id));
       const byCode = new Map(children.map((c) => [c.code, c]));
 
@@ -212,6 +221,7 @@ export class CabinetsService {
         tx,
         ctx,
         loc!,
+        styleOf(cab),
         layout.compartments.filter((c) => !byCode.has(c.id)),
       );
 
@@ -262,7 +272,7 @@ export class CabinetsService {
   ): Promise<Cabinet> {
     return this.dbs.tenant(ctx, async (tx) => {
       const [cab] = await tx
-        .select({ locationId: cabinets.locationId })
+        .select({ locationId: cabinets.locationId, style: cabinets.style })
         .from(cabinets)
         .where(eq(cabinets.id, id));
       if (!cab) throw notFound('Gabinete');
@@ -277,7 +287,7 @@ export class CabinetsService {
         .where(
           and(
             eq(locations.parentId, cab.locationId),
-            eq(locations.kind, 'drawer'),
+            eq(locations.kind, cellKindOf(cab)),
             eq(locations.code, compartmentId),
             isNull(locations.archivedAt),
           ),
@@ -307,6 +317,7 @@ export class CabinetsService {
     tx: Tx,
     ctx: OrgContext,
     cabinetLoc: { id: string; path: string; depth: number },
+    style: CabinetStyleValue,
     compartments: readonly Compartment[],
   ): Promise<void> {
     // Por lotes para no superar el límite de parámetros de PostgreSQL.
@@ -315,9 +326,9 @@ export class CabinetsService {
         compartments.slice(i, i + 500).map((c) => ({
           organizationId: ctx.organizationId,
           parentId: cabinetLoc.id,
-          kind: 'drawer' as const,
+          kind: CABINET_STYLE_INFO[style].cellKind,
           code: c.id,
-          name: drawerName(c.address),
+          name: cellName(style, c.address),
           path: locationPath([cabinetLoc.path, c.id]),
           depth: cabinetLoc.depth + 1,
           qrCode: generateShortCode(),
@@ -355,7 +366,7 @@ export class CabinetsService {
       .where(
         and(
           eq(locations.parentId, row.c.locationId),
-          eq(locations.kind, 'drawer'),
+          eq(locations.kind, cellKindOf(row.c)),
           isNull(locations.archivedAt),
         ),
       );
@@ -382,7 +393,7 @@ export class CabinetsService {
       return {
         ...c,
         locationId: d?.id ?? '',
-        name: d?.name ?? drawerName(c.address),
+        name: d?.name ?? cellName(styleOf(row.c), c.address),
         qrCode: d?.qrCode ?? '',
         itemCount: agg?.count ?? 0,
         maxItems,
@@ -414,6 +425,7 @@ export class CabinetsService {
       id: c.id,
       locationId: c.locationId,
       parentId: loc.parentId,
+      style: styleOf(c),
       code: loc.code,
       name: loc.name,
       path: loc.path,

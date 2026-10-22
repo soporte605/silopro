@@ -24,6 +24,7 @@ import {
 } from '@elikarsystems/ui';
 import { LucideGrid3x3 } from '@lucide/angular';
 import { buildCellIndex, type CabinetLayout, cabinetSceneModel } from '@silopro/cabinet-engine';
+import { CABINET_STYLE_INFO } from '@silopro/contracts';
 import type {
   Cabinet,
   CabinetStockEntry,
@@ -178,7 +179,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   class="mt-2"
                   [routerLink]="['/gabinetes', s.cabinet.id]"
                   [queryParams]="{ resaltar: s.compartment.locationId, vista: '3d' }"
-                  >Abrir gabinete</a
+                  >Abrir {{ styleInfo(s.cabinet).label.toLowerCase() }}</a
                 >
               </div>
               @if (s.entries.length) {
@@ -199,11 +200,11 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   }
                 </ul>
               } @else {
-                <p class="px-4 py-3 text-sm text-fg-muted">Cajón vacío.</p>
+                <p class="px-4 py-3 text-sm text-fg-muted">{{ styleInfo(s.cabinet).emptyCell }}.</p>
               }
             } @else {
               <p class="px-4 py-6 text-sm text-fg-muted">
-                Toque un cajón para ver qué tiene, o busque un artículo.
+                Toque un cajón o una charola para ver qué tiene, o busque un artículo.
               </p>
             }
             @if (query().trim()) {
@@ -221,6 +222,7 @@ export default class Shelf3d {
   private readonly api = inject(Api);
   private readonly session = inject(SessionService);
   protected readonly qty = fmtQty;
+  protected readonly styleInfo = (c: CabinetSummary) => CABINET_STYLE_INFO[c.style];
 
   /** Ubicación que contiene los gabinetes (parámetro de ruta). */
   readonly id = input.required<string>();
@@ -318,7 +320,7 @@ export default class Shelf3d {
       this.viewer.setModels(
         list.map((sc) => ({
           key: sc.cabinet.id,
-          model: cabinetSceneModel(sc.layout, sc.cabinet.physical),
+          model: cabinetSceneModel(sc.layout, sc.cabinet.physical, sc.cabinet.style),
           title: sc.cabinet.code,
         })),
       );

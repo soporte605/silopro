@@ -71,6 +71,13 @@
       "when": 1792688022191,
       "tag": "0009_reservas",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792689802078,
+      "tag": "0010_anaqueles",
+      "breakpoints": true
     }
   ]
 }

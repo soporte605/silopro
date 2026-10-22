@@ -319,6 +319,8 @@ export const cabinets = pgTable(
     locationId: uuid('location_id')
       .notNull()
       .references(() => locations.id),
+    /** `drawers` (gabinete de cajones) o `shelves` (anaquel con charolas). */
+    style: text('style').notNull().default('drawers'),
     rows: smallint('rows').notNull(),
     columns: smallint('columns').notNull(),
     addressing: text('addressing').notNull(),
@@ -339,6 +341,7 @@ export const cabinets = pgTable(
       'cabinets_physical_valid',
       sql`${t.cellWidth} between 5 and 500 and ${t.cellHeight} between 5 and 500 and ${t.depth} between 10 and 1000 and ${t.wallThickness} between 0.4 and 20`,
     ),
+    check('cabinets_style_valid', sql`${t.style} in ('drawers', 'shelves')`),
   ],
 );
 

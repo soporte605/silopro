@@ -1,0 +1,2 @@
+ALTER TABLE "cabinets" ADD COLUMN "style" text DEFAULT 'drawers' NOT NULL;--> statement-breakpoint
+ALTER TABLE "cabinets" ADD CONSTRAINT "cabinets_style_valid" CHECK ("cabinets"."style" in ('drawers', 'shelves'));

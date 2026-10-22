@@ -35,4 +35,17 @@ describe('cabinetSceneModel', () => {
     const wide = m.drawers.find((d) => d.id === wideId)!;
     expect(wide.front.width).toBe(2 * 40 + 2 - 1);
   });
+
+  it('anaquel: abierto, con repisas y charolas bajas apoyadas en ellas', () => {
+    const m = cabinetSceneModel(createGridLayout({ rows: 2, columns: 2 }), spec, 'shelves');
+    // Sin fondo ni separador vertical central: 3 repisas + 2 laterales.
+    expect(m.panels).toHaveLength(5);
+    expect(m.panels.filter((p) => p.width === 2)).toHaveLength(2);
+    const b1 = m.drawers.find((d) => d.address === 'B1')!;
+    // Repisa de abajo: su cara superior está en y = -33 + 2.
+    expect(b1.body.y - b1.body.height / 2).toBeCloseTo(-31);
+    expect(b1.body.height).toBeCloseTo(30 * 0.4);
+    expect(b1.front.height).toBe(b1.body.height);
+    expect(b1.body.z + b1.body.depth / 2).toBeCloseTo(b1.front.z - 1);
+  });
 });

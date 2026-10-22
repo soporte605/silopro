@@ -359,7 +359,14 @@ export default class Labels {
         const list = await this.api.get<Location[]>('/locations');
         const cabinetLocations = new Set(list.filter((l) => l.cabinetId).map((l) => l.id));
         return list
-          .filter((l) => !(l.kind === 'drawer' && l.parentId && cabinetLocations.has(l.parentId)))
+          .filter(
+            (l) =>
+              !(
+                (l.kind === 'drawer' || l.kind === 'bin') &&
+                l.parentId &&
+                cabinetLocations.has(l.parentId)
+              ),
+          )
           .map((l) => ({
             key: `location/${l.qrCode}`,
             title: l.code,

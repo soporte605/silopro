@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { QrReference, QrTarget } from '@silopro/contracts';
+import { isCabinetCell, type QrReference, type QrTarget } from '@silopro/contracts';
 import { and, eq, isNull } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { OrgContext } from '../auth/request-context.js';
@@ -42,13 +42,11 @@ export class QrService {
           kind: locations.kind,
           ownCabinet: own.id,
           parentCabinet: parent.id,
+          parentStyle: parent.style,
         })
         .from(locations)
         .leftJoin(own, eq(own.locationId, locations.id))
-        .leftJoin(
-          parent,
-          and(eq(parent.locationId, locations.parentId), eq(locations.kind, 'drawer')),
-        )
+        .leftJoin(parent, eq(parent.locationId, locations.parentId))
         .where(and(eq(locations.qrCode, ref.code), isNull(locations.archivedAt)));
       if (!loc) throw notFound('Código');
       return {
@@ -56,7 +54,11 @@ export class QrService {
         id: loc.id,
         name: loc.name,
         label: loc.path,
-        cabinetId: loc.ownCabinet ?? loc.parentCabinet ?? null,
+        cabinetId:
+          loc.ownCabinet ??
+          (loc.parentStyle && isCabinetCell({ style: loc.parentStyle }, loc.kind)
+            ? loc.parentCabinet
+            : null),
         locationKind: loc.kind,
       };
     });

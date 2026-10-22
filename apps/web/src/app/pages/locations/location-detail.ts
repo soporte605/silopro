@@ -98,7 +98,8 @@ import { ItemPicker } from './item-picker';
               [routerLink]="['/gabinetes', cabId]"
               [queryParams]="l.parentCabinetId ? { resaltar: l.id } : {}"
             >
-              <svg lucideGrid3x3></svg> Ver en el gabinete
+              <svg lucideGrid3x3></svg> Ver en el
+              {{ l.kind === 'bin' || l.kind === 'shelving' ? 'anaquel' : 'gabinete' }}
             </a>
             <a
               esButton
@@ -110,9 +111,9 @@ import { ItemPicker } from './item-picker';
           }
         </div>
 
-        @if (cabinetsHere(); as n) {
+        @if (cabinetsHereLabel(); as label) {
           <a esButton [routerLink]="['/gabinetes/estante', l.id]" class="self-start">
-            <svg lucideGrid3x3></svg> Ver {{ n }} {{ n === 1 ? 'gabinete' : 'gabinetes' }} en 3D
+            <svg lucideGrid3x3></svg> Ver {{ label }} en 3D
           </a>
         }
 
@@ -195,9 +196,20 @@ export default class LocationDetailPage {
     params: () => ({ org: this.session.orgId() }),
     loader: () => this.api.get<CabinetSummary[]>('/cabinets'),
   });
-  protected readonly cabinetsHere = computed(
-    () => (this.cabinets.value() ?? []).filter((c) => c.parentId === this.id()).length,
-  );
+  /** «2 gabinetes», «1 anaquel» o «3 muebles» si hay de los dos tipos. */
+  protected readonly cabinetsHereLabel = computed(() => {
+    const here = (this.cabinets.value() ?? []).filter((c) => c.parentId === this.id());
+    const n = here.length;
+    if (!n) return null;
+    const styles = new Set(here.map((c) => c.style));
+    const [one, many] =
+      styles.size > 1
+        ? ['mueble', 'muebles']
+        : styles.has('shelves')
+          ? ['anaquel', 'anaqueles']
+          : ['gabinete', 'gabinetes'];
+    return `${n} ${n === 1 ? one : many}`;
+  });
   protected readonly parentPath = computed(() => {
     const path = this.loc.value()?.path ?? '';
     return path.includes(' / ') ? path.slice(0, path.lastIndexOf(' / ')) : '';

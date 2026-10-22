@@ -12,6 +12,14 @@ import { buildCellIndex, type CabinetLayout } from './layout.js';
 import { type CabinetPhysicalSpec, type Dimensions, outerDimensions } from './physical.js';
 
 /** Caja alineada a los ejes: centro y tamaño, en mm. */
+/**
+ * Tipo de mueble: `drawers` es un gabinete cerrado con un cajón por
+ * compartimento; `shelves` es un anaquel abierto, con repisas por fila y una
+ * charola por compartimento apoyada en la repisa.
+ */
+export const CABINET_STYLES = ['drawers', 'shelves'] as const;
+export type CabinetStyle = (typeof CABINET_STYLES)[number];
+
 export interface SceneBox {
   x: number;
   y: number;
@@ -25,11 +33,11 @@ export interface SceneDrawer {
   /** Id del compartimento. */
   id: string;
   address: string;
-  /** Cuerpo del cajón cerrado (sin el frente). */
+  /** Cuerpo del cajón (o charola) cerrado, sin el frente. */
   body: SceneBox;
-  /** Frente del cajón cerrado. */
+  /** Frente del cajón cerrado (en una charola, su borde delantero). */
   front: SceneBox;
-  /** Cuánto sale el cajón al abrirse (mm, hacia +Z). */
+  /** Cuánto sale el cajón o la charola al abrirse (mm, hacia +Z). */
   travel: number;
 }
 
@@ -51,15 +59,30 @@ export const DEFAULT_PHYSICAL_SPEC: CabinetPhysicalSpec = {
   wallThickness: 2,
 };
 
+/** Anaquel de taller: repisas de 30 cm de fondo con charolas de 30 × 25 cm. */
+export const DEFAULT_SHELVES_SPEC: CabinetPhysicalSpec = {
+  cellWidth: 300,
+  cellHeight: 250,
+  depth: 300,
+  wallThickness: 15,
+};
+
+export const defaultPhysicalSpec = (style: CabinetStyle): CabinetPhysicalSpec =>
+  style === 'shelves' ? DEFAULT_SHELVES_SPEC : DEFAULT_PHYSICAL_SPEC;
+
 /** Holgura entre el cajón y su hueco, por lado (mm). */
 const CLEARANCE = 0.5;
 /** Fracción de la profundidad que sale un cajón abierto. */
 const TRAVEL = 0.7;
+/** Fracción del alto de la celda que ocupa una charola de anaquel. */
+const TRAY_HEIGHT = 0.4;
 
 export function cabinetSceneModel(
   layout: CabinetLayout,
   spec: CabinetPhysicalSpec = DEFAULT_PHYSICAL_SPEC,
+  style: CabinetStyle = 'drawers',
 ): CabinetSceneModel {
+  const shelves = style === 'shelves';
   const { rows, columns } = layout;
   const { cellWidth: cw, cellHeight: ch, depth, wallThickness: t } = spec;
   const outer = outerDimensions(layout, spec);
@@ -75,9 +98,10 @@ export function cabinetSceneModel(
   /** Paredes y separadores ocupan la profundidad interior, delante del fondo. */
   const wallZ = back + t + depth / 2;
 
-  const panels: SceneBox[] = [
-    { x: 0, y: 0, z: back + t / 2, width: outer.width, height: outer.height, depth: t },
-  ];
+  // El anaquel es abierto: sin fondo y sin separadores verticales interiores.
+  const panels: SceneBox[] = shelves
+    ? []
+    : [{ x: 0, y: 0, z: back + t / 2, width: outer.width, height: outer.height, depth: t }];
 
   // Paredes horizontales: en cada borde entre filas, donde los cajones de
   // arriba y abajo son distintos (o es el borde exterior). Tramos contiguos se
@@ -106,7 +130,8 @@ export function cabinetSceneModel(
   for (let c = 0; c <= columns; c++) {
     let start = -1;
     for (let r = 0; r <= rows; r++) {
-      const wall = r < rows && (c === 0 || c === columns || at(r, c - 1) !== at(r, c));
+      const wall =
+        r < rows && (c === 0 || c === columns || (!shelves && at(r, c - 1) !== at(r, c)));
       if (wall && start < 0) start = r;
       if (!wall && start >= 0) {
         const y0 = rowY(start);
@@ -135,6 +160,26 @@ export function cabinetSceneModel(
     const width = x1 - x0;
     const height = y0 - y1;
     const bodyDepth = depth - t - CLEARANCE;
+    if (shelves) {
+      // Charola: baja, apoyada en la repisa, con borde delantero del mismo alto.
+      const th = Math.max(t * 2, Math.min(height, (height + 2 * CLEARANCE) * TRAY_HEIGHT));
+      const ty = y1 - CLEARANCE + th / 2;
+      const trayDepth = depth - CLEARANCE * 2;
+      return {
+        id: comp.id,
+        address: comp.address,
+        front: { x, y: ty, z: front - t / 2, width, height: th, depth: t },
+        body: {
+          x,
+          y: ty,
+          z: front - t - (trayDepth - t) / 2,
+          width,
+          height: th,
+          depth: trayDepth - t,
+        },
+        travel: Math.round(depth * TRAVEL),
+      };
+    }
     return {
       id: comp.id,
       address: comp.address,

@@ -25,6 +25,8 @@ import { LucideGrid3x3, LucidePlus } from '@lucide/angular';
 import {
   type Cabinet,
   CABINET_MAX_COLUMNS,
+  CABINET_STYLE_INFO,
+  type CabinetStyleValue,
   CABINET_MAX_ROWS,
   type CabinetSummary,
   cabinetInputSchema,
@@ -36,8 +38,15 @@ import { zodErrors } from '../../core/forms';
 import { SessionService } from '../../core/session';
 import { PageHeader } from '../page-header';
 
-/** Ubicaciones que pueden contener un gabinete. */
-const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabinet');
+/** Ubicaciones que pueden contener un gabinete o un anaquel. */
+const canHold = (style: CabinetStyleValue) => (l: Location) =>
+  ALLOWED_CHILDREN[l.kind].includes(CABINET_STYLE_INFO[style].containerKind);
+
+/** Tamaño inicial sugerido para cada tipo de mueble. */
+const STYLE_DEFAULTS: Record<CabinetStyleValue, { rows: string; columns: string }> = {
+  drawers: { rows: '6', columns: '8' },
+  shelves: { rows: '4', columns: '3' },
+};
 
 @Component({
   selector: 'sp-cabinet-form',
@@ -46,8 +55,12 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
   host: { class: 'flex h-full w-full' },
   template: `
     <es-dialog-shell
-      title="Nuevo gabinete"
-      description="Se crea un cajón por celda. Después puede fusionarlos o dividirlos en el editor."
+      [title]="'Nuevo ' + info().label.toLowerCase()"
+      [description]="
+        style() === 'shelves'
+          ? 'Cada fila es una repisa y se crea una charola por celda. Después puede fusionarlas o dividirlas en el editor.'
+          : 'Se crea un cajón por celda. Después puede fusionarlos o dividirlos en el editor.'
+      "
     >
       <form
         id="cabinet-form"
@@ -63,6 +76,28 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
             {{ error() }}
           </p>
         }
+        <fieldset class="col-span-full">
+          <legend class="mb-1 text-sm font-medium">Tipo</legend>
+          <div class="grid grid-cols-2 gap-2">
+            @for (o of styleOptions; track o.value) {
+              <label
+                class="flex cursor-pointer flex-col rounded-md border border-border p-2.5 has-checked:border-accent has-checked:bg-accent-soft"
+              >
+                <span class="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="radio"
+                    name="style"
+                    [value]="o.value"
+                    [checked]="style() === o.value"
+                    (change)="setStyle(o.value)"
+                  />
+                  {{ o.label }}
+                </span>
+                <span class="mt-0.5 text-xs text-fg-muted">{{ o.hint }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
         <es-form-field
           class="col-span-full"
           label="Dentro de"
@@ -76,7 +111,7 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
             [value]="parentId()"
             (change)="parentId.set($any($event.target).value)"
           >
-            @for (l of data; track l.id) {
+            @for (l of parents(); track l.id) {
               <option [value]="l.id">{{ l.path }}</option>
             }
           </select>
@@ -86,7 +121,7 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
             esInput
             mono
             [id]="c.controlId"
-            placeholder="GAB-1"
+            [placeholder]="style() === 'shelves' ? 'ANQ-1' : 'GAB-1'"
             [value]="code()"
             (input)="code.set($any($event.target).value)"
             [attr.aria-describedby]="c.describedBy()"
@@ -97,7 +132,9 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
           <input
             esInput
             [id]="n.controlId"
-            placeholder="Gabinete de electrónica"
+            [placeholder]="
+              style() === 'shelves' ? 'Anaquel de charolas' : 'Gabinete de electrónica'
+            "
             [value]="name()"
             (input)="name.set($any($event.target).value)"
             [attr.aria-describedby]="n.describedBy()"
@@ -105,7 +142,7 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
           />
         </es-form-field>
         <es-form-field
-          label="Filas"
+          [label]="style() === 'shelves' ? 'Repisas' : 'Filas'"
           required
           [hint]="'Hasta ' + maxRows"
           [error]="fields()['rows']"
@@ -124,7 +161,7 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
           />
         </es-form-field>
         <es-form-field
-          label="Columnas"
+          [label]="style() === 'shelves' ? 'Charolas por repisa' : 'Columnas'"
           required
           [hint]="'Hasta ' + maxColumns"
           [error]="fields()['columns']"
@@ -154,7 +191,10 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
             <option value="numeric">Numérico · 1-1</option>
           </select>
         </es-form-field>
-        <es-form-field label="Primera fila" #o="esFormField">
+        <es-form-field
+          [label]="style() === 'shelves' ? 'Primera repisa' : 'Primera fila'"
+          #o="esFormField"
+        >
           <select
             esSelect
             [id]="o.controlId"
@@ -169,7 +209,7 @@ const canHoldCabinet = (l: Location) => ALLOWED_CHILDREN[l.kind].includes('cabin
       <ng-container esDialogFooter>
         <button esButton type="button" (click)="ref.close()">Cancelar</button>
         <button esButton variant="primary" type="submit" form="cabinet-form" [loading]="busy()">
-          Crear gabinete
+          Crear {{ info().label.toLowerCase() }}
         </button>
       </ng-container>
     </es-dialog-shell>
@@ -183,19 +223,35 @@ export class CabinetForm {
   protected readonly maxRows = CABINET_MAX_ROWS;
   protected readonly maxColumns = CABINET_MAX_COLUMNS;
 
-  protected readonly parentId = signal(this.data[0]?.id ?? '');
+  protected readonly styleOptions = [
+    { value: 'drawers', label: 'Gabinete', hint: 'Cajones en cuadrícula' },
+    { value: 'shelves', label: 'Anaquel', hint: 'Repisas con charolas' },
+  ] as const;
+  protected readonly style = signal<CabinetStyleValue>('drawers');
+  protected readonly info = computed(() => CABINET_STYLE_INFO[this.style()]);
+  protected readonly parents = computed(() => this.data.filter(canHold(this.style())));
+  protected readonly parentId = signal(this.parents()[0]?.id ?? '');
   protected readonly code = signal('');
   protected readonly name = signal('');
-  protected readonly rows = signal('6');
-  protected readonly columns = signal('8');
+  protected readonly rows = signal(STYLE_DEFAULTS.drawers.rows);
+  protected readonly columns = signal(STYLE_DEFAULTS.drawers.columns);
   protected readonly addressing = signal('row-letter');
   protected readonly rowOrigin = signal('top');
   protected readonly fields = signal<Record<string, string>>({});
   protected readonly error = signal<string | null>(null);
   protected readonly busy = signal(false);
 
+  protected setStyle(style: CabinetStyleValue): void {
+    this.style.set(style);
+    this.rows.set(STYLE_DEFAULTS[style].rows);
+    this.columns.set(STYLE_DEFAULTS[style].columns);
+    const parents = this.parents();
+    if (!parents.some((l) => l.id === this.parentId())) this.parentId.set(parents[0]?.id ?? '');
+  }
+
   protected async save(): Promise<void> {
     const parsed = cabinetInputSchema.safeParse({
+      style: this.style(),
       parentId: this.parentId(),
       code: this.code(),
       name: this.name(),
@@ -210,9 +266,10 @@ export class CabinetForm {
     this.error.set(null);
     try {
       const cab = await this.api.post<Cabinet>('/cabinets', parsed.data);
-      this.toast.show('Gabinete creado', {
+      const info = this.info();
+      this.toast.show(`${info.label} creado`, {
         tone: 'success',
-        description: `${cab.compartments.length} cajones en ${cab.path}`,
+        description: `${cab.compartments.length} ${info.cells} en ${cab.path}`,
       });
       this.ref.close(cab);
     } catch (e) {
@@ -245,8 +302,8 @@ export class CabinetForm {
   template: `
     <div class="mx-auto flex max-w-5xl flex-col gap-4 p-4 md:p-6">
       <sp-page-header
-        title="Gabinetes"
-        description="Gabinetes de cajones en cuadrícula. Cada cajón es una ubicación con su QR."
+        title="Gabinetes y anaqueles"
+        description="Gabinetes de cajones y anaqueles de charolas, en cuadrícula. Cada cajón o charola es una ubicación con su QR."
       >
         <a spActions esButton variant="ghost" routerLink="/gabinetes/demo">Ver demostración</a>
         @if (session.canWrite()) {
@@ -257,7 +314,7 @@ export class CabinetForm {
             [disabled]="!parents().length"
             (click)="open()"
           >
-            <svg lucidePlus></svg> Nuevo gabinete
+            <svg lucidePlus></svg> Nuevo gabinete o anaquel
           </button>
         }
       </sp-page-header>
@@ -267,11 +324,11 @@ export class CabinetForm {
         } @else if (!list.value()?.length) {
           <es-empty-state
             class="m-3"
-            title="Sin gabinetes"
+            title="Sin gabinetes ni anaqueles"
             [description]="
               parents().length
-                ? 'Cree su primer gabinete: elija dónde está, cuántas filas y columnas tiene.'
-                : 'Primero cree un almacén en Ubicaciones; luego podrá poner gabinetes dentro.'
+                ? 'Cree su primer gabinete o anaquel: elija dónde está, cuántas filas y columnas tiene.'
+                : 'Primero cree un almacén en Ubicaciones; luego podrá poner gabinetes y anaqueles dentro.'
             "
           >
             <svg esEmptyIcon lucideGrid3x3></svg>
@@ -282,14 +339,15 @@ export class CabinetForm {
         } @else {
           <table esTable>
             <caption class="sr-only">
-              Gabinetes
+              Gabinetes y anaqueles
             </caption>
             <thead>
               <tr>
-                <th scope="col">Gabinete</th>
+                <th scope="col">Mueble</th>
+                <th scope="col">Tipo</th>
                 <th scope="col">Ubicación</th>
                 <th scope="col" class="num w-24">Tamaño</th>
-                <th scope="col" class="num w-24">Cajones</th>
+                <th scope="col" class="num w-24">Celdas</th>
                 <th scope="col" class="num w-24">Ocupados</th>
               </tr>
             </thead>
@@ -302,6 +360,7 @@ export class CabinetForm {
                       <span class="ml-2">{{ c.name }}</span>
                     </a>
                   </td>
+                  <td>{{ styleLabel(c) }}</td>
                   <td class="text-fg-muted">{{ c.path }}</td>
                   <td class="num">{{ c.rows }}×{{ c.columns }}</td>
                   <td class="num">{{ c.compartmentCount }}</td>
@@ -330,12 +389,16 @@ export default class Cabinets {
     loader: () => this.api.get<Location[]>('/locations'),
   });
   protected readonly parents = computed(() =>
-    (this.locations.value() ?? []).filter(canHoldCabinet),
+    (this.locations.value() ?? []).filter((l) => canHold('drawers')(l) || canHold('shelves')(l)),
   );
+  protected readonly styleLabel = (c: CabinetSummary) => CABINET_STYLE_INFO[c.style].label;
 
   protected open(): void {
     this.dialog
-      .open<Cabinet, Location[]>(CabinetForm, { data: this.parents(), ariaLabel: 'Nuevo gabinete' })
+      .open<Cabinet, Location[]>(CabinetForm, {
+        data: this.parents(),
+        ariaLabel: 'Nuevo gabinete o anaquel',
+      })
       .closed.subscribe((cab) => cab && void this.router.navigate(['/gabinetes', cab.id]));
   }
 }

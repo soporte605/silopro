@@ -62,13 +62,13 @@ Three.js con carga diferida, gabinete modular con frentes transparentes, cámara
 
 **Cerrada en `v0.4.0`:** vista 3D de un estante o lugar con todos sus gabinetes juntos (`/gabinetes/estante/:id`), con el código de cada uno, búsqueda «¿Dónde está?» que atenúa lo que no coincide y paso con flechas de un gabinete al vecino.
 
-## Fase 5 — Operaciones · `v0.5.0` · 🟡 `v0.5.0-alpha.1`
+## Fase 5 — Operaciones · `v0.5.0` · 🟡 `v0.5.0-alpha.3`
 
 Entradas, salidas, ajustes, transferencias, reservas, consumos; bloqueo optimista/pesimista; auditoría inmutable; QR por artículo/ubicación; etiquetas PDF individuales y por lotes; escaneo desde móvil.
 
 **Adelantado en `v0.3.0-alpha.3`:** etiquetas QR imprimibles (Carta, A4 y rollo térmico; imprimir o PDF) por gabinete, ubicaciones o artículos, y enlace `/q/…` que al escanearlo con la cámara del celular abre el cajón o el artículo. En `v0.3.0-alpha.5`, la etiqueta de un cajón abre su ficha para el celular con el contenido y entradas/salidas rápidas.
 
-**Hecho en `v0.5.0-alpha.1`:** transferencias entre ubicaciones (salida y entrada atómicas y unidas; bloqueo en orden fijo, sin interbloqueos con transferencias cruzadas), página Transferencias y botón «Mover» en el artículo y en la ficha de la ubicación. **Hecho en `v0.5.0-alpha.2`:** reservas con consumo parcial o total y liberación (todo en una transacción con bloqueo de la reserva), página Reservas y botón «Reservar» en el artículo. Pendiente: auditoría inmutable y diario de movimientos (`alpha.3`) y escáner dentro de la app (requiere HTTPS para usar la cámara desde el navegador).
+**Hecho en `v0.5.0-alpha.1`:** transferencias entre ubicaciones (salida y entrada atómicas y unidas; bloqueo en orden fijo, sin interbloqueos con transferencias cruzadas), página Transferencias y botón «Mover» en el artículo y en la ficha de la ubicación. **Hecho en `v0.5.0-alpha.2`:** reservas con consumo parcial o total y liberación (todo en una transacción con bloqueo de la reserva), página Reservas y botón «Reservar» en el artículo. **Hecho en `v0.5.0-alpha.3`:** anaqueles con repisas y charolas, con el mismo editor, búsqueda, etiquetas y vista 3D (abierta, con las charolas que se deslizan) que los gabinetes. Pendiente: auditoría inmutable y diario de movimientos (`alpha.4`) y escáner dentro de la app (requiere HTTPS para usar la cámara desde el navegador).
 
 ## Fase 6 — Productividad · `v0.6.0`
 

@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { locationInputSchema, type LocationStockEntry, maxItemsSchema } from './stock.js';
+import {
+  type LOCATION_KIND_VALUES,
+  locationInputSchema,
+  type LocationStockEntry,
+  maxItemsSchema,
+} from './stock.js';
+
+type LocationKind = (typeof LOCATION_KIND_VALUES)[number];
 
 /** Límites de un gabinete guardado (el motor admite más; esto acota la carga). */
 export const CABINET_MAX_ROWS = 60;
@@ -8,8 +15,71 @@ export const CABINET_MAX_COLUMNS = 60;
 export const ADDRESSING_VALUES = ['row-letter', 'column-letter', 'numeric'] as const;
 export const ROW_ORIGIN_VALUES = ['top', 'bottom'] as const;
 
-/** Crea la ubicación de tipo gabinete y un cajón por celda. */
+/** Gabinete de cajones o anaquel de repisas con charolas (igual que en el motor). */
+export const CABINET_STYLE_VALUES = ['drawers', 'shelves'] as const;
+export type CabinetStyleValue = (typeof CABINET_STYLE_VALUES)[number];
+
+/** Tipos de ubicación y nombres que usa cada mueble. */
+export const CABINET_STYLE_INFO = {
+  drawers: {
+    containerKind: 'cabinet',
+    cellKind: 'drawer',
+    label: 'Gabinete',
+    cell: 'cajón',
+    cells: 'cajones',
+    cellLabel: 'Cajón',
+    aCell: 'un cajón',
+    theCell: 'el cajón',
+    ofCell: 'del cajón',
+    ofContainer: 'del gabinete',
+    emptyCell: 'Cajón vacío',
+    savedCell: 'Cajón guardado',
+    newCell: 'Este cajón es nuevo',
+  },
+  shelves: {
+    containerKind: 'shelving',
+    cellKind: 'bin',
+    label: 'Anaquel',
+    cell: 'charola',
+    cells: 'charolas',
+    cellLabel: 'Charola',
+    aCell: 'una charola',
+    theCell: 'la charola',
+    ofCell: 'de la charola',
+    ofContainer: 'del anaquel',
+    emptyCell: 'Charola vacía',
+    savedCell: 'Charola guardada',
+    newCell: 'Esta charola es nueva',
+  },
+} as const satisfies Record<
+  CabinetStyleValue,
+  {
+    containerKind: LocationKind;
+    cellKind: LocationKind;
+    label: string;
+    cell: string;
+    cells: string;
+    cellLabel: string;
+    aCell: string;
+    theCell: string;
+    ofCell: string;
+    ofContainer: string;
+    emptyCell: string;
+    savedCell: string;
+    newCell: string;
+  }
+>;
+
+/** Si una ubicación de tipo `kind`, hija del mueble, es una de sus celdas. */
+export const isCabinetCell = (cabinet: { style: string }, kind: string): boolean =>
+  CABINET_STYLE_INFO[cabinet.style as CabinetStyleValue]?.cellKind === kind;
+
+/**
+ * Crea la ubicación del mueble (gabinete o anaquel) y un cajón o charola por
+ * celda. En un anaquel cada fila es una repisa.
+ */
 export const cabinetInputSchema = z.object({
+  style: z.enum(CABINET_STYLE_VALUES).default('drawers'),
   parentId: z.string().uuid('Elija dónde está el gabinete'),
   code: locationInputSchema.shape.code,
   name: locationInputSchema.shape.name,
@@ -74,6 +144,7 @@ export interface CabinetSummary {
   locationId: string;
   /** Dónde está el gabinete (estante, zona…): agrupa la vista 3D de varios gabinetes. */
   parentId: string | null;
+  style: CabinetStyleValue;
   code: string;
   name: string;
   path: string;

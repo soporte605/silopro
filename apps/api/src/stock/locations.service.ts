@@ -5,6 +5,7 @@ import {
   type LocationDetail,
   type locationInputSchema,
   type locationUpdateSchema,
+  isCabinetCell,
 } from '@silopro/contracts';
 import {
   checkPlacement,
@@ -161,12 +162,12 @@ export class LocationsService {
       if (!row) throw notFound('Ubicación');
       const loc = row;
       let parentCabinetId: string | null = null;
-      if (loc.kind === 'drawer' && loc.parentId) {
+      if (loc.parentId) {
         const [cab] = await tx
-          .select({ id: cabinets.id })
+          .select({ id: cabinets.id, style: cabinets.style })
           .from(cabinets)
           .where(eq(cabinets.locationId, loc.parentId));
-        parentCabinetId = cab?.id ?? null;
+        if (cab && isCabinetCell(cab, loc.kind)) parentCabinetId = cab.id;
       }
       const contents = await locationStock(tx, sql`d.id = ${id}`);
       return { ...loc, parentCabinetId, contents };
@@ -229,12 +230,12 @@ export class LocationsService {
     tx: Tx,
     node: { kind: LocationKind; parentId: string | null },
   ): Promise<boolean> {
-    if (node.kind !== 'drawer' || !node.parentId) return false;
+    if (!node.parentId) return false;
     const [cab] = await tx
-      .select({ id: cabinets.id })
+      .select({ style: cabinets.style })
       .from(cabinets)
       .where(eq(cabinets.locationId, node.parentId));
-    return !!cab;
+    return !!cab && isCabinetCell(cab, node.kind);
   }
 
   private async subtreeMaxDepth(tx: Tx, id: string): Promise<number> {
