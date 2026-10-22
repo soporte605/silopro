@@ -13,7 +13,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { EsButton } from '@elikarsystems/ui';
-import { buildCellIndex, type CabinetLayout, cabinetSceneModel } from '@silopro/cabinet-engine';
+import {
+  buildCellIndex,
+  type CabinetLayout,
+  type CabinetPhysicalSpec,
+  cabinetSceneModel,
+  DEFAULT_PHYSICAL_SPEC,
+} from '@silopro/cabinet-engine';
 import type { CompartmentState } from '@silopro/contracts';
 import type { CabinetViewer } from './cabinet-viewer';
 
@@ -86,6 +92,8 @@ export class Cabinet3d {
   readonly states = input<ReadonlyMap<string, CompartmentState>>(new Map());
   readonly matches = input<ReadonlySet<string>>(new Set());
   readonly label = input('Gabinete');
+  /** Medidas reales del gabinete (mm). */
+  readonly spec = input<CabinetPhysicalSpec>(DEFAULT_PHYSICAL_SPEC);
   readonly selectedId = model<string | null>(null);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -95,7 +103,7 @@ export class Cabinet3d {
   /** Cajón abierto; se expone en `data-open` para pruebas. */
   protected readonly openId = signal<string | null>(null);
 
-  private readonly sceneModel = computed(() => cabinetSceneModel(this.layout()));
+  private readonly sceneModel = computed(() => cabinetSceneModel(this.layout(), this.spec()));
   private readonly cells = computed(() => buildCellIndex(this.layout()));
   protected viewer: CabinetViewer | null = null;
   private destroyed = false;

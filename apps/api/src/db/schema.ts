@@ -16,6 +16,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  real,
   smallint,
   text,
   timestamp,
@@ -319,10 +320,21 @@ export const cabinets = pgTable(
     rowOrigin: text('row_origin').notNull(),
     /** Compartimentos del motor: [{ id, row, column, rowSpan, columnSpan, address }]. */
     compartments: jsonb('compartments').notNull(),
+    /** Medidas físicas en mm (`CabinetPhysicalSpec`): vista 3D y, más adelante, CAD. */
+    cellWidth: real('cell_width').notNull().default(40),
+    cellHeight: real('cell_height').notNull().default(30),
+    depth: real('depth').notNull().default(120),
+    wallThickness: real('wall_thickness').notNull().default(2),
     version: integer('version').notNull().default(1),
     ...timestamps,
   },
-  (t) => [uniqueIndex('cabinets_location_key').on(t.locationId)],
+  (t) => [
+    uniqueIndex('cabinets_location_key').on(t.locationId),
+    check(
+      'cabinets_physical_valid',
+      sql`${t.cellWidth} between 5 and 500 and ${t.cellHeight} between 5 and 500 and ${t.depth} between 10 and 1000 and ${t.wallThickness} between 0.4 and 20`,
+    ),
+  ],
 );
 
 export const stockLevels = pgTable(

@@ -189,6 +189,13 @@ const KIND_LABELS: Record<Movement['kind'], string> = {
                               [attr.aria-label]="s.locationPath + ': ver en el gabinete'"
                               >{{ s.locationPath }}</a
                             >
+                            <a
+                              class="ml-2 rounded px-1 text-xs font-medium text-accent hover:bg-accent-soft"
+                              [routerLink]="['/gabinetes', s.cabinetId]"
+                              [queryParams]="{ resaltar: s.locationId, vista: '3d' }"
+                              [attr.aria-label]="s.locationPath + ': ver en 3D'"
+                              >3D</a
+                            >
                           } @else {
                             {{ s.locationPath }}
                           }

@@ -194,6 +194,34 @@ describe.skipIf(!TEST_DB)('gabinetes', () => {
     await s.patch(`/cabinets/${cab.id}/compartments/Z9`).send({ name: 'x' }).expect(404);
   });
 
+  it('guarda las medidas físicas con control de versión', async () => {
+    const cab: Cabinet = (await create('GAB-MED', 2, 2).expect(201)).body;
+    expect(cab.physical).toEqual({ cellWidth: 40, cellHeight: 30, depth: 120, wallThickness: 2 });
+    const medidas = { cellWidth: 55, cellHeight: 22.5, depth: 150, wallThickness: 1.6 };
+    const updated: Cabinet = (
+      await s
+        .put(`/cabinets/${cab.id}/physical`)
+        .send({ version: cab.version, ...medidas })
+        .expect(200)
+    ).body;
+    expect(updated.physical).toEqual(medidas);
+    expect(updated.version).toBe(cab.version + 1);
+    expect(updated.compartments).toHaveLength(4);
+    // Versión vieja → 409; fuera de rango → 400; gabinete inexistente → 404.
+    await s
+      .put(`/cabinets/${cab.id}/physical`)
+      .send({ version: cab.version, ...medidas })
+      .expect(409);
+    await s
+      .put(`/cabinets/${cab.id}/physical`)
+      .send({ version: updated.version, ...medidas, wallThickness: 0 })
+      .expect(400);
+    await s
+      .put('/cabinets/0190a000-0000-7000-8000-000000000000/physical')
+      .send({ version: 1, ...medidas })
+      .expect(404);
+  });
+
   it('aísla los gabinetes por organización y respeta el rol', async () => {
     const cab: Cabinet = (await create('GAB-5', 1, 1).expect(201)).body;
     const other = await signUp(app, 'Ajeno');

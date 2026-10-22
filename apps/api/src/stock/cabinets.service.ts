@@ -14,6 +14,7 @@ import {
   type CabinetStockEntry,
   type CabinetSummary,
   type CompartmentState,
+  type cabinetPhysicalUpdateSchema,
   type compartmentUpdateSchema,
   generateShortCode,
 } from '@silopro/contracts';
@@ -223,6 +224,30 @@ export class CabinetsService {
     });
   }
 
+  /** Fija las medidas físicas (mm); no cambia cajones ni existencias. */
+  updatePhysical(
+    ctx: OrgContext,
+    id: string,
+    input: z.output<typeof cabinetPhysicalUpdateSchema>,
+  ): Promise<Cabinet> {
+    return this.dbs.tenant(ctx, async (tx) => {
+      const { version, ...physical } = input;
+      const updated = await tx
+        .update(cabinets)
+        .set({ ...physical, version: sql`${cabinets.version} + 1`, updatedAt: new Date() })
+        .where(and(eq(cabinets.id, id), eq(cabinets.version, version)))
+        .returning({ id: cabinets.id });
+      if (!updated.length) {
+        const [exists] = await tx
+          .select({ id: cabinets.id })
+          .from(cabinets)
+          .where(eq(cabinets.id, id));
+        throw exists ? staleVersion() : notFound('Gabinete');
+      }
+      return this.load(tx, id);
+    });
+  }
+
   /** Renombra un cajón o fija cuántos artículos distintos admite. */
   updateCompartment(
     ctx: OrgContext,
@@ -364,6 +389,12 @@ export class CabinetsService {
       addressing: row.c.addressing as Cabinet['addressing'],
       rowOrigin: row.c.rowOrigin as Cabinet['rowOrigin'],
       qrCode: row.loc.qrCode,
+      physical: {
+        cellWidth: row.c.cellWidth,
+        cellHeight: row.c.cellHeight,
+        depth: row.c.depth,
+        wallThickness: row.c.wallThickness,
+      },
       compartments,
     };
   }

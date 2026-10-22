@@ -50,6 +50,13 @@
       "when": 1792621719312,
       "tag": "0006_ubicaciones_capacidad",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792685175788,
+      "tag": "0007_gabinetes_medidas",
+      "breakpoints": true
     }
   ]
 }

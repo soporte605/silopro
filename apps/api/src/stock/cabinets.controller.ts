@@ -13,6 +13,7 @@ import {
 import {
   cabinetInputSchema,
   cabinetLayoutUpdateSchema,
+  cabinetPhysicalUpdateSchema,
   compartmentIdSchema,
   compartmentUpdateSchema,
 } from '@silopro/contracts';
@@ -63,6 +64,17 @@ export class CabinetsController {
     body: z.output<typeof cabinetLayoutUpdateSchema>,
   ) {
     return this.svc.updateLayout(ctx, id, body);
+  }
+
+  @Put(':id/physical')
+  @RequirePermission('catalog.write')
+  updatePhysical(
+    @Org() ctx: OrgContext,
+    @Param('id', uuid) id: string,
+    @Body(new ZodValidationPipe(cabinetPhysicalUpdateSchema))
+    body: z.output<typeof cabinetPhysicalUpdateSchema>,
+  ) {
+    return this.svc.updatePhysical(ctx, id, body);
   }
 
   @Patch(':id/compartments/:compartmentId')

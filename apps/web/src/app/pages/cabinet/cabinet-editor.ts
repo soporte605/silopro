@@ -15,12 +15,16 @@ import {
   type CabinetLayout,
   LayoutError,
   mergeCompartments,
+  outerDimensions,
+  planModules,
   resizeLayout,
   splitCompartment,
 } from '@silopro/cabinet-engine';
 import {
   type Cabinet,
   type CabinetCompartment,
+  type CabinetPhysical,
+  cabinetPhysicalSchema,
   type CabinetStockEntry,
   type CompartmentState,
   compartmentUpdateSchema,
@@ -200,6 +204,7 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                   [layout]="lay"
                   [states]="states()"
                   [matches]="matches()"
+                  [spec]="cab.physical"
                   [(selectedId)]="selectedId"
                 />
               </div>
@@ -325,6 +330,59 @@ const toLayout = (c: Cabinet): CabinetLayout => ({
                 {{ lay.compartments.length }} cajones · {{ cab.occupiedCount }} ocupados ·
                 {{ matches().size }} coincidencias
               </div>
+              <details class="group border-t border-border" [open]="view() === '3d'">
+                <summary
+                  class="cursor-pointer px-4 py-3 text-sm font-medium select-none hover:bg-surface-hover"
+                >
+                  Medidas del gabinete
+                </summary>
+                <form
+                  class="grid grid-cols-2 gap-2 px-4 pb-4"
+                  aria-label="Medidas del gabinete"
+                  (submit)="$event.preventDefault(); savePhysical()"
+                >
+                  @for (f of physicalFields; track f.key) {
+                    <es-form-field [label]="f.label" #pf="esFormField">
+                      <input
+                        esInput
+                        type="number"
+                        inputmode="decimal"
+                        [min]="f.min"
+                        [max]="f.max"
+                        [step]="f.step"
+                        [id]="pf.controlId"
+                        [value]="draftPhysical()[f.key]"
+                        [disabled]="!session.canWrite()"
+                        (input)="setPhysical(f.key, $any($event.target).value)"
+                      />
+                    </es-form-field>
+                  }
+                  <p class="col-span-full text-xs text-fg-muted" aria-live="polite">
+                    @if (outer(); as o) {
+                      Exterior: {{ o.width }} × {{ o.height }} × {{ o.depth }} mm.
+                      @if (modules(); as m) {
+                        Se imprime en {{ m.modules }} {{ m.modules === 1 ? 'pieza' : 'módulos' }} en
+                        la Ender-3 V3 KE.
+                      } @else {
+                        Una celda no cabe en la Ender-3 V3 KE.
+                      }
+                    } @else {
+                      Revise las medidas.
+                    }
+                  </p>
+                  @if (session.canWrite()) {
+                    <button
+                      esButton
+                      type="submit"
+                      class="col-span-full justify-self-end"
+                      [disabled]="!physicalDirty() || !outer()"
+                      [loading]="savingPhysical()"
+                    >
+                      Guardar medidas
+                    </button>
+                  }
+                </form>
+              </details>
             </aside>
           </div>
         }
@@ -349,6 +407,8 @@ export default class CabinetEditor {
   readonly id = input.required<string>();
   /** Ubicación (cajón) a resaltar al abrir: `?resaltar=<locationId>`. */
   readonly resaltar = input<string>();
+  /** Vista inicial desde un enlace: `?vista=3d` o `?vista=cuadricula`. */
+  readonly vista = input<string>();
 
   protected readonly server = resource({
     params: () => ({ id: this.id(), org: this.session.orgId() }),
@@ -372,7 +432,53 @@ export default class CabinetEditor {
     return false;
   });
   protected readonly query = signal('');
-  protected readonly view = signal<View>(readView());
+  protected readonly view = linkedSignal<View>(() =>
+    this.vista() === '3d' ? '3d' : this.vista() === 'cuadricula' ? 'grid' : readView(),
+  );
+  protected readonly physicalFields: readonly {
+    key: keyof CabinetPhysical;
+    label: string;
+    min: number;
+    max: number;
+    step: number;
+  }[] = [
+    { key: 'cellWidth', label: 'Ancho de celda (mm)', min: 5, max: 500, step: 0.5 },
+    { key: 'cellHeight', label: 'Alto de celda (mm)', min: 5, max: 500, step: 0.5 },
+    { key: 'depth', label: 'Profundidad (mm)', min: 10, max: 1000, step: 1 },
+    { key: 'wallThickness', label: 'Pared (mm)', min: 0.4, max: 20, step: 0.1 },
+  ];
+  /** Medidas en edición (texto de los campos); se reinician con cada versión del servidor. */
+  protected readonly draftPhysical = linkedSignal<Record<keyof CabinetPhysical, string>>(() => {
+    const p = this.cabinet()?.physical;
+    return {
+      cellWidth: String(p?.cellWidth ?? ''),
+      cellHeight: String(p?.cellHeight ?? ''),
+      depth: String(p?.depth ?? ''),
+      wallThickness: String(p?.wallThickness ?? ''),
+    };
+  });
+  private readonly parsedPhysical = computed(() => {
+    const r = cabinetPhysicalSchema.safeParse(this.draftPhysical());
+    return r.success ? r.data : null;
+  });
+  protected readonly physicalDirty = computed(() => {
+    const p = this.parsedPhysical();
+    const saved = this.cabinet()?.physical;
+    return (
+      !!p && !!saved && (Object.keys(p) as (keyof CabinetPhysical)[]).some((k) => p[k] !== saved[k])
+    );
+  });
+  protected readonly outer = computed(() => {
+    const p = this.parsedPhysical();
+    const lay = this.layout();
+    return p && lay ? outerDimensions(lay, p) : null;
+  });
+  protected readonly modules = computed(() => {
+    const p = this.parsedPhysical();
+    const lay = this.layout();
+    return p && lay ? planModules(lay, p) : null;
+  });
+  protected readonly savingPhysical = signal(false);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly anchorId = signal<string | null>(null);
   protected readonly saving = signal(false);
@@ -457,6 +563,42 @@ export default class CabinetEditor {
       localStorage.setItem(VIEW_KEY, v);
     } catch {
       /* Sin almacenamiento: solo no se recuerda la vista. */
+    }
+  }
+
+  protected setPhysical(key: keyof CabinetPhysical, value: string): void {
+    this.draftPhysical.update((d) => ({ ...d, [key]: value }));
+  }
+
+  protected async savePhysical(): Promise<void> {
+    const cab = this.cabinet();
+    const p = this.parsedPhysical();
+    if (!cab || !p) return;
+    this.savingPhysical.set(true);
+    try {
+      const next = await this.api.put<Cabinet>(`/cabinets/${cab.id}/physical`, {
+        version: cab.version,
+        ...p,
+      });
+      // Conserva el diseño en edición: solo cambian medidas y versión.
+      const pending = this.dirty() ? this.layout() : null;
+      this.server.set(next);
+      if (pending) {
+        this.layout.set(pending);
+        this.dirty.set(true);
+      }
+      this.toast.show('Medidas guardadas', { tone: 'success' });
+    } catch (e) {
+      const err = ApiRequestError.from(e);
+      this.toast.show('No se pudieron guardar las medidas', {
+        description:
+          err.code === 'STALE_VERSION'
+            ? 'Otra persona cambió este gabinete; recargue.'
+            : err.message,
+        tone: 'danger',
+      });
+    } finally {
+      this.savingPhysical.set(false);
     }
   }
 

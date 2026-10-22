@@ -66,6 +66,6 @@ Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no 
 
 ### Gabinetes (migraciones `0004` y `0005`)
 
-- `cabinets`: `location_id` único (la ubicación de tipo `cabinet`), `rows` y `columns` (1–60, CHECK), `addressing`, `row_origin` y `compartments` jsonb con el diseño de `@silopro/cabinet-engine`; `version` para bloqueo optimista. FK compuesta a `locations` y RLS forzada.
+- `cabinets`: `location_id` único (la ubicación de tipo `cabinet`), `rows` y `columns` (1–60, CHECK), `addressing`, `row_origin` y `compartments` jsonb con el diseño de `@silopro/cabinet-engine`; medidas físicas en mm `cell_width`, `cell_height`, `depth`, `wall_thickness` (`real`, con CHECK de rango; por omisión 40, 30, 120 y 2); `version` para bloqueo optimista. FK compuesta a `locations` y RLS forzada.
 - `locations.max_items` (NULL o 1–999, CHECK): capacidad en artículos distintos; la valida `MovementsService` al registrar entradas y ajustes, bloqueando la ubicación. El índice único `(organization_id, parent_id, code)` es parcial (`archived_at is null`).
 - Cada compartimento es una fila de `locations` de tipo `drawer`, hija del gabinete, con la dirección como `code` y ruta `ALMACÉN / GABINETE / A1`. Al fusionar, los cajones absorbidos se archivan (`archived_at`); al dividir se restauran, conservando su id, QR e historial.

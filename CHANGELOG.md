@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.4.0-alpha.2] — 2026-10-22
+
+### Añadido
+
+- **Medidas del gabinete**: en el editor, «Medidas del gabinete» guarda ancho y alto de celda, profundidad y grosor de pared en mm. Muestra las medidas exteriores y en cuántos módulos se imprime en la Ender-3 V3 KE. La vista 3D se dibuja a esa escala.
+- **Ver en 3D** desde la ficha de una ubicación o cajón y junto a cada ubicación en las existencias del artículo: abre el gabinete en 3D con el cajón afuera. El editor acepta `?vista=3d` o `?vista=cuadricula`.
+- API `PUT cabinets/:id/physical` (con control de versión); el gabinete incluye `physical`.
+- Migración `0007_gabinetes_medidas`: cuatro columnas con valores por omisión; los gabinetes existentes quedan con 40 × 30 × 120 mm y pared de 2 mm.
+
 ## [0.4.0-alpha.1] — 2026-10-22
 
 Fase 4 · Visualización 3D.

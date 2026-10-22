@@ -92,6 +92,13 @@ import { ItemPicker } from './item-picker';
             >
               <svg lucideGrid3x3></svg> Ver en el gabinete
             </a>
+            <a
+              esButton
+              [routerLink]="['/gabinetes', cabId]"
+              [queryParams]="l.parentCabinetId ? { resaltar: l.id, vista: '3d' } : { vista: '3d' }"
+            >
+              Ver en 3D
+            </a>
           }
         </div>
 

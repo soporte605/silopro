@@ -55,6 +55,20 @@ export const compartmentUpdateSchema = z
   })
   .refine((v) => v.name !== undefined || v.maxItems !== undefined, 'Nada que actualizar');
 
+/** Medidas físicas del gabinete en mm (ver `CabinetPhysicalSpec` del motor). */
+export const cabinetPhysicalSchema = z.object({
+  cellWidth: z.coerce.number().min(5).max(500),
+  cellHeight: z.coerce.number().min(5).max(500),
+  depth: z.coerce.number().min(10).max(1000),
+  wallThickness: z.coerce.number().min(0.4).max(20),
+});
+export type CabinetPhysical = z.output<typeof cabinetPhysicalSchema>;
+
+export const cabinetPhysicalUpdateSchema = cabinetPhysicalSchema.extend({
+  version: z.coerce.number().int().min(1),
+});
+export type CabinetPhysicalUpdate = z.input<typeof cabinetPhysicalUpdateSchema>;
+
 export interface CabinetSummary {
   id: string;
   locationId: string;
@@ -90,6 +104,7 @@ export interface Cabinet extends CabinetSummary {
   addressing: (typeof ADDRESSING_VALUES)[number];
   rowOrigin: (typeof ROW_ORIGIN_VALUES)[number];
   qrCode: string;
+  physical: CabinetPhysical;
   compartments: CabinetCompartment[];
 }
 

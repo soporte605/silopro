@@ -82,8 +82,23 @@ test('vista 3D: abre cajones con teclado y clic, y muestra su contenido', async 
     await expect(detail).toContainText('C3');
   }
 
+  // Medidas reales: celdas de 60 mm de ancho.
+  const medidas = page.getByRole('form', { name: 'Medidas del gabinete' });
+  await medidas.getByRole('spinbutton', { name: 'Ancho de celda (mm)' }).fill('60');
+  await expect(medidas).toContainText('Exterior: 188 × 98 × 122 mm');
+  await medidas.getByRole('button', { name: 'Guardar medidas' }).click();
+  await expect(page.getByText('Medidas guardadas')).toBeVisible();
+  await expect(view).toHaveAttribute('data-status', 'ready');
+
+  // Desde la ficha del cajón, «Ver en 3D» abre el gabinete con ese cajón afuera.
+  await page.goto(`/ubicaciones/${b2.locationId}`);
+  await page.getByRole('link', { name: 'Ver en 3D' }).click();
+  await expect(page).toHaveURL(/vista=3d/);
+  await expect(view).toHaveAttribute('data-open', 'B2', { timeout: 30_000 });
+  await expect(page.getByRole('form', { name: 'Medidas del gabinete' })).toContainText('188 × 98');
+
   // La vista elegida se recuerda; la cuadrícula conserva la selección.
-  await page.reload();
+  await page.goto(`/gabinetes/${cab.id}`);
   await expect(view).toHaveAttribute('data-status', 'ready', { timeout: 30_000 });
   await page.getByRole('button', { name: 'Cuadrícula' }).click();
   await expect(page.locator('[data-address="A1"]')).toBeVisible();
