@@ -26,6 +26,11 @@ const envSchema = z.object({
   UPLOADS_DIR: z.string().min(1).default('./data/uploads'),
   /** Origen público de la web, para construir enlaces de invitación. */
   PUBLIC_WEB_URL: z.url().default('http://localhost:4200'),
+  /**
+   * Proxies de confianza delante de la API: 1 con el nginx del contenedor web;
+   * 2 si además hay un nginx en el servidor que termina HTTPS.
+   */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;
