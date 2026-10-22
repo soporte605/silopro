@@ -4,6 +4,7 @@ import es from 'zod/v4/locales/es.js';
 // Mensajes de validación en español para API y web por igual.
 z.config(es());
 
+export * from './audit.js';
 export * from './auth.js';
 export * from './cabinets.js';
 export * from './catalog.js';

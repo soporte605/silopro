@@ -10,15 +10,19 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
+  type JournalMovement,
   locationInputSchema,
   locationUpdateSchema,
   movementInputSchema,
+  movementQuerySchema,
   qrReferenceSchema,
   transferInputSchema,
 } from '@silopro/contracts';
+import type { Response } from 'express';
 import type { z } from 'zod';
 import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.js';
 import type { OrgContext } from '../auth/request-context.js';
@@ -29,6 +33,51 @@ import { MovementsService } from './movements.service.js';
 import { QrService } from './qr.service.js';
 
 const uuid = new ParseUUIDPipe({ version: '7' });
+
+const KIND_LABELS: Record<string, string> = {
+  receipt: 'Entrada',
+  issue: 'Salida',
+  adjustment: 'Ajuste',
+  transfer: 'Transferencia',
+  consumption: 'Consumo',
+};
+
+/** Campo CSV con comillas cuando hace falta; neutraliza fórmulas (=, +, -, @). */
+const csvField = (v: string | number | null): string => {
+  let s = v === null ? '' : String(v);
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+function movementsCsv(rows: JournalMovement[]): string {
+  const head = [
+    'Fecha',
+    'Tipo',
+    'SKU',
+    'Artículo',
+    'Ubicación',
+    'Cantidad',
+    'Unidad',
+    'Motivo',
+    'Quién',
+  ];
+  const lines = rows.map((m) =>
+    [
+      m.occurredAt,
+      KIND_LABELS[m.kind] ?? m.kind,
+      m.sku,
+      m.itemName,
+      m.locationPath,
+      m.delta,
+      m.unitSymbol,
+      m.reason,
+      m.actorName,
+    ]
+      .map(csvField)
+      .join(','),
+  );
+  return [head.join(','), ...lines].join('\r\n') + '\r\n';
+}
 
 @Controller('orgs/:orgId')
 @UseGuards(SessionGuard, OrgGuard)
@@ -83,6 +132,36 @@ export class StockController {
     @Body(new ZodValidationPipe(movementInputSchema)) body: z.output<typeof movementInputSchema>,
   ) {
     return this.movementsSvc.record(ctx, body);
+  }
+
+  /** Diario de movimientos de la organización con filtros. */
+  @Get('movements')
+  journal(
+    @Org() ctx: OrgContext,
+    @Query(new ZodValidationPipe(movementQuerySchema)) q: z.output<typeof movementQuerySchema>,
+  ) {
+    return this.movementsSvc.journal(ctx, q);
+  }
+
+  /** El mismo diario en CSV (hasta 10 000 filas) para abrirlo en Excel. */
+  @Get('movements/export')
+  async exportJournal(
+    @Org() ctx: OrgContext,
+    @Query(new ZodValidationPipe(movementQuerySchema.omit({ limit: true, before: true })))
+    q: z.output<typeof movementQuerySchema>,
+    @Res() res: Response,
+  ) {
+    const rows = [];
+    let before: string | undefined;
+    do {
+      const page = await this.movementsSvc.journal(ctx, { ...q, before, limit: 200 });
+      rows.push(...page.movements);
+      before = page.nextCursor ?? undefined;
+    } while (before && rows.length < 10_000);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="movimientos.csv"');
+    // BOM para que Excel reconozca UTF-8 (acentos).
+    res.send('\uFEFF' + movementsCsv(rows));
   }
 
   @Get('transfers')

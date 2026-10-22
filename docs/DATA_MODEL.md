@@ -35,7 +35,7 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                ├─ stock_movements (registro inmutable, trigger)               ✅
                ├─ reservations (activa → consumida / liberada)                ✅
                ├─ projects ── bom_lines                                       ⏳ F6
-               └─ audit_log                                                   ⏳ F5
+               └─ audit_log (solo inserción, trigger)                         ✅
 ```
 
 ### Ubicaciones (`@silopro/domain/locations.ts`, implementado)
@@ -53,6 +53,8 @@ Un gabinete guarda su `CabinetLayout` (`@silopro/cabinet-engine`) y cada compart
 `stock_movements(id, kind, item_id, location_id, delta, reason, transfer_id, reservation_id, actor_id, occurred_at)`; tipos implementados: `receipt`, `issue`, `adjustment` (fija la existencia al valor contado y exige motivo), `transfer` (dos filas, salida y entrada, con el mismo `transfer_id`) y `consumption` (salida desde una reserva, con su `reservation_id`). Un trigger impide `UPDATE` y `DELETE`.
 
 `reservations(id, item_id, location_id, quantity, consumed, status, purpose, created_by, closed_at)` (migración `0009`, con RLS) con `CHECK (quantity > 0 AND consumed >= 0 AND consumed <= quantity)`. Mientras está activa, lo que queda (`quantity − consumed`) suma en `stock_levels.reserved`. Consumir libera esa parte y la saca como `consumption` en la misma transacción; liberar devuelve el resto a disponible. Ambos bloquean la reserva con `FOR UPDATE`.
+
+`audit_log(id, actor_id, action, entity_id, label, details, ip, occurred_at)` (migración `0011`, RLS forzada, trigger que impide `UPDATE`/`DELETE`). Un interceptor global registra cada `POST`/`PUT`/`PATCH`/`DELETE` aceptado dentro de una organización: `action` es el método y la ruta sin prefijo (`PATCH items/:id`), `label` el SKU/código/nombre y `details` lo enviado sin campos con `pass`, `token` o `secret` (recortado a los nombres de campo si supera 4 KB). Se escribe tras la operación: si fallara, la operación no se revierte y queda en el registro de errores.
 
 Escritura: dentro de la transacción se inserta la fila de `stock_levels` si no existe, se bloquea con `SELECT … FOR UPDATE`, se aplica `applyDelta` del dominio y se escriben nivel y movimiento. Prueba: 12 salidas concurrentes de 1 sobre una existencia de 5 → exactamente 5 aceptadas.
 

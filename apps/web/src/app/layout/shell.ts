@@ -18,6 +18,8 @@ import {
   LucideArrowLeftRight,
   LucideBookmark,
   LucideBox,
+  LucideHistory,
+  LucideShieldCheck,
   LucideBuilding2,
   LucideCheck,
   LucideClipboardList,
@@ -60,6 +62,8 @@ import { SessionService } from '../core/session';
     LucideMapPin,
     LucideArrowLeftRight,
     LucideBookmark,
+    LucideHistory,
+    LucideShieldCheck,
     LucideClipboardList,
     LucideBox,
     LucideBuilding2,
@@ -294,6 +298,24 @@ import { SessionService } from '../core/session';
       <a esNavItem routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
         <svg lucideBookmark></svg> Reservas
       </a>
+      <a
+        esNavItem
+        routerLink="/movimientos"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <svg lucideHistory></svg> Movimientos
+      </a>
+      @if (session.can('members.manage')) {
+        <a
+          esNavItem
+          routerLink="/auditoria"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+        >
+          <svg lucideShieldCheck></svg> Auditoría
+        </a>
+      }
     </ng-template>
 
     <ng-template #userMenu>
@@ -381,6 +403,20 @@ export class Shell {
         group: 'Navegación',
         keywords: ['apartar', 'consumir', 'proyecto'],
         run: () => this.go('/reservas'),
+      },
+      {
+        id: 'nav.journal',
+        label: 'Ir a Movimientos',
+        group: 'Navegación',
+        keywords: ['historial', 'diario', 'csv', 'exportar', 'kardex'],
+        run: () => this.go('/movimientos'),
+      },
+      {
+        id: 'nav.audit',
+        label: 'Ir a Auditoría',
+        group: 'Navegación',
+        keywords: ['bitácora', 'cambios', 'quién'],
+        run: () => this.go('/auditoria'),
       },
       {
         id: 'nav.cabinet',

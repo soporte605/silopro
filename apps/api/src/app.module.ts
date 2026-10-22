@@ -1,5 +1,6 @@
 import { type DynamicModule, Global, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { CsrfGuard } from './common/csrf.guard.js';
@@ -30,6 +31,7 @@ export class AppModule {
         CatalogModule,
         StockModule,
         MembersModule,
+        AuditModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],
     };

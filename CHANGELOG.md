@@ -4,6 +4,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.5.0-alpha.5] — 2026-10-22
+
+Fase 5 · Operaciones: auditoría y diario de movimientos.
+
+### Añadido
+
+- **Auditoría**: cada cambio aceptado (crear, editar, archivar, mover, reservar, invitar…) queda registrado con quién, qué, sobre qué y cuándo. La bitácora no se puede editar ni borrar (trigger en la base) y solo la ven dueños y administradores, en la página **Auditoría**.
+- **Movimientos**: diario de toda la organización con filtros por tipo, ubicación y fechas, «Cargar más» y **Exportar CSV** para abrir en Excel.
+- API `GET movements`, `GET movements/export` y `GET audit`.
+- Migración `0011_auditoria`: tabla `audit_log` con aislamiento por organización y un índice para el diario. No borra datos.
+
 ## [0.5.0-alpha.4] — 2026-10-22
 
 Publicación en servidor.

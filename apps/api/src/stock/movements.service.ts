@@ -1,5 +1,8 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import type {
+  JournalMovement,
+  MovementPage,
+  movementQuerySchema,
   Movement,
   movementInputSchema,
   StockByLocation,
@@ -15,14 +18,22 @@ import {
   StockError,
   toScaled,
 } from '@silopro/domain';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lt, type SQL, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound } from '../common/http.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { iso, num0 } from '../db/mappers.js';
-import { cabinets, items, locations, stockLevels, stockMovements, users } from '../db/schema.js';
+import {
+  cabinets,
+  items,
+  locations,
+  stockLevels,
+  stockMovements,
+  units,
+  users,
+} from '../db/schema.js';
 
 type MovementData = z.output<typeof movementInputSchema>;
 type TransferData = z.output<typeof transferInputSchema>;
@@ -321,6 +332,59 @@ export class MovementsService {
         actorName: r.actorName,
         occurredAt: iso(r.m.occurredAt),
       }));
+    });
+  }
+
+  /**
+   * Diario de movimientos de toda la organización, más reciente primero, con
+   * filtros y paginación por cursor (`before` = id del último de la página).
+   */
+  journal(ctx: OrgContext, q: z.output<typeof movementQuerySchema>): Promise<MovementPage> {
+    return this.dbs.tenant(ctx, async (tx) => {
+      const where: SQL[] = [];
+      if (q.kind) where.push(eq(stockMovements.kind, q.kind));
+      if (q.itemId) where.push(eq(stockMovements.itemId, q.itemId));
+      if (q.locationId) where.push(eq(stockMovements.locationId, q.locationId));
+      if (q.from) where.push(gte(stockMovements.occurredAt, new Date(`${q.from}T00:00:00Z`)));
+      if (q.to) where.push(sql`${stockMovements.occurredAt} < (${q.to}::date + 1)`);
+      if (q.before) where.push(lt(stockMovements.id, q.before));
+      const rows = await tx
+        .select({
+          m: stockMovements,
+          path: locations.path,
+          actorName: users.name,
+          sku: items.sku,
+          itemName: items.name,
+          unitSymbol: units.symbol,
+        })
+        .from(stockMovements)
+        .innerJoin(locations, eq(locations.id, stockMovements.locationId))
+        .innerJoin(users, eq(users.id, stockMovements.actorId))
+        .innerJoin(items, eq(items.id, stockMovements.itemId))
+        .innerJoin(units, eq(units.id, items.unitId))
+        .where(and(...where))
+        .orderBy(desc(stockMovements.id))
+        .limit(q.limit + 1);
+      const movements: JournalMovement[] = rows.slice(0, q.limit).map((r) => ({
+        id: r.m.id,
+        kind: r.m.kind,
+        itemId: r.m.itemId,
+        sku: r.sku,
+        itemName: r.itemName,
+        unitSymbol: r.unitSymbol,
+        locationId: r.m.locationId,
+        locationPath: r.path,
+        delta: num0(r.m.delta),
+        reason: r.m.reason,
+        transferId: r.m.transferId,
+        reservationId: r.m.reservationId,
+        actorName: r.actorName,
+        occurredAt: iso(r.m.occurredAt),
+      }));
+      return {
+        movements,
+        nextCursor: rows.length > q.limit ? movements[movements.length - 1]!.id : null,
+      };
     });
   }
 

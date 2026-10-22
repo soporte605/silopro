@@ -87,6 +87,16 @@ export const routes: Routes = [
         title: 'Transferencias · SiloPro',
       },
       {
+        path: 'movimientos',
+        loadComponent: () => import('./pages/journal/movements-journal'),
+        title: 'Movimientos · SiloPro',
+      },
+      {
+        path: 'auditoria',
+        loadComponent: () => import('./pages/audit/audit-log'),
+        title: 'Auditoría · SiloPro',
+      },
+      {
         path: 'reservas',
         loadComponent: () => import('./pages/reservations/reservations'),
         title: 'Reservas · SiloPro',

@@ -435,3 +435,32 @@ export const stockMovements = pgTable(
     index('stock_movements_transfer_idx').on(t.transferId),
   ],
 );
+
+/**
+ * Bitácora de auditoría: quién hizo qué y cuándo, por cada cambio aceptado por
+ * la API. Inmutable (un trigger impide UPDATE y DELETE) y aislada por RLS.
+ */
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: id(),
+    organizationId: orgId(),
+    actorId: uuid('actor_id')
+      .notNull()
+      .references(() => users.id),
+    /** Método y ruta sin el prefijo de la organización: `POST items`, `PATCH items/:id`. */
+    action: text('action').notNull(),
+    /** Id del registro afectado (artículo, ubicación, miembro, cajón…). */
+    entityId: text('entity_id'),
+    /** Nombre legible del registro (SKU, código, nombre) al momento del cambio. */
+    label: text('label'),
+    /** Datos enviados, sin contraseñas ni tokens y recortados si son grandes. */
+    details: jsonb('details'),
+    ip: text('ip'),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('audit_log_org_time_idx').on(t.organizationId, t.occurredAt),
+    index('audit_log_entity_idx').on(t.entityId),
+  ],
+);
