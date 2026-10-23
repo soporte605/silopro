@@ -36,7 +36,7 @@ export class ShoppingService {
         .filter((l) => l.toBuy > 0)
         .sort(
           (a, b) =>
-            (a.supplierName ?? '￿').localeCompare(b.supplierName ?? '￿', 'es') ||
+            (a.supplierName ?? '\uFFFF').localeCompare(b.supplierName ?? '\uFFFF', 'es') ||
             a.sku.localeCompare(b.sku, 'es'),
         );
       let total = 0;

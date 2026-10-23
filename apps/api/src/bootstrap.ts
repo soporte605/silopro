@@ -12,8 +12,9 @@ export function configureApp(app: INestApplication, env: Env): void {
   // esos proxies para obtener la IP real del cliente.
   express.set('trust proxy', env.TRUST_PROXY_HOPS);
   app.setGlobalPrefix('api');
-  // El diseño completo de un gabinete de 60×60 ronda los 350 KB.
-  express.useBodyParser('json', { limit: '1mb' });
+  // El diseño completo de un gabinete de 60×60 ronda los 350 KB; una
+  // importación de 2000 artículos con descripción, unos pocos MB.
+  express.useBodyParser('json', { limit: '5mb' });
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });

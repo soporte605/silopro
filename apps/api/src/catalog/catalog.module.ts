@@ -10,5 +10,6 @@ import { UnitsService } from './units.service.js';
 @Module({
   controllers: [CatalogController, PhotosController],
   providers: [UnitsService, CategoriesService, SuppliersService, ItemsService, PhotosService],
+  exports: [CategoriesService],
 })
 export class CatalogModule {}

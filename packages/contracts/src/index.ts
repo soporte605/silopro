@@ -10,6 +10,7 @@ export * from './cabinets.js';
 export * from './catalog.js';
 export * from './common.js';
 export * from './health.js';
+export * from './import.js';
 export * from './members.js';
 export * from './photos.js';
 export * from './projects.js';

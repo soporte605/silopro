@@ -98,6 +98,14 @@ Se calcula al consultar. Por artículo: `projectPending` es lo pendiente en proy
 | `GET shopping-list/export` | catalog.read | La misma lista en CSV UTF-8 para Excel                                                                            |
 | `GET alerts`               | catalog.read | `{ lowStock, toBuy, projectsShort }` para los avisos de inicio y del menú                                         |
 
+## Importación · `/orgs/:orgId/import`
+
+La web lee el archivo (Excel `.xlsx` o CSV con coma o punto y coma) y envía las filas con las columnas ya elegidas: `sku, name, unit, category?, internalCode?, manufacturer?, model?, description?, cost?, price?, minStock?, quantity?, location?`. La unidad se reconoce por código, símbolo o nombre; la categoría, por nombre; la ubicación, por ruta (`ALM / C1`) o por código si es único.
+
+| Método y ruta       | Permiso       | Notas                                                                                                                                                                                                                                                                                          |
+| ------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST import/items` | catalog.write | `rows` (hasta 2000), `dryRun` (por omisión `true`) y `updateExisting`. Devuelve qué pasa con cada fila (`create`, `update`, `skip`, `error`). Sin `dryRun`, importa todo en una transacción o nada (`422 IMPORT_INVALID` con el detalle). Las cantidades son entradas con motivo «Importación» |
+
 ## Gabinetes · `/orgs/:orgId/cabinets`
 
 Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubicación hija de tipo `drawer` cuyo código es su dirección (`A1`, `B12`, `3-4`). Las existencias se registran en los cajones con `POST movements` como en cualquier ubicación.

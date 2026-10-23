@@ -22,7 +22,7 @@ import {
   EsSkeleton,
   EsTable,
 } from '@elikarsystems/ui';
-import { LucidePackageOpen, LucidePlus, LucideSearch } from '@lucide/angular';
+import { LucidePackageOpen, LucidePlus, LucideSearch, LucideUpload } from '@lucide/angular';
 import type { Category, Item, Page } from '@silopro/contracts';
 import { Api } from '../../core/api';
 import { categoryTree } from '../../core/categories';
@@ -37,6 +37,7 @@ const PAGE_SIZE = 50;
 @Component({
   selector: 'sp-items-list',
   imports: [
+    LucideUpload,
     LoadingImage,
     PageHeader,
     RouterLink,
@@ -57,9 +58,12 @@ const PAGE_SIZE = 50;
     <div class="mx-auto flex max-w-6xl flex-col gap-4 p-4 md:p-6">
       <sp-page-header title="Artículos" description="Catálogo y existencias de la organización.">
         @if (session.canWrite()) {
-          <button spActions esButton variant="primary" (click)="create()">
-            <svg lucidePlus></svg> Nuevo artículo
-          </button>
+          <ng-container spActions>
+            <a esButton routerLink="/importar"> <svg lucideUpload></svg> Importar </a>
+            <button esButton variant="primary" (click)="create()">
+              <svg lucidePlus></svg> Nuevo artículo
+            </button>
+          </ng-container>
         }
       </sp-page-header>
 

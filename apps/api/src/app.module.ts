@@ -7,6 +7,7 @@ import { CsrfGuard } from './common/csrf.guard.js';
 import { ENV, type Env } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
+import { ImportModule } from './import/import.module.js';
 import { MembersModule } from './members/members.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { StockModule } from './stock/stock.module.js';
@@ -33,6 +34,7 @@ export class AppModule {
         StockModule,
         MembersModule,
         ProjectsModule,
+        ImportModule,
         AuditModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],

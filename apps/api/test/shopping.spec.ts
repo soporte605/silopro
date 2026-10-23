@@ -81,7 +81,7 @@ describe.skipIf(!TEST_DB)('lista de compras y alertas', () => {
 
     const csv = await s.get('/shopping-list/export').expect(200);
     expect(csv.headers['content-type']).toContain('text/csv');
-    expect(csv.text.startsWith('﻿Proveedor,SKU')).toBe(true);
+    expect(csv.text.startsWith('\uFEFFProveedor,SKU')).toBe(true);
     expect(csv.text).toContain('Electrónica Norte,CMP-LOW,CMP-LOW,3,pza,2,5,0,10,Stock mínimo');
     expect(csv.text).toContain(',CMP-MOT,CMP-MOT,7,pza');
 

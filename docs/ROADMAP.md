@@ -74,7 +74,7 @@ Entradas, salidas, ajustes, transferencias, reservas, consumos; bloqueo optimist
 
 Proyectos y listas de materiales (necesario / disponible / faltante / ubicación), reservas por proyecto, lista de compra, alertas de stock bajo, reportes operativos, importación CSV/Excel con vista previa y validación.
 
-**Hecho en `v0.6.0-alpha.1`:** proyectos con lista de materiales: por cada artículo, lo necesario, consumido, reservado, disponible, faltante y en qué ubicaciones está; «Reservar lo disponible» aparta todo lo que haya libre para el proyecto con un clic, y «Liberar todo lo apartado» lo devuelve. **Hecho en `v0.6.0-alpha.2`:** lista de compras agrupada por proveedor (faltantes de proyectos abiertos más lo necesario para llegar al mínimo, con costo estimado y exportación CSV) y avisos en inicio y en el menú: stock bajo, por comprar y proyectos con faltantes.
+**Hecho en `v0.6.0-alpha.1`:** proyectos con lista de materiales: por cada artículo, lo necesario, consumido, reservado, disponible, faltante y en qué ubicaciones está; «Reservar lo disponible» aparta todo lo que haya libre para el proyecto con un clic, y «Liberar todo lo apartado» lo devuelve. **Hecho en `v0.6.0-alpha.2`:** lista de compras agrupada por proveedor (faltantes de proyectos abiertos más lo necesario para llegar al mínimo, con costo estimado y exportación CSV) y avisos en inicio y en el menú: stock bajo, por comprar y proyectos con faltantes. **Hecho en `v0.6.0-alpha.3`:** importación de artículos desde Excel o CSV: reconoce las columnas, revisa fila por fila antes de guardar (nuevos, actualizados, errores) e importa todo o nada, con entradas de existencias opcionales.
 
 ## Fase 7 — Fabricación · `v0.7.0`
 

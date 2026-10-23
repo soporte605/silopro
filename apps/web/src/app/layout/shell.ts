@@ -377,10 +377,7 @@ export class Shell {
   protected readonly session = inject(SessionService);
   protected readonly alerts = inject(AlertsService);
 
-  protected readonly upcoming = [
-    { label: 'Importar CSV / Excel', icon: 'grid', phase: 'F6' },
-    { label: 'Reportes', icon: 'bom', phase: 'F6' },
-  ];
+  protected readonly upcoming = [{ label: 'Reportes', icon: 'bom', phase: 'F6' }];
 
   constructor() {
     this.palette.register([
@@ -446,6 +443,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['comprar', 'pedido', 'proveedor', 'faltantes', 'stock bajo', 'mínimo'],
         run: () => this.go('/compras'),
+      },
+      {
+        id: 'nav.import',
+        label: 'Importar artículos (CSV / Excel)',
+        group: 'Navegación',
+        keywords: ['excel', 'csv', 'carga masiva', 'subir', 'plantilla'],
+        run: () => this.go('/importar'),
       },
       {
         id: 'nav.reservations',

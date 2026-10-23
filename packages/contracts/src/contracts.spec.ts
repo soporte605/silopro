@@ -38,3 +38,27 @@ describe('paginationQuerySchema', () => {
     expect(paginationQuerySchema.safeParse({ limit: 1000 }).success).toBe(false);
   });
 });
+
+describe('importación', () => {
+  it('lee números escritos de varias formas', async () => {
+    const { parseImportNumber } = await import('./import.js');
+    expect(parseImportNumber('1,5')).toBe(1.5);
+    expect(parseImportNumber('$1,234.50')).toBe(1234.5);
+    expect(parseImportNumber('1.234,50')).toBe(1234.5);
+    expect(parseImportNumber('1 200')).toBe(1200);
+    expect(parseImportNumber('12,000')).toBe(12000);
+    expect(parseImportNumber('')).toBeNull();
+    expect(parseImportNumber(7)).toBe(7);
+    expect(parseImportNumber('diez')).toBeNaN();
+  });
+
+  it('reconoce encabezados comunes', async () => {
+    const { guessImportField } = await import('./import.js');
+    expect(guessImportField('SKU')).toBe('sku');
+    expect(guessImportField(' Unidad de medida ')).toBe('unit');
+    expect(guessImportField('Categoría*')).toBe('category');
+    expect(guessImportField('Marca')).toBe('manufacturer');
+    expect(guessImportField('Cantidad (entrada)')).toBe('quantity');
+    expect(guessImportField('Columna rara')).toBeNull();
+  });
+});

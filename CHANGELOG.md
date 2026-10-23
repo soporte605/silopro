@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.6.0-alpha.3] — 2026-10-23
+
+Fase 6 · Productividad: importación de artículos.
+
+### Añadido
+
+- **Importar artículos** (`/importar`, botón «Importar» en Artículos y en la paleta): desde Excel (`.xlsx`) o CSV (con coma o punto y coma, como lo guarda Excel en español). Reconoce los encabezados comunes (SKU, Nombre, Unidad, Marca, Costo, Mínimo, Cantidad, Ubicación…) y se pueden reasignar.
+- **Revisión antes de guardar**: por cada fila dice si crea, actualiza, se omite o tiene error (unidad o categoría inexistente, SKU repetido, cantidad sin ubicación…). Si hay errores no se importa nada.
+- Los artículos existentes (mismo SKU) se actualizan solo con las columnas que trae el archivo, o se omiten. La cantidad se registra como entrada con motivo «Importación».
+- **Descargar plantilla** CSV.
+- API `POST import/items`. Sin migraciones. El límite de las peticiones JSON sube a 5 MB.
+
 ## [0.6.0-alpha.2] — 2026-10-23
 
 Fase 6 · Productividad: lista de compras y avisos.
