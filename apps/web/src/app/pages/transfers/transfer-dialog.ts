@@ -96,31 +96,29 @@ export interface TransferDialogData {
               }
             </select>
           </es-form-field>
-          <div class="flex items-end gap-2">
-            <es-form-field
-              label="Cantidad"
-              required
-              class="flex-1"
-              [error]="fields()['quantity']"
-              [hint]="
-                source()
-                  ? 'Disponible: ' + qty(source()!.available) + ' ' + data.item.unitSymbol
-                  : undefined
-              "
-              #q="esFormField"
-            >
+          <es-form-field
+            label="Cantidad"
+            required
+            [error]="fields()['quantity']"
+            [hint]="
+              source()
+                ? 'Disponible: ' + qty(source()!.available) + ' ' + data.item.unitSymbol
+                : undefined
+            "
+            #q="esFormField"
+          >
+            <div class="flex gap-2">
               <input
+                class="min-w-0 flex-1"
                 esInput
                 inputmode="decimal"
                 formControlName="quantity"
                 [id]="q.controlId"
                 [attr.aria-describedby]="q.describedBy()"
               />
-            </es-form-field>
-            <button esButton type="button" class="mb-0.5" (click)="all()" [disabled]="!source()">
-              Todo
-            </button>
-          </div>
+              <button esButton type="button" (click)="all()" [disabled]="!source()">Todo</button>
+            </div>
+          </es-form-field>
           <es-form-field label="Nota" [error]="fields()['reason']" #r="esFormField">
             <input
               esInput

@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Corregido
+
+- **Mover existencias** y **Reservar**: el botón «Todo» queda junto a la cantidad, no a la altura del texto «Disponible» o del error.
+
 ## [0.6.0-alpha.1] — 2026-10-22
 
 Fase 6 · Productividad: proyectos y lista de materiales.
