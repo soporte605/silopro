@@ -14,4 +14,5 @@ export * from './members.js';
 export * from './photos.js';
 export * from './projects.js';
 export * from './qr.js';
+export * from './shopping.js';
 export * from './stock.js';

@@ -125,6 +125,21 @@ export function allocate<T extends { available: number }>(
   return { picks, missing: left };
 }
 
+/**
+ * Cuánto comprar (cantidades escaladas): lo que piden los proyectos más el
+ * mínimo, menos lo disponible. Con unidades enteras se redondea hacia arriba.
+ */
+export function purchaseNeed(p: {
+  available: number;
+  minStock: number | null;
+  projectPending: number;
+  wholeUnits: boolean;
+}): number {
+  const need = Math.max(0, p.projectPending + (p.minStock ?? 0) - Math.max(0, p.available));
+  if (!p.wholeUnits) return need;
+  return Math.ceil(need / QUANTITY_SCALE) * QUANTITY_SCALE;
+}
+
 export function isLowStock(totalAvailable: number, minimum: number | null): boolean {
   return minimum != null && minimum > 0 && totalAvailable <= minimum;
 }

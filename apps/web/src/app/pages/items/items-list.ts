@@ -4,6 +4,8 @@ import {
   computed,
   effect,
   inject,
+  input,
+  linkedSignal,
   resource,
   signal,
   untracked,
@@ -218,7 +220,9 @@ export default class ItemsList {
   protected readonly query = signal('');
   private readonly debouncedQuery = signal('');
   protected readonly categoryId = signal('');
-  protected readonly lowStock = signal(false);
+  /** `?bajo=1` abre la lista filtrada por stock bajo (desde los avisos). */
+  readonly bajo = input<string>();
+  protected readonly lowStock = linkedSignal(() => this.bajo() === '1');
   protected readonly pageNumber = signal(1);
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 

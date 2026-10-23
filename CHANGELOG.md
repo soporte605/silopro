@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.6.0-alpha.2] — 2026-10-23
+
+Fase 6 · Productividad: lista de compras y avisos.
+
+### Añadido
+
+- **Lista de compras** (`/compras`, en el menú y en la paleta): por cada artículo, cuánto comprar para cubrir los proyectos abiertos y quedar en su mínimo, agrupado por proveedor, con el motivo (proyecto o stock mínimo), costo estimado y **Exportar CSV**.
+- **Avisos** en inicio: artículos con stock bajo (abre el inventario filtrado), por comprar y proyectos con faltantes. El menú muestra cuántos artículos hay por comprar.
+- API `GET shopping-list`, `GET shopping-list/export` y `GET alerts`. Sin migraciones.
+
 ### Corregido
 
 - **Mover existencias** y **Reservar**: el botón «Todo» queda junto a la cantidad, no a la altura del texto «Disponible» o del error.

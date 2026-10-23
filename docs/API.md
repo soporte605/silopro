@@ -88,6 +88,16 @@ Un proyecto (o pedido, orden de trabajo) tiene `code` único por organización, 
 | `POST projects/:id/reserve-all`     | stock.move   | Aparta todo lo pendiente que haya libre, de las ubicaciones con más existencias; `{ project, created }`; `422 PROJECT_CLOSED` |
 | `POST projects/:id/release-all`     | stock.move   | Libera las reservas activas del proyecto                                                                                      |
 
+## Lista de compras y avisos · `/orgs/:orgId/…`
+
+Se calcula al consultar. Por artículo: `projectPending` es lo pendiente en proyectos abiertos (`draft` o `active`), y `toBuy = max(projectPending + minStock − available, 0)`, redondeado hacia arriba si la unidad no admite decimales. El proveedor es el primero por nombre de los vinculados al artículo.
+
+| Método y ruta              | Permiso      | Notas                                                                                                             |
+| -------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `GET shopping-list`        | catalog.read | `{ lines, estimatedTotal, missingCost }`; cada línea con `toBuy`, `reasons` (proyecto o stock mínimo) y proveedor |
+| `GET shopping-list/export` | catalog.read | La misma lista en CSV UTF-8 para Excel                                                                            |
+| `GET alerts`               | catalog.read | `{ lowStock, toBuy, projectsShort }` para los avisos de inicio y del menú                                         |
+
 ## Gabinetes · `/orgs/:orgId/cabinets`
 
 Un gabinete es una ubicación de tipo `cabinet`; cada compartimento es una ubicación hija de tipo `drawer` cuyo código es su dirección (`A1`, `B12`, `3-4`). Las existencias se registran en los cajones con `POST movements` como en cualquier ubicación.

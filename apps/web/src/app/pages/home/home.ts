@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EsBadge, EsButton, EsSkeleton, EsTable } from '@elikarsystems/ui';
+import { AlertsService } from '../../core/alerts';
 import { SessionService } from '../../core/session';
 
 interface Health {
@@ -29,6 +30,52 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
         </div>
         <a esButton variant="primary" routerLink="/inventario">Ver artículos</a>
       </header>
+
+      @if (alerts.counts(); as a) {
+        @if (a.lowStock || a.toBuy || a.projectsShort) {
+          <section aria-labelledby="avisos">
+            <h2 id="avisos" class="mb-2 text-xs font-medium text-fg-muted">Avisos</h2>
+            <ul class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <li>
+                <a
+                  routerLink="/inventario"
+                  [queryParams]="{ bajo: 1 }"
+                  class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+                >
+                  <span
+                    class="text-2xl font-semibold tabular-nums"
+                    [class.text-warning]="a.lowStock"
+                    >{{ a.lowStock }}</span
+                  >
+                  <span class="text-sm">Artículos con stock bajo</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  routerLink="/compras"
+                  class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+                >
+                  <span class="text-2xl font-semibold tabular-nums">{{ a.toBuy }}</span>
+                  <span class="text-sm">Por comprar</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  routerLink="/proyectos"
+                  class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+                >
+                  <span
+                    class="text-2xl font-semibold tabular-nums"
+                    [class.text-warning]="a.projectsShort"
+                    >{{ a.projectsShort }}</span
+                  >
+                  <span class="text-sm">Proyectos con faltantes</span>
+                </a>
+              </li>
+            </ul>
+          </section>
+        }
+      }
 
       <section aria-labelledby="pasos">
         <h2 id="pasos" class="mb-2 text-xs font-medium text-fg-muted">Primeros pasos</h2>
@@ -147,6 +194,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
 export default class Home {
   private readonly http = inject(HttpClient);
   protected readonly session = inject(SessionService);
+  protected readonly alerts = inject(AlertsService);
   protected readonly currentPhase = 6;
   protected readonly steps = [
     {

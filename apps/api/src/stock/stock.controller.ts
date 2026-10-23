@@ -31,6 +31,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { LocationsService } from './locations.service.js';
 import { MovementsService } from './movements.service.js';
 import { QrService } from './qr.service.js';
+import { csvField } from '../common/csv.js';
 
 const uuid = new ParseUUIDPipe({ version: '7' });
 
@@ -40,13 +41,6 @@ const KIND_LABELS: Record<string, string> = {
   adjustment: 'Ajuste',
   transfer: 'Transferencia',
   consumption: 'Consumo',
-};
-
-/** Campo CSV con comillas cuando hace falta; neutraliza fórmulas (=, +, -, @). */
-const csvField = (v: string | number | null): string => {
-  let s = v === null ? '' : String(v);
-  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-  return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 function movementsCsv(rows: JournalMovement[]): string {

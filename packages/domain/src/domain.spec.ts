@@ -4,6 +4,7 @@ import {
   allocate,
   applyDelta,
   bomLineStatus,
+  purchaseNeed,
   exceedsCapacity,
   available,
   fromScaled,
@@ -129,5 +130,27 @@ describe('lista de materiales', () => {
     });
     expect(allocate(10, [a, c]).missing).toBe(2);
     expect(allocate(0, [a]).picks).toEqual([]);
+  });
+});
+
+describe('lista de compras', () => {
+  it('cubre proyectos y deja el artículo en su mínimo', () => {
+    const k = 1000;
+    expect(
+      purchaseNeed({ available: 2 * k, minStock: 5 * k, projectPending: 4 * k, wholeUnits: true }),
+    ).toBe(7 * k);
+    expect(
+      purchaseNeed({ available: 20 * k, minStock: 5 * k, projectPending: 4 * k, wholeUnits: true }),
+    ).toBe(0);
+    expect(
+      purchaseNeed({ available: -k, minStock: null, projectPending: k, wholeUnits: true }),
+    ).toBe(k);
+    // Con unidades enteras se redondea hacia arriba; con decimales, no.
+    expect(
+      purchaseNeed({ available: 0, minStock: 1500, projectPending: 0, wholeUnits: true }),
+    ).toBe(2 * k);
+    expect(
+      purchaseNeed({ available: 0, minStock: 1500, projectPending: 0, wholeUnits: false }),
+    ).toBe(1500);
   });
 });

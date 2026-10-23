@@ -21,6 +21,7 @@ import {
   LucideScanLine,
   LucideHistory,
   LucideShieldCheck,
+  LucideShoppingCart,
   LucideBuilding2,
   LucideCheck,
   LucideClipboardList,
@@ -39,6 +40,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { ROLE_LABELS } from '@silopro/domain';
+import { AlertsService } from '../core/alerts';
 import { SessionService } from '../core/session';
 
 @Component({
@@ -62,6 +64,7 @@ import { SessionService } from '../core/session';
     LucideMonitor,
     LucideMapPin,
     LucideArrowLeftRight,
+    LucideShoppingCart,
     LucideBookmark,
     LucideScanLine,
     LucideHistory,
@@ -314,6 +317,16 @@ import { SessionService } from '../core/session';
       >
         <svg lucideClipboardList></svg> Proyectos
       </a>
+      <a esNavItem routerLink="/compras" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <svg lucideShoppingCart></svg> Lista de compras
+        @if (alerts.counts()?.toBuy; as n) {
+          <span
+            class="ml-auto rounded-full bg-warning-soft px-1.5 font-mono text-2xs text-warning"
+            [attr.aria-label]="n + ' por comprar'"
+            >{{ n }}</span
+          >
+        }
+      </a>
       <a esNavItem routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
         <svg lucideBookmark></svg> Reservas
       </a>
@@ -362,10 +375,11 @@ export class Shell {
   private readonly router = inject(Router);
 
   protected readonly session = inject(SessionService);
+  protected readonly alerts = inject(AlertsService);
 
   protected readonly upcoming = [
-    { label: 'Lista de compras', icon: 'bom', phase: 'F6' },
     { label: 'Importar CSV / Excel', icon: 'grid', phase: 'F6' },
+    { label: 'Reportes', icon: 'bom', phase: 'F6' },
   ];
 
   constructor() {
@@ -425,6 +439,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['bom', 'lista de materiales', 'pedido', 'orden de trabajo', 'faltantes'],
         run: () => this.go('/proyectos'),
+      },
+      {
+        id: 'nav.shopping',
+        label: 'Ir a Lista de compras',
+        group: 'Navegación',
+        keywords: ['comprar', 'pedido', 'proveedor', 'faltantes', 'stock bajo', 'mínimo'],
+        run: () => this.go('/compras'),
       },
       {
         id: 'nav.reservations',
