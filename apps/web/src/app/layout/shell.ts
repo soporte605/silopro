@@ -41,12 +41,14 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { ROLE_LABELS } from '@silopro/domain';
+import { VerifyBanner } from './verify-banner';
 import { AlertsService } from '../core/alerts';
 import { SessionService } from '../core/session';
 
 @Component({
   selector: 'sp-shell',
   imports: [
+    VerifyBanner,
     RouterOutlet,
     NgTemplateOutlet,
     Logo,
@@ -227,6 +229,7 @@ import { SessionService } from '../core/session';
       >
         <ng-container *ngTemplateOutlet="navLinks" />
       </nav>
+      <sp-verify-banner />
       <main id="contenido" class="min-h-0 flex-1 overflow-auto" tabindex="-1">
         @if (session.orgId()) {
           <router-outlet />

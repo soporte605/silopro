@@ -40,6 +40,9 @@ services:
       PUBLIC_WEB_URL: ${PUBLIC_WEB_URL}
       # nginx del contenedor web + nginx del servidor.
       TRUST_PROXY_HOPS: 2
+      # Correos (Resend). Sin clave, los correos solo se escriben en el registro.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-SiloPro <no-responder@silopro.elikarsystems.com>}
     volumes:
       - uploads:/data/uploads
     depends_on:

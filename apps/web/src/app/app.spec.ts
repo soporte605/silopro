@@ -15,7 +15,7 @@ describe('Shell', () => {
       providers: [provideRouter([]), provideHttpClient()],
     }).compileComponents();
     TestBed.inject(SessionService).me.set({
-      user: { id: 'u1', email: 'ana@ejemplo.test', name: 'Ana López' },
+      user: { id: 'u1', email: 'ana@ejemplo.test', name: 'Ana López', emailVerified: true },
       memberships: [{ organizationId: 'o1', organizationName: 'Taller Norte', role: 'operator' }],
     });
     const fixture = TestBed.createComponent(Shell);
@@ -33,7 +33,7 @@ describe('SessionService', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient()] });
     const s = TestBed.inject(SessionService);
     s.me.set({
-      user: { id: 'u', email: 'a@b.c', name: 'A' },
+      user: { id: 'u', email: 'a@b.c', name: 'A', emailVerified: true },
       memberships: [{ organizationId: 'o', organizationName: 'O', role: 'operator' }],
     });
     expect(s.canMove()).toBe(true);

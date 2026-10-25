@@ -31,6 +31,12 @@ const envSchema = z.object({
    * 2 si además hay un nginx en el servidor que termina HTTPS.
    */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+  /** Clave de Resend para enviar correos. Sin ella, los correos se escriben en el registro. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Sin Resend, además del registro, guarda cada correo como JSON aquí (desarrollo y e2e). */
+  MAIL_OUTBOX_DIR: z.string().min(1).optional(),
+  /** Remitente; el dominio debe estar verificado en Resend. */
+  MAIL_FROM: z.string().min(3).default('SiloPro <no-responder@silopro.elikarsystems.com>'),
 });
 
 export type Env = z.infer<typeof envSchema>;

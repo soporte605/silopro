@@ -76,9 +76,39 @@ export const users = pgTable(
     email: text('email').notNull(),
     name: text('name').notNull(),
     passwordHash: text('password_hash').notNull(),
+    /** Cuándo confirmó su correo con el enlace enviado; `null` si aún no. */
+    emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex('users_email_key').on(sql`lower(${t.email})`)],
+);
+
+export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
+  'verify_email',
+  'reset_password',
+]);
+
+/**
+ * Enlaces de un solo uso enviados por correo (confirmar correo, restablecer
+ * contraseña). Solo se guarda el hash SHA-256 del token.
+ */
+export const authTokens = pgTable(
+  'auth_tokens',
+  {
+    id: id(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: authTokenPurposeEnum('purpose').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('auth_tokens_token_key').on(t.tokenHash),
+    index('auth_tokens_user_idx').on(t.userId, t.purpose),
+  ],
 );
 
 export const sessions = pgTable(

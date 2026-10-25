@@ -9,7 +9,12 @@ import {
   type InvitationStatus,
   type Member,
 } from '@silopro/contracts';
-import { checkMembershipChange, type MembershipViolation, type Role } from '@silopro/domain';
+import {
+  checkMembershipChange,
+  type MembershipViolation,
+  ROLE_LABELS,
+  type Role,
+} from '@silopro/domain';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 import { hashToken } from '../auth/auth.service.js';
@@ -18,6 +23,8 @@ import { invalid, notFound } from '../common/http.js';
 import { ENV, type Env } from '../config/env.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { invitations, memberships, organizations, users } from '../db/schema.js';
+import { MailService } from '../mail/mail.service.js';
+import { invitationMail } from '../mail/templates.js';
 
 const VIOLATIONS: Record<MembershipViolation, string> = {
   FORBIDDEN: 'Su rol no permite administrar miembros',
@@ -38,6 +45,7 @@ export class MembersService {
   constructor(
     @Inject(DbService) private readonly dbs: DbService,
     @Inject(ENV) private readonly env: Env,
+    @Inject(MailService) private readonly mail: MailService,
   ) {}
 
   list(ctx: OrgContext): Promise<Member[]> {
@@ -111,11 +119,11 @@ export class MembersService {
     });
   }
 
-  createInvitation(
+  async createInvitation(
     ctx: OrgContext,
     input: z.output<typeof invitationInputSchema>,
   ): Promise<InvitationCreated> {
-    return this.dbs.tenant(ctx, async (tx) => {
+    const created = await this.dbs.tenant(ctx, async (tx) => {
       const v = checkMembershipChange({
         actor: ctx.role,
         current: null,
@@ -157,6 +165,22 @@ export class MembersService {
         url: `${base}/invitacion/${ctx.organizationId}/${token}`,
       };
     });
+    const [org] = await this.dbs.tenant(ctx, (tx) =>
+      tx
+        .select({ name: organizations.name })
+        .from(organizations)
+        .where(eq(organizations.id, ctx.organizationId)),
+    );
+    await this.mail.send(
+      invitationMail(
+        created.email,
+        created.invitedByName,
+        org?.name ?? 'su organización',
+        ROLE_LABELS[created.role].toLowerCase(),
+        created.url,
+      ),
+    );
+    return created;
   }
 
   async revokeInvitation(ctx: OrgContext, id: string): Promise<void> {

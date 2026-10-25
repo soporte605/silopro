@@ -4,6 +4,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Correos con Resend**: al registrarse llega un enlace para **confirmar el correo** (vence en 24 h); mientras no se confirme, un aviso arriba permite **reenviarlo**.
+- **Recuperar contraseña** desde «¿Olvidaste tu contraseña?» en el acceso: el enlace vence en 1 hora, sirve una vez y al usarlo se cierran todas las sesiones abiertas. No revela si un correo está registrado.
+- Las **invitaciones** llegan también por correo con el enlace.
+- API `POST auth/verify-email`, `auth/verify-email/resend`, `auth/password/forgot` y `auth/password/reset`; `Me.user.emailVerified`. Migración `0013_correo` (`users.email_verified_at`, tabla `auth_tokens`).
+- Variables `RESEND_API_KEY` y `MAIL_FROM`; sin clave los correos se escriben en el registro.
+
 ## [0.6.0] — 2026-10-25
 
 Cierre de la Fase 6 · Productividad (contenido de `0.6.0-alpha.1` a `0.6.0-alpha.4`): proyectos con lista de materiales, lista de compras y avisos, importación desde Excel o CSV y reportes.

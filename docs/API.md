@@ -13,12 +13,16 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 ## Autenticación
 
-| Método y ruta         | Cuerpo                                          | Respuesta                                               |
-| --------------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| `POST /auth/register` | `name, email, password (≥10), organizationName` | `201 Me`; crea organización (propietario) y 6 unidades  |
-| `POST /auth/login`    | `email, password`                               | `200 Me`; `401` genérico; `429` tras 10 intentos/15 min |
-| `POST /auth/logout`   | —                                               | `204`                                                   |
-| `GET /auth/me`        | —                                               | `Me` (usuario y membresías) o `401`                     |
+| Método y ruta                    | Cuerpo                                          | Respuesta                                                                                        |
+| -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `POST /auth/register`            | `name, email, password (≥10), organizationName` | `201 Me`; crea organización (propietario) y 6 unidades; envía el enlace para confirmar el correo |
+| `POST /auth/login`               | `email, password`                               | `200 Me`; `401` genérico; `429` tras 10 intentos/15 min                                          |
+| `POST /auth/logout`              | —                                               | `204`                                                                                            |
+| `GET /auth/me`                   | —                                               | `Me` (usuario con `emailVerified` y membresías) o `401`                                          |
+| `POST /auth/verify-email`        | `token`                                         | `204`; `400 INVALID_LINK` si no es válido, ya se usó o venció (24 h)                             |
+| `POST /auth/verify-email/resend` | — (con sesión)                                  | `204`; invalida el enlace anterior; `429` tras 3 por hora                                        |
+| `POST /auth/password/forgot`     | `email`                                         | `204` exista o no la cuenta; envía el enlace (1 h, un solo uso); `429` tras 3 por hora           |
+| `POST /auth/password/reset`      | `token, password (≥10)`                         | `204`; cambia la contraseña, confirma el correo y cierra todas las sesiones; `400 INVALID_LINK`  |
 
 ## Catálogo · `/orgs/:orgId/…`
 

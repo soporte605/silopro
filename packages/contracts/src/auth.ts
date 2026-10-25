@@ -21,6 +21,18 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export const loginSchema = z.object({ email, password: z.string().min(1).max(128) });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+/** Token de un enlace enviado por correo (32 bytes en base64url). */
+const linkToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Enlace inválido');
+
+export const forgotPasswordSchema = z.object({ email });
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({ token: linkToken, password });
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const verifyEmailSchema = z.object({ token: linkToken });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
 export const membershipSchema = z.object({
   organizationId: z.string(),
   organizationName: z.string(),
@@ -28,7 +40,13 @@ export const membershipSchema = z.object({
 });
 
 export const meSchema = z.object({
-  user: z.object({ id: z.string(), email: z.string(), name: z.string() }),
+  user: z.object({
+    id: z.string(),
+    email: z.string(),
+    name: z.string(),
+    /** Confirmó su correo con el enlace enviado. */
+    emailVerified: z.boolean(),
+  }),
   memberships: z.array(membershipSchema),
 });
 export type Me = z.infer<typeof meSchema>;

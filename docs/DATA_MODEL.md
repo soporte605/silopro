@@ -20,7 +20,8 @@ Estado: **implementado en la Fase 2** para usuarios, organizaciones, catálogo, 
 ## Entidades
 
 ```
-users ── sessions (hash SHA-256 del token)
+users (email_verified_at) ─┬─ sessions (hash SHA-256 del token)
+                           └─ auth_tokens (confirmar correo / restablecer contraseña; hash, un solo uso)  ✅
   │
 organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── users      ✅
                ├─ invitations (hash SHA-256 del token, vence en 7 días)       ✅

@@ -8,6 +8,7 @@ import { ENV, type Env } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
 import { ImportModule } from './import/import.module.js';
+import { MailModule } from './mail/mail.module.js';
 import { MembersModule } from './members/members.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { ReportsModule } from './reports/reports.module.js';
@@ -29,6 +30,7 @@ export class AppModule {
       imports: [
         EnvModule.forRoot(env),
         DbModule,
+        MailModule,
         AuthModule,
         HealthModule,
         CatalogModule,
