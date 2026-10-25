@@ -16,6 +16,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 - Pantalla **Plan y facturación** (`/plan`, en la barra lateral, el menú de cuenta y la paleta): plan actual, uso contra límites y planes con precio mensual o anual.
 - **Cobro con Stripe (modo prueba)**: «Elegir plan» abre Stripe Checkout y «Administrar suscripción» el portal de cliente; el webhook `POST /api/billing/webhook` (firmado) actualiza plan, estado y periodo. Sin clave de Stripe la pantalla ofrece contratar por correo. Script `apps/api/scripts/stripe-setup.mjs` crea productos, precios, webhook y configuración del portal. Variables `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y `STRIPE_PORTAL_CONFIGURATION`.
 - API `GET orgs/:orgId/billing`, `POST …/billing/checkout` y `…/billing/portal`. Migración `0014_planes`: columnas de plan y suscripción en `organizations`; las organizaciones existentes pasan a prueba con 30 días.
+- **Página comercial** (`/producto`): qué hace SiloPro, precios con pago mensual o anual, preguntas frecuentes y registro de prueba gratis. Quien entra a la raíz sin sesión llega aquí; los enlaces directos siguen llevando al acceso.
+- **Aviso de privacidad** (`/privacidad`, LFPDPPP) y **Términos y condiciones** (`/terminos`), enlazados desde el pie de la página comercial y desde el registro. Son borradores pendientes de revisión legal (ver `docs/LEGAL.md`).
+- «Plan y facturación» también en el menú de cuenta, para llegar desde el celular.
 
 ### Cambiado
 

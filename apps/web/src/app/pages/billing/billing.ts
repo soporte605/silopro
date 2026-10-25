@@ -14,6 +14,7 @@ import { Api, ApiRequestError } from '../../core/api';
 import { fmtMoney } from '../../core/format';
 import { SessionService } from '../../core/session';
 import { PageHeader } from '../page-header';
+import { CONTACT_EMAIL, gb, PLAN_INCLUDES, planLimitLines } from './plan-copy';
 
 const STATUS: Record<string, string> = {
   active: 'Activa',
@@ -26,8 +27,6 @@ const STATUS: Record<string, string> = {
   paused: 'En pausa',
 };
 
-const gb = (bytes: number) =>
-  `${(bytes / 1024 ** 3).toLocaleString('es-MX', { maximumFractionDigits: 1 })} GB`;
 const dateFmt = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' });
 
 /** Plan actual, uso de cada límite y contratación con Stripe. */
@@ -157,37 +156,17 @@ const dateFmt = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' });
                   }
                 </div>
                 <ul class="flex flex-col gap-1 text-sm">
-                  <li>
-                    {{
-                      p.limits.members === null
-                        ? 'Usuarios ilimitados'
-                        : 'Hasta ' + p.limits.members + ' usuarios'
-                    }}
-                  </li>
-                  <li>
-                    {{
-                      p.limits.items === null
-                        ? 'Artículos ilimitados'
-                        : 'Hasta ' + num(p.limits.items) + ' artículos'
-                    }}
-                  </li>
-                  <li>
-                    {{
-                      p.limits.photoBytes === null
-                        ? 'Fotografías sin límite'
-                        : gb(p.limits.photoBytes) + ' de fotografías'
-                    }}
-                  </li>
-                  <li class="text-fg-muted">
-                    Gabinetes 2D y 3D, QR, proyectos, compras y reportes
-                  </li>
+                  @for (line of limitLines(p); track line) {
+                    <li>{{ line }}</li>
+                  }
+                  <li class="text-fg-muted">{{ includes }}</li>
                 </ul>
                 <div class="mt-auto">
                   @if (p.id === 'enterprise') {
                     <a
                       esButton
                       class="w-full"
-                      href="mailto:soporte@elikarsystems.com?subject=SiloPro%20Empresa"
+                      [href]="'mailto:' + contact + '?subject=SiloPro%20Empresa'"
                       >Contactar</a
                     >
                   } @else if (isCurrent(p.id)) {
@@ -198,7 +177,7 @@ const dateFmt = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' });
                     <a
                       esButton
                       class="w-full"
-                      href="mailto:soporte@elikarsystems.com?subject=Contratar%20SiloPro"
+                      [href]="'mailto:' + contact + '?subject=Contratar%20SiloPro'"
                       >Escríbanos para contratar</a
                     >
                   } @else {
@@ -232,7 +211,9 @@ export default class Billing {
   /** `?pago=ok` al volver de Stripe Checkout. */
   readonly pago = input<string>();
   protected readonly money = fmtMoney;
-  protected readonly gb = gb;
+  protected readonly limitLines = planLimitLines;
+  protected readonly includes = PLAN_INCLUDES;
+  protected readonly contact = CONTACT_EMAIL;
   protected readonly num = (n: number) => n.toLocaleString('es-MX');
   protected readonly round = Math.round;
   protected readonly offers = [PLANS.basic, PLANS.pro, PLANS.enterprise];

@@ -32,6 +32,21 @@ export const routes: Routes = [
     title: 'Confirmar correo · SiloPro',
   },
   {
+    path: 'producto',
+    loadComponent: () => import('./pages/public/landing'),
+    title: 'SiloPro · Inventario con ubicación física',
+  },
+  {
+    path: 'privacidad',
+    loadComponent: () => import('./pages/public/privacy'),
+    title: 'Aviso de privacidad · SiloPro',
+  },
+  {
+    path: 'terminos',
+    loadComponent: () => import('./pages/public/terms'),
+    title: 'Términos y condiciones · SiloPro',
+  },
+  {
     path: 'invitacion/:orgId/:token',
     loadComponent: () => import('./pages/auth/invitation'),
     title: 'Invitación · SiloPro',
