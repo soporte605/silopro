@@ -175,7 +175,7 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
                   <span class="text-fg-muted"> · {{ p.scope }}</span>
                 </td>
                 <td>
-                  @if (p.n < currentPhase) {
+                  @if (p.done) {
                     <es-badge tone="success">Completada</es-badge>
                   } @else if (p.n === currentPhase) {
                     <es-badge tone="primary">En curso</es-badge>
@@ -195,7 +195,8 @@ export default class Home {
   private readonly http = inject(HttpClient);
   protected readonly session = inject(SessionService);
   protected readonly alerts = inject(AlertsService);
-  protected readonly currentPhase = 6;
+  /** La Fase 8 se adelantó a la 7 para lanzar antes (ver ROADMAP). */
+  protected readonly currentPhase = 8;
   protected readonly steps = [
     {
       n: 1,
@@ -223,14 +224,39 @@ export default class Home {
   });
 
   protected readonly phases = [
-    { n: 1, name: 'Fundamentos', scope: 'arquitectura, marca, design system, monorepo, CI' },
-    { n: 2, name: 'Inventario', scope: 'autenticación, organizaciones, artículos, categorías' },
-    { n: 3, name: 'Almacenamiento', scope: 'almacenes, ubicaciones, gabinetes, editor 2D' },
-    { n: 4, name: 'Visualización 3D', scope: 'Three.js, selección, apertura de cajones' },
-    { n: 5, name: 'Operaciones', scope: 'movimientos, reservas, auditoría, QR' },
-    { n: 6, name: 'Productividad', scope: 'proyectos, BOM, alertas, importación' },
-    { n: 7, name: 'Fabricación', scope: 'CAD paramétrico, STL/3MF, impresión 3D' },
-    { n: 8, name: 'Comercialización', scope: 'planes, límites, despliegue, versión estable' },
+    {
+      n: 1,
+      name: 'Fundamentos',
+      scope: 'arquitectura, marca, design system, monorepo, CI',
+      done: true,
+    },
+    {
+      n: 2,
+      name: 'Inventario',
+      scope: 'autenticación, organizaciones, artículos, categorías',
+      done: true,
+    },
+    {
+      n: 3,
+      name: 'Almacenamiento',
+      scope: 'almacenes, ubicaciones, gabinetes, editor 2D',
+      done: true,
+    },
+    {
+      n: 4,
+      name: 'Visualización 3D',
+      scope: 'Three.js, selección, apertura de cajones',
+      done: true,
+    },
+    { n: 5, name: 'Operaciones', scope: 'movimientos, reservas, auditoría, QR', done: true },
+    { n: 6, name: 'Productividad', scope: 'proyectos, BOM, alertas, importación', done: true },
+    { n: 7, name: 'Fabricación', scope: 'CAD paramétrico, STL/3MF, impresión 3D', done: false },
+    {
+      n: 8,
+      name: 'Comercialización',
+      scope: 'planes, cobros, correos, landing, lanzamiento',
+      done: false,
+    },
   ];
 
   constructor() {

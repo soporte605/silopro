@@ -4,6 +4,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.6.0] — 2026-10-25
+
+Cierre de la Fase 6 · Productividad (contenido de `0.6.0-alpha.1` a `0.6.0-alpha.4`): proyectos con lista de materiales, lista de compras y avisos, importación desde Excel o CSV y reportes.
+
+### Cambiado
+
+- La Fase 8 (comercialización) se adelanta a la 7 (fabricación) para lanzar antes. Inicio muestra el estado de cada fase según la hoja de ruta.
+
 ## [0.6.0-alpha.4] — 2026-10-25
 
 Fase 6 · Productividad: reportes.
