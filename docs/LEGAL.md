@@ -24,4 +24,4 @@ El aviso de privacidad (`/privacidad`) y los términos y condiciones (`/terminos
 
 ## Al cambiar el funcionamiento
 
-Actualice los textos y `LEGAL.updated` si cambia: qué datos se guardan, los proveedores que los tratan (hoy Stripe, Resend y Contabo; al agregar respaldos externos, ese proveedor), las cookies o el almacenamiento del navegador, o las finalidades (por ejemplo, correos de novedades, que requerirían consentimiento y forma de negarse).
+Actualice los textos y `LEGAL.updated` si cambia: qué datos se guardan, los proveedores que los tratan (hoy Stripe, Resend, Contabo y Cloudflare R2 para respaldos), las cookies o el almacenamiento del navegador, o las finalidades (por ejemplo, correos de novedades, que requerirían consentimiento y forma de negarse).

@@ -71,6 +71,7 @@ import { LegalPage } from './legal-page';
         <li><strong>Stripe</strong>, para procesar pagos y suscripciones.</li>
         <li><strong>Resend</strong>, para enviar los correos del servicio.</li>
         <li><strong>Contabo</strong>, proveedor del servidor donde se aloja SiloPro.</li>
+        <li><strong>Cloudflare</strong>, para guardar copias de respaldo cifradas.</li>
       </ul>
       <p>
         Algunos de estos proveedores pueden tratar los datos fuera de México. Solo comunicaremos sus

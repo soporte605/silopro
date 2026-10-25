@@ -18,6 +18,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 - API `GET orgs/:orgId/billing`, `POST …/billing/checkout` y `…/billing/portal`. Migración `0014_planes`: columnas de plan y suscripción en `organizations`; las organizaciones existentes pasan a prueba con 30 días.
 - **Página comercial** (`/producto`): qué hace SiloPro, precios con pago mensual o anual, preguntas frecuentes y registro de prueba gratis. Quien entra a la raíz sin sesión llega aquí; los enlaces directos siguen llevando al acceso.
 - **Aviso de privacidad** (`/privacidad`, LFPDPPP) y **Términos y condiciones** (`/terminos`), enlazados desde el pie de la página comercial y desde el registro. Son borradores pendientes de revisión legal (ver `docs/LEGAL.md`).
+- **Respaldos fuera del servidor**: `infra/server/backup.sh` cifra y sube a Cloudflare R2 la base y las fotografías cuando existe `shared/backup.env`, verifica la subida y avisa por correo si falla.
+- **Vigilante** (`infra/server/watchdog.sh`, cada 5 minutos): reinicia la app tras 2 fallas seguidas, avisa por correo al caer y al recuperarse, y si el respaldo externo se atrasa. Cron en `infra/server/silopro.cron`.
 - «Plan y facturación» también en el menú de cuenta, para llegar desde el celular.
 
 ### Cambiado

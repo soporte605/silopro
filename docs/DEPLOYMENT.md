@@ -80,7 +80,32 @@ docker compose -p silopro -f infra/docker/compose.prod.yaml --env-file /opt/silo
 curl -s http://127.0.0.1:3200/api/health
 ```
 
-Una sola vez: copiar `infra/server/silopro.nginx.conf` a `/etc/nginx/sites-available/`, enlazarlo en `sites-enabled`, `nginx -t && systemctl reload nginx` y `certbot --nginx -d app.silopro.elikarsystems.com`. Respaldo diario con `infra/server/backup.sh` en el cron de root. Volver a la versión anterior: apuntar `current` a la release previa y repetir `up -d --build` (las migraciones solo agregan).
+Una sola vez: copiar `infra/server/silopro.nginx.conf` a `/etc/nginx/sites-available/`, enlazarlo en `sites-enabled`, `nginx -t && systemctl reload nginx` y `certbot --nginx -d app.silopro.elikarsystems.com`. Respaldo diario y vigilante: ver la sección siguiente. Volver a la versión anterior: apuntar `current` a la release previa y repetir `up -d --build` (las migraciones solo agregan).
+
+### Respaldos fuera del servidor y vigilante
+
+`infra/server/backup.sh` respalda cada noche la base (`pg_dump`) y las fotografías en `/opt/silopro/backups` (14 días). Si existe `/opt/silopro/shared/backup.env` (permisos 600), además cifra cada archivo con AES-256 y lo sube a Cloudflare R2 en `daily/AAAA/MM/`, verificando el tamaño. `infra/server/watchdog.sh` revisa cada 5 minutos la app en `127.0.0.1:3200` y desde internet: con 2 fallas seguidas reinicia la API y la web (no toca nginx, compartido con otros servicios) y avisa por correo; avisa también al recuperarse y si el respaldo en R2 lleva más de 26 horas sin completarse. Los avisos (`infra/server/notify.sh`) usan `RESEND_API_KEY` y `MAIL_FROM` de `shared/.env` y van a `ALERT_EMAIL` (por omisión soporte@elikarsystems.com).
+
+`shared/backup.env`:
+
+```
+R2_ACCOUNT_ID=<id de la cuenta de Cloudflare>
+R2_ACCESS_KEY_ID=<token de R2 limitado al bucket, lectura y escritura>
+R2_SECRET_ACCESS_KEY=<…>
+R2_BACKUP_BUCKET=silopro-backups
+BACKUP_PASSPHRASE='<frase larga; guárdela también fuera del servidor>'
+```
+
+Sin `BACKUP_PASSPHRASE` los respaldos de R2 no se pueden leer: guárdela en un gestor de contraseñas. En el bucket, una regla de ciclo de vida borra los objetos de `daily/` con más de 30 días.
+
+Instalación: `cp /opt/silopro/current/infra/server/silopro.cron /etc/cron.d/silopro` (reemplaza la línea anterior del respaldo en el cron de root). Prueba: `/opt/silopro/current/infra/server/backup.sh` y `…/notify.sh "prueba" "aviso de prueba"`.
+
+Restaurar un respaldo de R2:
+
+```bash
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in silopro-<fecha>.dump.enc -out silopro.dump   # pide la frase
+docker exec -i silopro-postgres-1 pg_restore -U postgres -d silopro --clean --if-exists < silopro.dump
+```
 
 ## Desarrollo sin Docker
 
