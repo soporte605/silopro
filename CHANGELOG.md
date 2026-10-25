@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Añadido
+
+- **CI**: el workflow «Título del PR» valida que el título de cada pull request siga Conventional Commits con los tipos de `CONTRIBUTING.md`. Si no cumple, el check falla y deja un comentario con un título sugerido (deducido de las etiquetas, p. ej. `bug` → `fix`). Usa [conventional-pr-check](https://github.com/soporte605/conventional-pr-check) v0.2.0.
+
 ## [0.6.0-alpha.3] — 2026-10-23
 
 Fase 6 · Productividad: importación de artículos.
