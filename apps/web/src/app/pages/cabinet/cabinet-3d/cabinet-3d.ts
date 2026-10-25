@@ -103,7 +103,7 @@ export class Cabinet3d {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   protected readonly status = signal<Status>('loading');
-  protected readonly failure = signal<ViewerFailure>('webgl');
+  protected readonly failure = signal<ViewerFailure>({ kind: 'webgl' });
   protected readonly hovered = signal<string | null>(null);
   /** Cajón abierto; se expone en `data-open` para pruebas. */
   protected readonly openId = signal<string | null>(null);

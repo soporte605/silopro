@@ -136,3 +136,29 @@ test('vista 3D sin WebGL: explica cómo activarlo y ofrece la cuadrícula', asyn
   await expect(alert).toContainText('Use la cuadrícula.');
   await expect(alert).toContainText('aceleración por hardware');
 });
+
+test('vista 3D con solo WebGL 1: lo explica', async ({ page, account: _ }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, id: string, ...a) {
+      return id === 'webgl2' ? null : original.call(this, id, ...a);
+    } as typeof original;
+  });
+  const me = await (await page.request.get('/api/auth/me')).json();
+  const base = `/api/orgs/${me.memberships[0].organizationId}`;
+  const wh = await (
+    await page.request.post(`${base}/locations`, {
+      headers: H,
+      data: { kind: 'warehouse', code: 'GL1', name: 'Solo WebGL 1' },
+    })
+  ).json();
+  const cab = await (
+    await page.request.post(`${base}/cabinets`, {
+      headers: H,
+      data: { parentId: wh.id, code: 'GAB-GL1', name: 'GL1', rows: 2, columns: 2 },
+    })
+  ).json();
+  await page.goto(`/gabinetes/${cab.id}`);
+  await page.getByRole('button', { name: '3D', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('solo tiene WebGL 1');
+});

@@ -13,19 +13,40 @@ import type { ViewerFailure } from './load-viewer';
     role: 'alert',
   },
   template: `
-    @if (reason() === 'load') {
-      <p>No se pudo cargar la vista 3D. Puede que haya una versión nueva de SiloPro.</p>
-      <div><button esButton size="sm" (click)="reload()">Recargar la página</button></div>
-    } @else {
-      <p>
-        Este navegador no puede mostrar la vista 3D (WebGL no disponible).
-        @if (fallback()) {
-          {{ fallback() }}
-        }
-      </p>
-      <p class="text-xs">
-        Revise que la aceleración por hardware esté activada en la configuración del navegador.
-      </p>
+    @switch (reason().kind) {
+      @case ('load') {
+        <p>No se pudo cargar la vista 3D. Puede que haya una versión nueva de SiloPro.</p>
+        <div><button esButton size="sm" (click)="reload()">Recargar la página</button></div>
+      }
+      @case ('error') {
+        <p>
+          No se pudo abrir la vista 3D.
+          @if (fallback()) {
+            {{ fallback() }}
+          }
+        </p>
+        <p class="text-xs">
+          Recargue la página; si se repite, envíe a soporte este detalle:
+          <code class="font-mono break-all">{{ reason().detail }}</code>
+        </p>
+      }
+      @default {
+        <p>
+          @if (reason().kind === 'webgl1') {
+            Este navegador solo tiene WebGL 1 y la vista 3D necesita WebGL 2.
+          } @else {
+            Este navegador no puede mostrar la vista 3D (WebGL no disponible).
+          }
+          @if (fallback()) {
+            {{ fallback() }}
+          }
+        </p>
+        <p class="text-xs">
+          Use Chrome, Edge o Firefox actualizados con la aceleración por hardware activada
+          (Configuración › Sistema). Si ya lo está, actualice el controlador de video; en
+          chrome://gpu la línea «WebGL2» debe decir «Hardware accelerated».
+        </p>
+      }
     }
   `,
 })

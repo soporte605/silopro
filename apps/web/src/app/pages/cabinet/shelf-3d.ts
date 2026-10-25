@@ -250,7 +250,7 @@ export default class Shelf3d {
 
   private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
   protected readonly status = signal<'loading' | 'ready' | 'failed'>('loading');
-  protected readonly failure = signal<ViewerFailure>('webgl');
+  protected readonly failure = signal<ViewerFailure>({ kind: 'webgl' });
   protected readonly query = signal('');
   protected readonly selected = signal<Selection | null>(null);
   protected readonly open = signal(false);
