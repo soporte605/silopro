@@ -9,6 +9,7 @@
    - `docs(arquitectura): documentar modelo de ubicaciones`
    - `test(inventario): agregar pruebas de transferencias`
    - Tipos: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `style`. Ámbitos sugeridos: `api`, `web`, `ui`, `tokens`, `dominio`, `gabinetes`, `inventario`, `stock`, `marca`, `infra`.
+   - El título del PR sigue el mismo formato: el workflow «Título del PR» lo valida y, si no cumple, comenta un título sugerido.
 3. `pnpm check` en verde antes de abrir PR.
 4. Actualizar `CHANGELOG.md` (sección «Sin publicar») y la documentación afectada.
 

@@ -1,0 +1,23 @@
+name: Título del PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  titulo:
+    name: Conventional Commits en el título
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: soporte605/conventional-pr-check@v0.2.0
+        id: titulo
+        with:
+          types: feat,fix,docs,test,refactor,perf,build,ci,chore,style
+      - name: Próximo bump SemVer
+        if: always()
+        run: |
+          echo "Bump: ${{ steps.titulo.outputs.bump }}"
