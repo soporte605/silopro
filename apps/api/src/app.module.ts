@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module.js';
 import { ImportModule } from './import/import.module.js';
 import { MembersModule } from './members/members.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 import { StockModule } from './stock/stock.module.js';
 
 @Global()
@@ -35,6 +36,7 @@ export class AppModule {
         MembersModule,
         ProjectsModule,
         ImportModule,
+        ReportsModule,
         AuditModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],

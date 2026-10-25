@@ -117,6 +117,11 @@ export const routes: Routes = [
         title: 'Lista de compras · SiloPro',
       },
       {
+        path: 'reportes',
+        loadComponent: () => import('./pages/reports/reports'),
+        title: 'Reportes · SiloPro',
+      },
+      {
         path: 'importar',
         loadComponent: () => import('./pages/import/import-items'),
         title: 'Importar artículos · SiloPro',

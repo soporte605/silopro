@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decodeQrReference, encodeQrReference, generateShortCode, qrUrl } from './qr.js';
 import { paginationQuerySchema } from './common.js';
+import { movementReportQuerySchema } from './reports.js';
 
 describe('referencias QR', () => {
   it('codifica y decodifica de forma reversible', () => {
@@ -60,5 +61,20 @@ describe('importación', () => {
     expect(guessImportField('Marca')).toBe('manufacturer');
     expect(guessImportField('Cantidad (entrada)')).toBe('quantity');
     expect(guessImportField('Columna rara')).toBeNull();
+  });
+});
+
+describe('periodo de reportes', () => {
+  it('acepta un periodo válido y rechaza zonas, órdenes y rangos inválidos', () => {
+    expect(movementReportQuerySchema.parse({ from: '2026-01-01', to: '2026-01-31' })).toEqual({
+      from: '2026-01-01',
+      to: '2026-01-31',
+      tz: 'UTC',
+    });
+    const ok = (q: object) => movementReportQuerySchema.safeParse(q).success;
+    expect(ok({ from: '2026-01-01', to: '2026-01-31', tz: 'America/Mexico_City' })).toBe(true);
+    expect(ok({ from: '2026-01-01', to: '2026-01-31', tz: 'Marte/Olimpo' })).toBe(false);
+    expect(ok({ from: '2026-02-01', to: '2026-01-31' })).toBe(false);
+    expect(ok({ from: '2024-01-01', to: '2026-01-31' })).toBe(false);
   });
 });

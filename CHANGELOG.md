@@ -4,8 +4,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.6.0-alpha.4] — 2026-10-25
+
+Fase 6 · Productividad: reportes.
+
 ### Añadido
 
+- **Reportes** (`/reportes`, en el menú y en la paleta), cada uno con **Exportar CSV**:
+  - **Valor del inventario**: existencia × costo registrado, total, por categoría y por artículo; avisa cuántos artículos con existencia no tienen costo.
+  - **Movimientos del periodo**: por artículo, entradas, salidas (incluye consumos de reservas), ajustes, neto, cantidad transferida y número de movimientos. Periodos rápidos de 7, 30 y 90 días o fechas a elegir (hasta un año), en días completos de la hora local.
+  - **Sin movimiento**: artículos con existencia que no se mueven desde hace 30, 90, 180 o 365 días, con el valor detenido.
+- API `GET reports/valuation`, `GET reports/movements`, `GET reports/stale` y sus `…/export`. Sin migraciones.
 - **CI**: el workflow «Título del PR» valida que el título de cada pull request siga Conventional Commits con los tipos de `CONTRIBUTING.md`. Si no cumple, el check falla y deja un comentario con un título sugerido (deducido de las etiquetas, p. ej. `bug` → `fix`). Usa [conventional-pr-check](https://github.com/soporte605/conventional-pr-check) v0.2.0.
 
 ## [0.6.0-alpha.3] — 2026-10-23

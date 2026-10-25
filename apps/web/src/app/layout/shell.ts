@@ -22,6 +22,7 @@ import {
   LucideHistory,
   LucideShieldCheck,
   LucideShoppingCart,
+  LucideChartColumn,
   LucideBuilding2,
   LucideCheck,
   LucideClipboardList,
@@ -65,6 +66,7 @@ import { SessionService } from '../core/session';
     LucideMapPin,
     LucideArrowLeftRight,
     LucideShoppingCart,
+    LucideChartColumn,
     LucideBookmark,
     LucideScanLine,
     LucideHistory,
@@ -330,6 +332,9 @@ import { SessionService } from '../core/session';
       <a esNavItem routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
         <svg lucideBookmark></svg> Reservas
       </a>
+      <a esNavItem routerLink="/reportes" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <svg lucideChartColumn></svg> Reportes
+      </a>
       <a
         esNavItem
         routerLink="/movimientos"
@@ -377,7 +382,7 @@ export class Shell {
   protected readonly session = inject(SessionService);
   protected readonly alerts = inject(AlertsService);
 
-  protected readonly upcoming = [{ label: 'Reportes', icon: 'bom', phase: 'F6' }];
+  protected readonly upcoming = [{ label: 'Fabricación (CAD)', icon: 'grid', phase: 'F7' }];
 
   constructor() {
     this.palette.register([
@@ -443,6 +448,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['comprar', 'pedido', 'proveedor', 'faltantes', 'stock bajo', 'mínimo'],
         run: () => this.go('/compras'),
+      },
+      {
+        id: 'nav.reports',
+        label: 'Ir a Reportes',
+        group: 'Navegación',
+        keywords: ['valor', 'valuación', 'inventario', 'periodo', 'sin movimiento', 'excel', 'csv'],
+        run: () => this.go('/reportes'),
       },
       {
         id: 'nav.import',

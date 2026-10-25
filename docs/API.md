@@ -98,6 +98,16 @@ Se calcula al consultar. Por artículo: `projectPending` es lo pendiente en proy
 | `GET shopping-list/export` | catalog.read | La misma lista en CSV UTF-8 para Excel                                                                            |
 | `GET alerts`               | catalog.read | `{ lowStock, toBuy, projectsShort }` para los avisos de inicio y del menú                                         |
 
+## Reportes · `/orgs/:orgId/reports`
+
+Se calculan al consultar. Cada uno tiene su versión CSV en `…/export` con los mismos parámetros.
+
+| Método y ruta           | Permiso      | Notas                                                                                                                                                                                                                     |
+| ----------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET reports/valuation` | catalog.read | `{ rows, byCategory, totalValue, missingCost }`: existencia en ubicaciones vigentes × costo del artículo; los artículos sin costo no suman                                                                                |
+| `GET reports/movements` | catalog.read | `from`, `to` (AAAA-MM-DD, hasta un año) y `tz` (zona IANA, por omisión `UTC`). Por artículo: `received`, `issued` (salidas y consumos), `adjusted`, `net`, `transferred` y `movements` (una transferencia cuenta una vez) |
+| `GET reports/stale`     | catalog.read | `days` (1 a 3650, por omisión 90): artículos con existencia cuyo último movimiento es más antiguo, con su valor                                                                                                           |
+
 ## Importación · `/orgs/:orgId/import`
 
 La web lee el archivo (Excel `.xlsx` o CSV con coma o punto y coma) y envía las filas con las columnas ya elegidas: `sku, name, unit, category?, internalCode?, manufacturer?, model?, description?, cost?, price?, minStock?, quantity?, location?`. La unidad se reconoce por código, símbolo o nombre; la categoría, por nombre; la ubicación, por ruta (`ALM / C1`) o por código si es único.
