@@ -20,21 +20,24 @@ Detener: `docker compose -f infra/docker/compose.yaml down` (añadir `-v` **borr
 
 ### Variables de la API
 
-| Variable           | Por defecto                                        | Descripción                                                                                                                                   |
-| ------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`             | 3000                                               | Puerto HTTP                                                                                                                                   |
-| `CORS_ORIGINS`     | `http://localhost:4200`                            | Orígenes permitidos, separados por coma                                                                                                       |
-| `DATABASE_URL`     | —                                                  | **Obligatoria.** Rol sin `SUPERUSER` ni `BYPASSRLS`                                                                                           |
-| `MIGRATE_ON_START` | false                                              | Aplica migraciones pendientes al arrancar                                                                                                     |
-| `SESSION_TTL_DAYS` | 14                                                 | Duración de la sesión                                                                                                                         |
-| `COOKIE_SECURE`    | `true` en producción                               | Ponga `false` solo si sirve por HTTP en la red local                                                                                          |
-| `NODE_ENV`         | development                                        | `production` en contenedores                                                                                                                  |
-| `UPLOADS_DIR`      | `./data/uploads`                                   | Carpeta privada de fotografías (`/data/uploads` en Docker)                                                                                    |
-| `PUBLIC_WEB_URL`   | `http://localhost:4200`                            | Dirección de la web para los enlaces de invitación                                                                                            |
-| `TRUST_PROXY_HOPS` | 1                                                  | Proxies delante de la API (2 con nginx + HTTPS en servidor)                                                                                   |
-| `RESEND_API_KEY`   | —                                                  | Clave de Resend para enviar correos (confirmación, recuperar contraseña, invitaciones). Sin ella, los correos solo se escriben en el registro |
-| `MAIL_FROM`        | `SiloPro <no-responder@silopro.elikarsystems.com>` | Remitente; su dominio debe estar verificado en Resend (registros DNS SPF y DKIM)                                                              |
-| `MAIL_OUTBOX_DIR`  | —                                                  | Solo desarrollo y e2e: guarda cada correo como JSON en esa carpeta                                                                            |
+| Variable                      | Por defecto                                        | Descripción                                                                                                                                   |
+| ----------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                        | 3000                                               | Puerto HTTP                                                                                                                                   |
+| `CORS_ORIGINS`                | `http://localhost:4200`                            | Orígenes permitidos, separados por coma                                                                                                       |
+| `DATABASE_URL`                | —                                                  | **Obligatoria.** Rol sin `SUPERUSER` ni `BYPASSRLS`                                                                                           |
+| `MIGRATE_ON_START`            | false                                              | Aplica migraciones pendientes al arrancar                                                                                                     |
+| `SESSION_TTL_DAYS`            | 14                                                 | Duración de la sesión                                                                                                                         |
+| `COOKIE_SECURE`               | `true` en producción                               | Ponga `false` solo si sirve por HTTP en la red local                                                                                          |
+| `NODE_ENV`                    | development                                        | `production` en contenedores                                                                                                                  |
+| `UPLOADS_DIR`                 | `./data/uploads`                                   | Carpeta privada de fotografías (`/data/uploads` en Docker)                                                                                    |
+| `PUBLIC_WEB_URL`              | `http://localhost:4200`                            | Dirección de la web para los enlaces de invitación                                                                                            |
+| `TRUST_PROXY_HOPS`            | 1                                                  | Proxies delante de la API (2 con nginx + HTTPS en servidor)                                                                                   |
+| `RESEND_API_KEY`              | —                                                  | Clave de Resend para enviar correos (confirmación, recuperar contraseña, invitaciones). Sin ella, los correos solo se escriben en el registro |
+| `MAIL_FROM`                   | `SiloPro <no-responder@silopro.elikarsystems.com>` | Remitente; su dominio debe estar verificado en Resend (registros DNS SPF y DKIM)                                                              |
+| `STRIPE_SECRET_KEY`           | —                                                  | Clave secreta de Stripe (`sk_test_…` mientras no se aprueben cobros reales). Sin ella, «Plan y facturación» ofrece contratar por correo       |
+| `STRIPE_WEBHOOK_SECRET`       | —                                                  | Secreto de firma del webhook (`whsec_…`); lo escribe `stripe-setup.mjs`                                                                       |
+| `STRIPE_PORTAL_CONFIGURATION` | —                                                  | Configuración propia del portal de cliente (`bpc_…`), para no usar la predeterminada de una cuenta compartida; la escribe `stripe-setup.mjs`  |
+| `MAIL_OUTBOX_DIR`             | —                                                  | Solo desarrollo y e2e: guarda cada correo como JSON en esa carpeta                                                                            |
 
 El contenedor de PostgreSQL crea al iniciarse por primera vez el rol de aplicación `silopro` sin privilegios especiales (`infra/docker/postgres-init.sh`); el superusuario `postgres` solo se usa para administración.
 
@@ -58,6 +61,13 @@ POSTGRES_PASSWORD=<aleatoria>
 PUBLIC_WEB_URL=https://app.silopro.elikarsystems.com
 SILOPRO_WEB_PORT=3200
 RESEND_API_KEY=<clave de Resend>
+STRIPE_SECRET_KEY=<sk_test_…>
+```
+
+Stripe, una vez por cuenta y modo (idempotente; crea productos `silopro_basic` y `silopro_pro`, precios en MXN con IVA aparte y claves `silopro_basic_month`, `silopro_basic_year`, `silopro_pro_month`, `silopro_pro_year`, el webhook a `https://app.silopro.elikarsystems.com/api/billing/webhook` y la configuración del portal, y agrega `STRIPE_WEBHOOK_SECRET` y `STRIPE_PORTAL_CONFIGURATION` al archivo):
+
+```bash
+cd apps/api && node scripts/stripe-setup.mjs /opt/silopro/shared/.env   # --live solo con cobros reales aprobados
 ```
 
 Primera instalación y cada versión nueva:

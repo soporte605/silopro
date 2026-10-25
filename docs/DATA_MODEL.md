@@ -39,6 +39,10 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                └─ audit_log (solo inserción, trigger)                         ✅
 ```
 
+### Plan y suscripción (migración `0014`)
+
+`organizations` guarda `plan` (`trial`, `basic`, `pro`, `enterprise`), `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`, `subscription_status` (el de Stripe), `billing_interval` y `current_period_end`. Solo el webhook de Stripe cambia el plan pagado. El estado efectivo (límites, solo lectura, días de prueba) lo calcula `planState` de `@silopro/domain/plans.ts`; los límites se verifican en la misma transacción que la escritura, con la fila de la organización bloqueada.
+
 ### Ubicaciones (`@silopro/domain/locations.ts`, implementado)
 
 Árbol de profundidad variable (máx. 12). Tipos: `warehouse`, `zone`, `room`, `shelving`, `shelf`, `cabinet`, `drawer`, `compartment`, `box`, `bin`, `other`. La raíz siempre es un almacén. `ALLOWED_CHILDREN` define qué tipos admite cada padre (un cajón contiene compartimentos, cajas o contenedores; una estantería contiene estantes; etc.), lo que permite tanto gabinetes como estanterías y cajas sueltas. Se rechazan ciclos al mover nodos.

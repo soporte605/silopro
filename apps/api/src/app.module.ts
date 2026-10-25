@@ -2,6 +2,7 @@ import { type DynamicModule, Global, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BillingModule } from './billing/billing.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { CsrfGuard } from './common/csrf.guard.js';
 import { ENV, type Env } from './config/env.js';
@@ -39,6 +40,7 @@ export class AppModule {
         ProjectsModule,
         ImportModule,
         ReportsModule,
+        BillingModule,
         AuditModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],

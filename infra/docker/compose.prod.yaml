@@ -43,6 +43,10 @@ services:
       # Correos (Resend). Sin clave, los correos solo se escriben en el registro.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-SiloPro <no-responder@silopro.elikarsystems.com>}
+      # Cobros (Stripe). Sin clave, «Plan y facturación» no ofrece pagar en línea.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PORTAL_CONFIGURATION: ${STRIPE_PORTAL_CONFIGURATION:-}
     volumes:
       - uploads:/data/uploads
     depends_on:

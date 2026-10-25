@@ -13,7 +13,7 @@ async function main(): Promise<void> {
     await runMigrations(env.DATABASE_URL);
     Logger.log('Migraciones aplicadas', 'Bootstrap');
   }
-  const app = await NestFactory.create(AppModule.forRoot(env));
+  const app = await NestFactory.create(AppModule.forRoot(env), { rawBody: true });
   configureApp(app, env);
   await app.get(DbService).assertRlsEnforced();
   await app.listen(env.PORT);

@@ -20,6 +20,7 @@ import { v7 as uuidv7 } from 'uuid';
 import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound } from '../common/http.js';
 import { ENV, type Env } from '../config/env.js';
+import { assertWithinPlan } from '../billing/plan-limits.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { itemPhotos, items } from '../db/schema.js';
 
@@ -84,6 +85,7 @@ export class PhotosService {
       return await this.dbs.tenant(ctx, async (tx) => {
         // Bloquea el artículo para que dos subidas simultáneas no superen el límite.
         await this.assertItem(tx, itemId, true);
+        await assertWithinPlan(tx, ctx.organizationId, 'photoBytes', encoded.full.info.size);
         const [{ n } = { n: 0 }] = await tx
           .select({ n: count() })
           .from(itemPhotos)

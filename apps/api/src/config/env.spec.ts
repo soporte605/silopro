@@ -12,6 +12,12 @@ describe('loadEnv', () => {
     expect(env.MIGRATE_ON_START).toBe(false);
   });
 
+  it('trata las variables vacías como no definidas', () => {
+    const env = loadEnv({ DATABASE_URL: DB, RESEND_API_KEY: '', STRIPE_SECRET_KEY: '' });
+    expect(env.RESEND_API_KEY).toBeUndefined();
+    expect(env.STRIPE_SECRET_KEY).toBeUndefined();
+  });
+
   it('exige DATABASE_URL', () => {
     expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
   });

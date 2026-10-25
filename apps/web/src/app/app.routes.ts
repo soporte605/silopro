@@ -133,6 +133,11 @@ export const routes: Routes = [
         title: 'Lista de compras · SiloPro',
       },
       {
+        path: 'plan',
+        loadComponent: () => import('./pages/billing/billing'),
+        title: 'Plan y facturación · SiloPro',
+      },
+      {
         path: 'reportes',
         loadComponent: () => import('./pages/reports/reports'),
         title: 'Reportes · SiloPro',

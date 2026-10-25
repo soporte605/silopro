@@ -127,10 +127,19 @@ export const sessions = pgTable(
 );
 
 // ── Organizaciones ─────────────────────────────────────────────────────────
+/** Organización: el plan y la suscripción viven aquí (ver `@silopro/domain/plans`). */
 export const organizations = pgTable('organizations', {
   id: id(),
   name: text('name').notNull(),
-  plan: text('plan').notNull().default('free'),
+  /** `trial`, `basic`, `pro` o `enterprise`. */
+  plan: text('plan').notNull().default('trial'),
+  trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  /** Estado de la suscripción en Stripe (`active`, `past_due`, `canceled`…). */
+  subscriptionStatus: text('subscription_status'),
+  billingInterval: text('billing_interval'),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
   ...timestamps,
 });
 

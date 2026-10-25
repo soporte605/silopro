@@ -21,6 +21,7 @@ import { hashToken } from '../auth/auth.service.js';
 import type { AuthUser, OrgContext } from '../auth/request-context.js';
 import { invalid, notFound } from '../common/http.js';
 import { ENV, type Env } from '../config/env.js';
+import { assertWithinPlan } from '../billing/plan-limits.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { invitations, memberships, organizations, users } from '../db/schema.js';
 import { MailService } from '../mail/mail.service.js';
@@ -146,6 +147,7 @@ export class MembersService {
         });
       }
 
+      await assertWithinPlan(tx, ctx.organizationId, 'members');
       const token = randomBytes(32).toString('base64url');
       const [row] = await tx
         .insert(invitations)

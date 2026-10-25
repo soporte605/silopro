@@ -144,6 +144,18 @@ Cada artículo y ubicación tiene un código corto aleatorio (`qrCode`, base32 C
 | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
 | `GET qr/:type/:code` | catalog.read | `type` = `item` o `location`; devuelve `{ type, id, name, label, cabinetId, locationKind }`; `404` si no existe aquí |
 
+## Plan y facturación · `/orgs/:orgId/billing`
+
+Planes y límites en `@silopro/domain/plans.ts`. Al exceder un límite, la escritura responde `402 PLAN_LIMIT` con `details: { kind, limit, used }` (`kind`: `users` cuenta miembros e invitaciones pendientes, `items` artículos no archivados, `storage` bytes de fotos). Si la prueba terminó o la suscripción no está activa (`active`, `trialing`, `past_due`), toda escritura de la organización responde `402 READ_ONLY`, salvo contratar.
+
+| Método y ruta   | Permiso             | Notas                                                                                                                                                                       |
+| --------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET billing`   | catalog.read        | `BillingSummary`: plan, `readOnly`, prueba, estado de la suscripción, periodo, límites, uso y `checkoutAvailable`                                                           |
+| `POST checkout` | organization.manage | `plan` (`basic`/`pro`), `interval` (`month`/`year`) → `{ url }` de Stripe Checkout; `400 ALREADY_SUBSCRIBED` o `PRICE_NOT_CONFIGURED`; `503 BILLING_UNAVAILABLE` sin Stripe |
+| `POST portal`   | organization.manage | `{ url }` del portal de cliente de Stripe; `400 NO_SUBSCRIPTION` si aún no hay cliente                                                                                      |
+
+`POST /billing/webhook` (sin sesión ni cabecera CSRF) recibe los eventos `customer.subscription.created|updated|deleted` firmados con `STRIPE_WEBHOOK_SECRET`; `400` si la firma no es válida.
+
 ## Miembros e invitaciones · `/orgs/:orgId/…`
 
 | Método y ruta            | Permiso        | Notas                                                                                            |

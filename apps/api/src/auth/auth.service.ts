@@ -19,6 +19,7 @@ import { resetPasswordMail, verifyEmailMail } from '../mail/templates.js';
 import { isUniqueViolation } from '../common/pg-errors.js';
 import { dummyHash, hashPassword, verifyPassword } from './password.js';
 import { RateLimiter } from './rate-limiter.js';
+import { TRIAL_DAYS } from '@silopro/domain';
 import type { AuthUser } from './request-context.js';
 
 /** Unidades con las que nace cada organización. */
@@ -89,7 +90,12 @@ export class AuthService {
     await tx.execute(
       sql`select set_config('app.user_id', ${userId}, true), set_config('app.organization_id', ${orgId}, true)`,
     );
-    await tx.insert(organizations).values({ id: orgId, name });
+    await tx.insert(organizations).values({
+      id: orgId,
+      name,
+      plan: 'trial',
+      trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 86_400_000),
+    });
     await tx.insert(memberships).values({ organizationId: orgId, userId, role: 'owner' });
     await tx.insert(units).values(DEFAULT_UNITS.map((u) => ({ ...u, organizationId: orgId })));
     return orgId;

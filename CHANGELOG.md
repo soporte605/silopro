@@ -11,6 +11,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 - Las **invitaciones** llegan también por correo con el enlace.
 - API `POST auth/verify-email`, `auth/verify-email/resend`, `auth/password/forgot` y `auth/password/reset`; `Me.user.emailVerified`. Migración `0013_correo` (`users.email_verified_at`, tabla `auth_tokens`).
 - Variables `RESEND_API_KEY` y `MAIL_FROM`; sin clave los correos se escriben en el registro.
+- **Planes y límites**: cada organización nueva empieza con **14 días de prueba gratis** con los límites de Profesional, sin tarjeta. Básico ($299 MXN/mes o $2,990/año + IVA): 3 usuarios, 1,000 artículos, 2 GB de fotos. Profesional ($699/mes o $6,990/año + IVA): 10 usuarios, 10,000 artículos, 20 GB. Empresa: a la medida. Al pasar el límite, crear artículos, importar, subir fotos o invitar responde `402 PLAN_LIMIT` con un mensaje claro.
+- Al terminar la prueba o si la suscripción deja de estar activa, la organización queda **en solo lectura** (`402 READ_ONLY` al escribir); no se borra nada. Un aviso arriba lo indica y otro avisa cuando quedan 5 días o menos de prueba.
+- Pantalla **Plan y facturación** (`/plan`, en la barra lateral, el menú de cuenta y la paleta): plan actual, uso contra límites y planes con precio mensual o anual.
+- **Cobro con Stripe (modo prueba)**: «Elegir plan» abre Stripe Checkout y «Administrar suscripción» el portal de cliente; el webhook `POST /api/billing/webhook` (firmado) actualiza plan, estado y periodo. Sin clave de Stripe la pantalla ofrece contratar por correo. Script `apps/api/scripts/stripe-setup.mjs` crea productos, precios, webhook y configuración del portal. Variables `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y `STRIPE_PORTAL_CONFIGURATION`.
+- API `GET orgs/:orgId/billing`, `POST …/billing/checkout` y `…/billing/portal`. Migración `0014_planes`: columnas de plan y suscripción en `organizations`; las organizaciones existentes pasan a prueba con 30 días.
+
+### Cambiado
+
+- Las variables de entorno vacías se tratan como no definidas.
 
 ## [0.6.0] — 2026-10-25
 

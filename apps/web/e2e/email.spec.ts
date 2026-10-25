@@ -44,6 +44,7 @@ test('recupera la contraseña desde el inicio de sesión', async ({ page, accoun
   await page.context().clearCookies();
   await page.goto('/acceso');
   await page.getByRole('link', { name: '¿Olvidaste tu contraseña?' }).click();
+  await expect(page.getByRole('heading', { name: 'Recuperar contraseña' })).toBeVisible();
   await page.getByLabel('Correo electrónico').fill(account.email);
   await page.getByRole('button', { name: 'Enviar enlace' }).click();
   await expect(page.getByText('en unos minutos llegará un correo')).toBeVisible({
@@ -55,6 +56,7 @@ test('recupera la contraseña desde el inicio de sesión', async ({ page, accoun
   await page.getByRole('button', { name: 'Guardar contraseña' }).click();
   await expect(page.getByText('tu contraseña cambió')).toBeVisible();
   await page.getByRole('link', { name: 'Iniciar sesión' }).click();
+  await expect(page).toHaveURL(/\/acceso/);
   await page.getByLabel('Correo electrónico').fill(account.email);
   await page.getByLabel('Contraseña').fill('nueva-clave-segura-9');
   await page.getByRole('button', { name: 'Entrar' }).click();
