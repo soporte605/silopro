@@ -86,4 +86,4 @@ Servicio CAD (CadQuery), modelos paramétricos de cajones, gabinetes, separadore
 
 Planes y límites, administración comercial, proveedor de pagos aprobado, despliegue en nube, endurecimiento de seguridad, Tauri (escritorio) y estrategia de sincronización implementada según el diseño documentado.
 
-**Para el lanzamiento:** correos transaccionales con Resend (confirmar correo, recuperar contraseña, invitaciones), planes con límites que la app hace cumplir, suscripciones con Stripe (modo de prueba hasta aprobar precios), aviso de privacidad (LFPDPPP) y términos de uso, landing page con precios y prueba gratis, respaldos fuera del servidor y monitoreo. Tauri y la sincronización sin conexión quedan para después de `v1.0.0`.
+**Para el lanzamiento (✅ en `v0.7.0`):** correos transaccionales con Resend (confirmar correo, recuperar contraseña, invitaciones), planes con límites que la app hace cumplir, suscripciones con Stripe (modo de prueba hasta aprobar precios), aviso de privacidad (LFPDPPP) y términos de uso, landing page con precios y prueba gratis, respaldos fuera del servidor y monitoreo. Tauri y la sincronización sin conexión quedan para después de `v1.0.0`.
