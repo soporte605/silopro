@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+## [0.7.0] — 2026-10-26
+
+Fase 8 · Comercialización: lo necesario para el lanzamiento (correo, planes con Stripe en modo prueba, página comercial, avisos legales, respaldos externos y vigilante).
+
 ### Añadido
 
 - **Correos con Resend**: al registrarse llega un enlace para **confirmar el correo** (vence en 24 h); mientras no se confirme, un aviso arriba permite **reenviarlo**.
