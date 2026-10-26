@@ -28,7 +28,7 @@ test('asistente: pregunta, responde con el cajón y abre el estante en 3D', asyn
       answer: 'Hay 12 pza de ESP32 DevKit en el gabinete GAB-B, cajón A2.',
       hits: [
         {
-          itemId: '00000000-0000-4000-8000-000000000001',
+          itemId: '01900000-0000-7000-8000-000000000001',
           sku: 'ESP32-WROOM',
           name: 'ESP32 DevKit',
           manufacturer: null,
@@ -38,13 +38,13 @@ test('asistente: pregunta, responde con el cajón y abre el estante en 3D', asyn
           onHand: 12,
           places: [
             {
-              locationId: '00000000-0000-4000-8000-000000000002',
+              locationId: '01900000-0000-7000-8000-000000000002',
               path: 'ALM-1 / GAB-B / A2',
               code: 'A2',
               onHand: 12,
-              cabinetId: '00000000-0000-4000-8000-000000000003',
+              cabinetId: '01900000-0000-7000-8000-000000000003',
               cabinetCode: 'GAB-B',
-              shelfId: '00000000-0000-4000-8000-000000000004',
+              shelfId: '01900000-0000-7000-8000-000000000004',
             },
           ],
         },
@@ -76,7 +76,7 @@ test('asistente: pregunta, responde con el cajón y abre el estante en 3D', asyn
 
   await chat.getByRole('link', { name: 'Ver en 3D' }).first().click();
   await expect(page).toHaveURL(
-    /\/gabinetes\/estante\/00000000-0000-4000-8000-000000000004\?resaltar=00000000-0000-4000-8000-000000000002&buscar=ESP32-WROOM/,
+    /\/gabinetes\/estante\/01900000-0000-7000-8000-000000000004\?resaltar=01900000-0000-7000-8000-000000000002&buscar=ESP32-WROOM/,
   );
 });
 
