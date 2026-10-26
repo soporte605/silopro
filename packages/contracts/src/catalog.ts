@@ -101,6 +101,14 @@ export const itemInputSchema = z.object({
   unitId: z.string().uuid(),
   manufacturer: optionalText(120),
   model: optionalText(120),
+  /** Nombres alternos para encontrarlo («placa wifi», «esp»); sin repetidos ni vacíos. */
+  aliases: z
+    .array(text(60))
+    .max(20)
+    .default([])
+    .transform((list) => [
+      ...new Map(list.filter(Boolean).map((a) => [a.toLowerCase(), a])).values(),
+    ]),
   cost: money,
   price: money,
   minStock: quantity.nullish().transform((v) => v ?? null),
@@ -124,6 +132,7 @@ export interface Item {
   unitSymbol: string;
   manufacturer: string | null;
   model: string | null;
+  aliases: string[];
   cost: number | null;
   price: number | null;
   minStock: number | null;

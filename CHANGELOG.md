@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Añadido
+
+- **¿Dónde está?** (`/donde`, en la barra lateral, la paleta y con la tecla **/** desde cualquier pantalla): se escribe un artículo, SKU, fabricante o alias y responde en qué cajones hay existencias, de más a menos, con su ruta. Tolera mayúsculas, acentos, guiones y espacios («esp 32» encuentra «ESP32-WROOM»). Enter lleva al primer cajón. **Pantalla completa** para dejarla en una tablet del almacén. Es la primera etapa del asistente de almacén (después vienen el chat con IA y el dispositivo con luces y voz).
+- «Ver en 3D» abre el estante con el cajón **seleccionado y abierto**: la cámara viaja hasta él, **destella** unos segundos y el resto del estante se atenúa salvo los cajones con el mismo artículo (`/gabinetes/estante/:id?resaltar=<ubicación>&buscar=<texto>`).
+- Campo **«También se le dice»** en la ficha del artículo (alias separados por comas, hasta 20) para encontrarlo por otros nombres. API `GET /orgs/:orgId/locate?q=`; `Item.aliases` y búsqueda de artículos por alias. Migración `0015_alias_articulos` (`items.aliases`).
+
 ### Cambiado
 
 - La página comercial tiene su propio dominio, **silopro.elikarsystems.com** (como FincaPro), y la app queda en app.silopro.elikarsystems.com. En el dominio comercial solo se ven la landing y los avisos legales; «Iniciar sesión», «Prueba gratis» y cualquier otra ruta abren la app. En la app, la raíz sin sesión lleva al acceso y el logotipo de las pantallas de acceso a la página comercial. En la red local todo sigue en un solo origen (`/producto`).

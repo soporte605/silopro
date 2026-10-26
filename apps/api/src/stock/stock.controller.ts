@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import {
   type JournalMovement,
+  locateQuerySchema,
   locationInputSchema,
   locationUpdateSchema,
   movementInputSchema,
@@ -28,6 +29,7 @@ import { Org, OrgGuard, RequirePermission, SessionGuard } from '../auth/guards.j
 import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound } from '../common/http.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { LocateService } from './locate.service.js';
 import { LocationsService } from './locations.service.js';
 import { MovementsService } from './movements.service.js';
 import { QrService } from './qr.service.js';
@@ -81,7 +83,17 @@ export class StockController {
     @Inject(LocationsService) private readonly locationsSvc: LocationsService,
     @Inject(MovementsService) private readonly movementsSvc: MovementsService,
     @Inject(QrService) private readonly qrSvc: QrService,
+    @Inject(LocateService) private readonly locateSvc: LocateService,
   ) {}
+
+  /** «¿Dónde está?»: artículos que coinciden y los cajones donde hay existencias. */
+  @Get('locate')
+  locate(
+    @Org() ctx: OrgContext,
+    @Query(new ZodValidationPipe(locateQuerySchema)) q: z.output<typeof locateQuerySchema>,
+  ) {
+    return this.locateSvc.locate(ctx, q);
+  }
 
   @Get('locations')
   listLocations(@Org() ctx: OrgContext) {

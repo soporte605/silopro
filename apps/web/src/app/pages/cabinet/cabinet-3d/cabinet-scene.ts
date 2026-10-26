@@ -34,11 +34,14 @@ export interface ScenePalette {
 export const MAX_LABELS = 400;
 /** Velocidad de apertura: fracción del recorrido por segundo. */
 const OPEN_SPEED = 3.5;
+/** Destellos por segundo del cajón localizado. */
+const FLASH_RATE = 1.5;
 
 const UNIT_BOX = new BoxGeometry(1, 1, 1);
 const tmp = new Matrix4();
 const tmpColor = new Color();
 const MUTED = new Color('#9ca3af');
+const FLASH = new Color();
 
 const boxMatrix = (b: SceneBox, dz = 0): Matrix4 =>
   tmp.makeScale(b.width, b.height, b.depth).setPosition(b.x, b.y, b.z + dz);
@@ -65,6 +68,8 @@ export class CabinetScene {
   private states: ReadonlyMap<string, CompartmentState> = new Map();
   private matches: ReadonlySet<string> = new Set();
   private selected: string | null = null;
+  /** Cajón que destella («¿dónde está?») y segundos que le quedan. */
+  private flashing: { index: number; left: number; elapsed: number } | null = null;
 
   constructor(
     readonly model: CabinetSceneModel,
@@ -194,6 +199,18 @@ export class CabinetScene {
     this.target[i] = this.target[i] ? 0 : 1;
   }
 
+  /** Hace destellar un cajón unos segundos para encontrarlo de un vistazo. */
+  flash(id: string, seconds = 4): void {
+    const index = this.indexById.get(id);
+    this.flashing = index === undefined ? null : { index, left: seconds, elapsed: 0 };
+    this.updateColors();
+  }
+
+  /** ¿Sigue destellando algún cajón? */
+  isFlashing(): boolean {
+    return this.flashing !== null;
+  }
+
   isOpen(id: string): boolean {
     const i = this.indexById.get(id);
     return i !== undefined && this.target[i] === 1;
@@ -202,6 +219,13 @@ export class CabinetScene {
   /** Avanza la animación; devuelve `true` mientras algún cajón siga moviéndose. */
   step(dt: number): boolean {
     let moving = false;
+    if (this.flashing) {
+      this.flashing.left -= dt;
+      this.flashing.elapsed += dt;
+      if (this.flashing.left <= 0) this.flashing = null;
+      else moving = true;
+      this.updateColors();
+    }
     for (let i = 0; i < this.open.length; i++) {
       const cur = this.open[i]!;
       const to = this.target[i]!;
@@ -273,6 +297,10 @@ export class CabinetScene {
       const state = this.states.get(d.id) ?? 'empty';
       tmpColor.set(this.palette[state]);
       if (filtering && !this.matches.has(d.id)) tmpColor.lerp(MUTED, 0.75);
+      if (this.flashing?.index === i) {
+        const wave = 0.5 - 0.5 * Math.cos(this.flashing.elapsed * FLASH_RATE * 2 * Math.PI);
+        tmpColor.lerp(FLASH.set(this.palette.selection), wave * 0.85);
+      }
       this.bodies.setColorAt(i, tmpColor);
     });
     if (this.bodies.instanceColor) this.bodies.instanceColor.needsUpdate = true;
