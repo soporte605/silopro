@@ -80,6 +80,8 @@ docker compose -p silopro -f infra/docker/compose.prod.yaml --env-file /opt/silo
 curl -s http://127.0.0.1:3200/api/health
 ```
 
+Página comercial en `silopro.elikarsystems.com` (y `www.`): registro DNS A hacia el servidor, copiar `infra/server/silopro-landing.nginx.conf` a `/etc/nginx/sites-available/silopro.elikarsystems.com`, enlazarlo, `nginx -t && systemctl reload nginx` y `certbot --nginx -d silopro.elikarsystems.com -d www.silopro.elikarsystems.com`. Usa el mismo contenedor web; la web detecta el dominio.
+
 Una sola vez: copiar `infra/server/silopro.nginx.conf` a `/etc/nginx/sites-available/`, enlazarlo en `sites-enabled`, `nginx -t && systemctl reload nginx` y `certbot --nginx -d app.silopro.elikarsystems.com`. Respaldo diario y vigilante: ver la sección siguiente. Volver a la versión anterior: apuntar `current` a la release previa y repetir `up -d --build` (las migraciones solo agregan).
 
 ### Respaldos fuera del servidor y vigilante

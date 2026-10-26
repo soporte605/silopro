@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Cambiado
+
+- La página comercial tiene su propio dominio, **silopro.elikarsystems.com** (como FincaPro), y la app queda en app.silopro.elikarsystems.com. En el dominio comercial solo se ven la landing y los avisos legales; «Iniciar sesión», «Prueba gratis» y cualquier otra ruta abren la app. En la app, la raíz sin sesión lleva al acceso y el logotipo de las pantallas de acceso a la página comercial. En la red local todo sigue en un solo origen (`/producto`).
+
 ## [0.7.0] — 2026-10-26
 
 Fase 8 · Comercialización: lo necesario para el lanzamiento (correo, planes con Stripe en modo prueba, página comercial, avisos legales, respaldos externos y vigilante).

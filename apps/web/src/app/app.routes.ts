@@ -1,5 +1,5 @@
 import type { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards';
+import { authGuard, guestGuard, toAppGuard } from './core/guards';
 import { Shell } from './layout/shell';
 
 export const routes: Routes = [
@@ -185,4 +185,23 @@ export const routes: Routes = [
     ],
   },
   { path: '**', redirectTo: '' },
+];
+
+const landing = () => import('./pages/public/landing');
+
+/** Rutas del dominio de la página comercial; lo demás se abre en la app. */
+export const landingRoutes: Routes = [
+  { path: '', loadComponent: landing, title: 'SiloPro · Inventario con ubicación física' },
+  { path: 'producto', loadComponent: landing, title: 'SiloPro · Inventario con ubicación física' },
+  {
+    path: 'privacidad',
+    loadComponent: () => import('./pages/public/privacy'),
+    title: 'Aviso de privacidad · SiloPro',
+  },
+  {
+    path: 'terminos',
+    loadComponent: () => import('./pages/public/terms'),
+    title: 'Términos y condiciones · SiloPro',
+  },
+  { path: '**', canActivate: [toAppGuard], children: [] },
 ];
