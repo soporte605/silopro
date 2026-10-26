@@ -80,4 +80,15 @@ test('flujo de inventario: ubicación, categoría, artículo y movimientos', asy
   await expect(page.getByRole('link', { name: 'R-10K' })).toBeVisible();
   await page.getByRole('searchbox', { name: 'Buscar artículos' }).fill('no-existe');
   await expect(page.getByText('Sin resultados')).toBeVisible();
+
+  // El inicio resume el inventario y muestra la actividad reciente
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Primeros pasos' })).toBeHidden();
+  const activity = page.getByRole('region', { name: 'Actividad reciente' });
+  await expect(activity.getByRole('listitem')).toHaveCount(2);
+  await expect(activity.getByRole('listitem').first()).toContainText('-35');
+  await expect(activity.getByRole('listitem').first()).toContainText('Salida');
+  await expect(
+    page.getByRole('region', { name: 'Avisos' }).getByRole('link', { name: /stock bajo/ }),
+  ).toContainText('1');
 });
