@@ -23,6 +23,7 @@ import {
   LucideShieldCheck,
   LucideShoppingCart,
   LucideChartColumn,
+  LucideCreditCard,
   LucideBuilding2,
   LucideCheck,
   LucideClipboardList,
@@ -41,12 +42,16 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { ROLE_LABELS } from '@silopro/domain';
+import { PlanBanner } from './plan-banner';
+import { VerifyBanner } from './verify-banner';
 import { AlertsService } from '../core/alerts';
 import { SessionService } from '../core/session';
 
 @Component({
   selector: 'sp-shell',
   imports: [
+    PlanBanner,
+    VerifyBanner,
     RouterOutlet,
     NgTemplateOutlet,
     Logo,
@@ -67,6 +72,7 @@ import { SessionService } from '../core/session';
     LucideArrowLeftRight,
     LucideShoppingCart,
     LucideChartColumn,
+    LucideCreditCard,
     LucideBookmark,
     LucideScanLine,
     LucideHistory,
@@ -164,6 +170,9 @@ import { SessionService } from '../core/session';
             </span>
           </span>
         </button>
+        <a esNavItem routerLink="/plan" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+          <svg lucideCreditCard></svg> Plan y facturación
+        </a>
         <a
           esNavItem
           routerLink="/sistema/componentes"
@@ -227,6 +236,8 @@ import { SessionService } from '../core/session';
       >
         <ng-container *ngTemplateOutlet="navLinks" />
       </nav>
+      <sp-verify-banner />
+      <sp-plan-banner />
       <main id="contenido" class="min-h-0 flex-1 overflow-auto" tabindex="-1">
         @if (session.orgId()) {
           <router-outlet />
@@ -368,6 +379,9 @@ import { SessionService } from '../core/session';
           </button>
         }
         <div esMenuSeparator></div>
+        <button esMenuItem (triggered)="go('/plan')">
+          <svg lucideCreditCard></svg> Plan y facturación
+        </button>
         <p class="truncate px-2 py-1 text-xs text-fg-muted">{{ session.me()?.user?.email }}</p>
         <button esMenuItem (triggered)="logout()"><svg lucideLogOut></svg> Cerrar sesión</button>
       </div>
@@ -448,6 +462,13 @@ export class Shell {
         group: 'Navegación',
         keywords: ['comprar', 'pedido', 'proveedor', 'faltantes', 'stock bajo', 'mínimo'],
         run: () => this.go('/compras'),
+      },
+      {
+        id: 'nav.billing',
+        label: 'Ir a Plan y facturación',
+        group: 'Navegación',
+        keywords: ['suscripción', 'pagar', 'precio', 'stripe', 'factura', 'prueba'],
+        run: () => this.go('/plan'),
       },
       {
         id: 'nav.reports',
@@ -558,7 +579,7 @@ export class Shell {
     }
   }
 
-  private go(url: string): void {
+  protected go(url: string): void {
     void this.router.navigateByUrl(url);
   }
 }

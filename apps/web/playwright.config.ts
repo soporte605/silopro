@@ -55,6 +55,7 @@ export default defineConfig({
         MIGRATE_ON_START: 'true',
         CORS_ORIGINS: 'http://localhost:4300',
         UPLOADS_DIR: 'test-results/uploads',
+        MAIL_OUTBOX_DIR: '.playwright/correos',
         PUBLIC_WEB_URL: 'http://localhost:4300',
       },
     },

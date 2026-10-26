@@ -31,6 +31,18 @@ const envSchema = z.object({
    * 2 si además hay un nginx en el servidor que termina HTTPS.
    */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+  /** Clave de Resend para enviar correos. Sin ella, los correos se escriben en el registro. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Stripe (cobros). Sin clave, «Plan y facturación» no ofrece pagar en línea. */
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
+  /** Secreto del endpoint de webhooks (`whsec_…`). */
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
+  /** Configuración del portal propia de SiloPro (`bpc_…`, la crea `scripts/stripe-setup.mjs`). */
+  STRIPE_PORTAL_CONFIGURATION: z.string().startsWith('bpc_').optional(),
+  /** Sin Resend, además del registro, guarda cada correo como JSON aquí (desarrollo y e2e). */
+  MAIL_OUTBOX_DIR: z.string().min(1).optional(),
+  /** Remitente; el dominio debe estar verificado en Resend. */
+  MAIL_FROM: z.string().min(3).default('SiloPro <no-responder@silopro.elikarsystems.com>'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -41,7 +53,9 @@ export type Env = z.infer<typeof envSchema>;
  * Los valores nunca se imprimen, solo los nombres de las variables inválidas.
  */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = envSchema.safeParse(source);
+  // Una variable vacía (p. ej. `STRIPE_SECRET_KEY=` en compose) cuenta como no definida.
+  const defined = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== ''));
+  const parsed = envSchema.safeParse(defined);
   if (!parsed.success) {
     const fields = parsed.error.issues.map((i) => i.path.join('.')).join(', ');
     throw new Error(`Configuración inválida en: ${fields}`);

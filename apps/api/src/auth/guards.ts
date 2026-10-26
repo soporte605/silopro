@@ -2,6 +2,8 @@ import {
   type CanActivate,
   type ExecutionContext,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -10,10 +12,10 @@ import {
   createParamDecorator,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { can, type Permission, type Role } from '@silopro/domain';
+import { can, type Permission, planState, type Role } from '@silopro/domain';
 import { and, eq } from 'drizzle-orm';
 import { DbService } from '../db/db.service.js';
-import { memberships } from '../db/schema.js';
+import { memberships, organizations } from '../db/schema.js';
 import { AuthService } from './auth.service.js';
 import {
   type AppRequest,
@@ -39,6 +41,10 @@ export class SessionGuard implements CanActivate {
     return true;
   }
 }
+
+export const ALLOW_READ_ONLY_KEY = 'allowReadOnly';
+/** El manejador funciona aunque la organización esté en solo lectura (p. ej. pagar). */
+export const AllowReadOnly = () => SetMetadata(ALLOW_READ_ONLY_KEY, true);
 
 export const PERMISSION_KEY = 'permission';
 /** Permiso requerido por el manejador (ver `@silopro/domain/permissions`). */
@@ -70,8 +76,14 @@ export class OrgGuard implements CanActivate {
 
     const [m] = await this.dbs.tenant({ userId: user.id, organizationId: orgId }, (tx) =>
       tx
-        .select({ role: memberships.role })
+        .select({
+          role: memberships.role,
+          plan: organizations.plan,
+          trialEndsAt: organizations.trialEndsAt,
+          subscriptionStatus: organizations.subscriptionStatus,
+        })
         .from(memberships)
+        .innerJoin(organizations, eq(organizations.id, memberships.organizationId))
         .where(and(eq(memberships.organizationId, orgId), eq(memberships.userId, user.id)))
         .limit(1),
     );
@@ -83,6 +95,24 @@ export class OrgGuard implements CanActivate {
     ]);
     if (permission && !can(m.role as Role, permission)) {
       throw new ForbiddenException({ code: 'FORBIDDEN', message: 'Su rol no permite esta acción' });
+    }
+    const write = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    if (
+      write &&
+      planState(m).readOnly &&
+      !this.reflector.getAllAndOverride<boolean>(ALLOW_READ_ONLY_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    ) {
+      throw new HttpException(
+        {
+          code: 'READ_ONLY',
+          message:
+            'La prueba gratis terminó o la suscripción no está activa: puede consultar todo, pero para hacer cambios elija un plan en «Plan y facturación».',
+        },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
     }
     req.org = { userId: user.id, organizationId: orgId, role: m.role as Role };
     return true;

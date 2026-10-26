@@ -16,6 +16,37 @@ export const routes: Routes = [
     title: 'Crear cuenta · SiloPro',
   },
   {
+    path: 'recuperar-contrasena',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/auth/forgot-password'),
+    title: 'Recuperar contraseña · SiloPro',
+  },
+  {
+    path: 'restablecer-contrasena',
+    loadComponent: () => import('./pages/auth/reset-password'),
+    title: 'Nueva contraseña · SiloPro',
+  },
+  {
+    path: 'verificar-correo',
+    loadComponent: () => import('./pages/auth/verify-email'),
+    title: 'Confirmar correo · SiloPro',
+  },
+  {
+    path: 'producto',
+    loadComponent: () => import('./pages/public/landing'),
+    title: 'SiloPro · Inventario con ubicación física',
+  },
+  {
+    path: 'privacidad',
+    loadComponent: () => import('./pages/public/privacy'),
+    title: 'Aviso de privacidad · SiloPro',
+  },
+  {
+    path: 'terminos',
+    loadComponent: () => import('./pages/public/terms'),
+    title: 'Términos y condiciones · SiloPro',
+  },
+  {
     path: 'invitacion/:orgId/:token',
     loadComponent: () => import('./pages/auth/invitation'),
     title: 'Invitación · SiloPro',
@@ -115,6 +146,11 @@ export const routes: Routes = [
         path: 'compras',
         loadComponent: () => import('./pages/shopping/shopping-list'),
         title: 'Lista de compras · SiloPro',
+      },
+      {
+        path: 'plan',
+        loadComponent: () => import('./pages/billing/billing'),
+        title: 'Plan y facturación · SiloPro',
       },
       {
         path: 'reportes',

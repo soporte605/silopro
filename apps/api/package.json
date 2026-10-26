@@ -1,6 +1,6 @@
 {
   "name": "@silopro/api",
-  "version": "0.6.0-alpha.4",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,6 +27,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sharp": "^0.35.5",
+    "stripe": "23.0.1",
     "uuid": "^14.0.3",
     "zod": "^4.6.7"
   },

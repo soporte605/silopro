@@ -45,6 +45,11 @@ import { AuthLayout, safeReturnUrl } from './auth-layout';
             [id]="p.controlId"
           />
         </es-form-field>
+        <a
+          routerLink="/recuperar-contrasena"
+          class="-mt-1 self-end text-sm text-primary hover:underline"
+          >¿Olvidaste tu contraseña?</a
+        >
         <button esButton variant="primary" size="lg" type="submit" [loading]="busy()">
           Entrar
         </button>

@@ -20,7 +20,8 @@ Estado: **implementado en la Fase 2** para usuarios, organizaciones, catálogo, 
 ## Entidades
 
 ```
-users ── sessions (hash SHA-256 del token)
+users (email_verified_at) ─┬─ sessions (hash SHA-256 del token)
+                           └─ auth_tokens (confirmar correo / restablecer contraseña; hash, un solo uso)  ✅
   │
 organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── users      ✅
                ├─ invitations (hash SHA-256 del token, vence en 7 días)       ✅
@@ -37,6 +38,10 @@ organizations ─┬─ memberships (rol: owner/admin/operator/viewer) ── us
                ├─ projects ── bom_lines (reservations.project_id)             ✅
                └─ audit_log (solo inserción, trigger)                         ✅
 ```
+
+### Plan y suscripción (migración `0014`)
+
+`organizations` guarda `plan` (`trial`, `basic`, `pro`, `enterprise`), `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`, `subscription_status` (el de Stripe), `billing_interval` y `current_period_end`. Solo el webhook de Stripe cambia el plan pagado. El estado efectivo (límites, solo lectura, días de prueba) lo calcula `planState` de `@silopro/domain/plans.ts`; los límites se verifican en la misma transacción que la escritura, con la fila de la organización bloqueada.
 
 ### Ubicaciones (`@silopro/domain/locations.ts`, implementado)
 

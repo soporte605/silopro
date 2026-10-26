@@ -11,6 +11,7 @@ import { and, asc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
 import { invalid, notFound, staleVersion } from '../common/http.js';
+import { assertWithinPlan } from '../billing/plan-limits.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { num, num0 } from '../db/mappers.js';
 import { categories, itemPhotos, items, itemSuppliers, stockLevels, units } from '../db/schema.js';
@@ -75,6 +76,7 @@ export class ItemsService {
 
   async create(ctx: OrgContext, input: ItemData): Promise<Item> {
     return this.dbs.tenant(ctx, async (tx) => {
+      await assertWithinPlan(tx, ctx.organizationId, 'items');
       const attributes = await this.checkAttributes(tx, input.categoryId, input.attributes);
       const [row] = await tx
         .insert(items)

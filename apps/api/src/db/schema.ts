@@ -76,9 +76,39 @@ export const users = pgTable(
     email: text('email').notNull(),
     name: text('name').notNull(),
     passwordHash: text('password_hash').notNull(),
+    /** Cuándo confirmó su correo con el enlace enviado; `null` si aún no. */
+    emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex('users_email_key').on(sql`lower(${t.email})`)],
+);
+
+export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
+  'verify_email',
+  'reset_password',
+]);
+
+/**
+ * Enlaces de un solo uso enviados por correo (confirmar correo, restablecer
+ * contraseña). Solo se guarda el hash SHA-256 del token.
+ */
+export const authTokens = pgTable(
+  'auth_tokens',
+  {
+    id: id(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: authTokenPurposeEnum('purpose').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('auth_tokens_token_key').on(t.tokenHash),
+    index('auth_tokens_user_idx').on(t.userId, t.purpose),
+  ],
 );
 
 export const sessions = pgTable(
@@ -97,10 +127,19 @@ export const sessions = pgTable(
 );
 
 // ── Organizaciones ─────────────────────────────────────────────────────────
+/** Organización: el plan y la suscripción viven aquí (ver `@silopro/domain/plans`). */
 export const organizations = pgTable('organizations', {
   id: id(),
   name: text('name').notNull(),
-  plan: text('plan').notNull().default('free'),
+  /** `trial`, `basic`, `pro` o `enterprise`. */
+  plan: text('plan').notNull().default('trial'),
+  trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  /** Estado de la suscripción en Stripe (`active`, `past_due`, `canceled`…). */
+  subscriptionStatus: text('subscription_status'),
+  billingInterval: text('billing_interval'),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
   ...timestamps,
 });
 

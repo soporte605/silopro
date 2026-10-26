@@ -12,6 +12,7 @@ import type { z } from 'zod';
 import type { OrgContext } from '../auth/request-context.js';
 import { CategoriesService } from '../catalog/categories.service.js';
 import { invalid } from '../common/http.js';
+import { assertWithinPlan } from '../billing/plan-limits.js';
 import { DbService, type Tx } from '../db/db.service.js';
 import { categories, items, locations, units } from '../db/schema.js';
 import { type Loc, MovementsService } from '../stock/movements.service.js';
@@ -55,6 +56,7 @@ export class ImportService {
           { code: 'IMPORT_INVALID', result },
         );
       }
+      if (result.created) await assertWithinPlan(tx, ctx.organizationId, 'items', result.created);
       for (const p of plans) await this.apply(tx, ctx, p);
       return result;
     });

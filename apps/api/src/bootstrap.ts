@@ -14,6 +14,8 @@ export function configureApp(app: INestApplication, env: Env): void {
   app.setGlobalPrefix('api');
   // El diseño completo de un gabinete de 60×60 ronda los 350 KB; una
   // importación de 2000 artículos con descripción, unos pocos MB.
+  // Con `rawBody: true` al crear la app, `req.rawBody` conserva el cuerpo
+  // original: el webhook de Stripe verifica su firma sobre él.
   express.useBodyParser('json', { limit: '5mb' });
   app.use(helmet());
   app.use(cookieParser());

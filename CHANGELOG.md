@@ -4,6 +4,36 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Correos con Resend**: al registrarse llega un enlace para **confirmar el correo** (vence en 24 h); mientras no se confirme, un aviso arriba permite **reenviarlo**.
+- **Recuperar contraseña** desde «¿Olvidaste tu contraseña?» en el acceso: el enlace vence en 1 hora, sirve una vez y al usarlo se cierran todas las sesiones abiertas. No revela si un correo está registrado.
+- Las **invitaciones** llegan también por correo con el enlace.
+- API `POST auth/verify-email`, `auth/verify-email/resend`, `auth/password/forgot` y `auth/password/reset`; `Me.user.emailVerified`. Migración `0013_correo` (`users.email_verified_at`, tabla `auth_tokens`).
+- Variables `RESEND_API_KEY` y `MAIL_FROM`; sin clave los correos se escriben en el registro.
+- **Planes y límites**: cada organización nueva empieza con **14 días de prueba gratis** con los límites de Profesional, sin tarjeta. Básico ($299 MXN/mes o $2,990/año + IVA): 3 usuarios, 1,000 artículos, 2 GB de fotos. Profesional ($699/mes o $6,990/año + IVA): 10 usuarios, 10,000 artículos, 20 GB. Empresa: a la medida. Al pasar el límite, crear artículos, importar, subir fotos o invitar responde `402 PLAN_LIMIT` con un mensaje claro.
+- Al terminar la prueba o si la suscripción deja de estar activa, la organización queda **en solo lectura** (`402 READ_ONLY` al escribir); no se borra nada. Un aviso arriba lo indica y otro avisa cuando quedan 5 días o menos de prueba.
+- Pantalla **Plan y facturación** (`/plan`, en la barra lateral, el menú de cuenta y la paleta): plan actual, uso contra límites y planes con precio mensual o anual.
+- **Cobro con Stripe (modo prueba)**: «Elegir plan» abre Stripe Checkout y «Administrar suscripción» el portal de cliente; el webhook `POST /api/billing/webhook` (firmado) actualiza plan, estado y periodo. Sin clave de Stripe la pantalla ofrece contratar por correo. Script `apps/api/scripts/stripe-setup.mjs` crea productos, precios, webhook y configuración del portal. Variables `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y `STRIPE_PORTAL_CONFIGURATION`.
+- API `GET orgs/:orgId/billing`, `POST …/billing/checkout` y `…/billing/portal`. Migración `0014_planes`: columnas de plan y suscripción en `organizations`; las organizaciones existentes pasan a prueba con 30 días.
+- **Página comercial** (`/producto`): qué hace SiloPro, precios con pago mensual o anual, preguntas frecuentes y registro de prueba gratis. Quien entra a la raíz sin sesión llega aquí; los enlaces directos siguen llevando al acceso.
+- **Aviso de privacidad** (`/privacidad`, LFPDPPP) y **Términos y condiciones** (`/terminos`), enlazados desde el pie de la página comercial y desde el registro. Son borradores pendientes de revisión legal (ver `docs/LEGAL.md`).
+- **Respaldos fuera del servidor**: `infra/server/backup.sh` cifra y sube a Cloudflare R2 la base y las fotografías cuando existe `shared/backup.env`, verifica la subida y avisa por correo si falla.
+- **Vigilante** (`infra/server/watchdog.sh`, cada 5 minutos): reinicia la app tras 2 fallas seguidas, avisa por correo al caer y al recuperarse, y si el respaldo externo se atrasa. Cron en `infra/server/silopro.cron`.
+- «Plan y facturación» también en el menú de cuenta, para llegar desde el celular.
+
+### Cambiado
+
+- Las variables de entorno vacías se tratan como no definidas.
+
+## [0.6.0] — 2026-10-25
+
+Cierre de la Fase 6 · Productividad (contenido de `0.6.0-alpha.1` a `0.6.0-alpha.4`): proyectos con lista de materiales, lista de compras y avisos, importación desde Excel o CSV y reportes.
+
+### Cambiado
+
+- La Fase 8 (comercialización) se adelanta a la 7 (fabricación) para lanzar antes. Inicio muestra el estado de cada fase según la hoja de ruta.
+
 ## [0.6.0-alpha.4] — 2026-10-25
 
 Fase 6 · Productividad: reportes.

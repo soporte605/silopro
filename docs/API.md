@@ -13,12 +13,16 @@ Base: `/api`. Formato JSON. Esquemas de entrada y tipos de respuesta en `@silopr
 
 ## Autenticación
 
-| Método y ruta         | Cuerpo                                          | Respuesta                                               |
-| --------------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| `POST /auth/register` | `name, email, password (≥10), organizationName` | `201 Me`; crea organización (propietario) y 6 unidades  |
-| `POST /auth/login`    | `email, password`                               | `200 Me`; `401` genérico; `429` tras 10 intentos/15 min |
-| `POST /auth/logout`   | —                                               | `204`                                                   |
-| `GET /auth/me`        | —                                               | `Me` (usuario y membresías) o `401`                     |
+| Método y ruta                    | Cuerpo                                          | Respuesta                                                                                        |
+| -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `POST /auth/register`            | `name, email, password (≥10), organizationName` | `201 Me`; crea organización (propietario) y 6 unidades; envía el enlace para confirmar el correo |
+| `POST /auth/login`               | `email, password`                               | `200 Me`; `401` genérico; `429` tras 10 intentos/15 min                                          |
+| `POST /auth/logout`              | —                                               | `204`                                                                                            |
+| `GET /auth/me`                   | —                                               | `Me` (usuario con `emailVerified` y membresías) o `401`                                          |
+| `POST /auth/verify-email`        | `token`                                         | `204`; `400 INVALID_LINK` si no es válido, ya se usó o venció (24 h)                             |
+| `POST /auth/verify-email/resend` | — (con sesión)                                  | `204`; invalida el enlace anterior; `429` tras 3 por hora                                        |
+| `POST /auth/password/forgot`     | `email`                                         | `204` exista o no la cuenta; envía el enlace (1 h, un solo uso); `429` tras 3 por hora           |
+| `POST /auth/password/reset`      | `token, password (≥10)`                         | `204`; cambia la contraseña, confirma el correo y cierra todas las sesiones; `400 INVALID_LINK`  |
 
 ## Catálogo · `/orgs/:orgId/…`
 
@@ -139,6 +143,18 @@ Cada artículo y ubicación tiene un código corto aleatorio (`qrCode`, base32 C
 | Método y ruta        | Permiso      | Notas                                                                                                                |
 | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
 | `GET qr/:type/:code` | catalog.read | `type` = `item` o `location`; devuelve `{ type, id, name, label, cabinetId, locationKind }`; `404` si no existe aquí |
+
+## Plan y facturación · `/orgs/:orgId/billing`
+
+Planes y límites en `@silopro/domain/plans.ts`. Al exceder un límite, la escritura responde `402 PLAN_LIMIT` con `details: { kind, limit, used }` (`kind`: `users` cuenta miembros e invitaciones pendientes, `items` artículos no archivados, `storage` bytes de fotos). Si la prueba terminó o la suscripción no está activa (`active`, `trialing`, `past_due`), toda escritura de la organización responde `402 READ_ONLY`, salvo contratar.
+
+| Método y ruta   | Permiso             | Notas                                                                                                                                                                       |
+| --------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET billing`   | catalog.read        | `BillingSummary`: plan, `readOnly`, prueba, estado de la suscripción, periodo, límites, uso y `checkoutAvailable`                                                           |
+| `POST checkout` | organization.manage | `plan` (`basic`/`pro`), `interval` (`month`/`year`) → `{ url }` de Stripe Checkout; `400 ALREADY_SUBSCRIBED` o `PRICE_NOT_CONFIGURED`; `503 BILLING_UNAVAILABLE` sin Stripe |
+| `POST portal`   | organization.manage | `{ url }` del portal de cliente de Stripe; `400 NO_SUBSCRIPTION` si aún no hay cliente                                                                                      |
+
+`POST /billing/webhook` (sin sesión ni cabecera CSRF) recibe los eventos `customer.subscription.created|updated|deleted` firmados con `STRIPE_WEBHOOK_SECRET`; `400` si la firma no es válida.
 
 ## Miembros e invitaciones · `/orgs/:orgId/…`
 

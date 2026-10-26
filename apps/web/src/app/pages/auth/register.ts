@@ -10,6 +10,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { EsButton, EsFormField, EsInput } from '@elikarsystems/ui';
 import { registerSchema } from '@silopro/contracts';
+import { TRIAL_DAYS } from '@silopro/domain';
 import { ApiRequestError } from '../../core/api';
 import { zodErrors } from '../../core/forms';
 import { SessionService } from '../../core/session';
@@ -96,6 +97,16 @@ import { AuthLayout, safeReturnUrl } from './auth-layout';
         <button esButton variant="primary" size="lg" type="submit" [loading]="busy()">
           Crear cuenta
         </button>
+        <p class="text-xs text-fg-muted">
+          Incluye {{ trialDays }} días de prueba gratis, sin tarjeta. Al crear la cuenta aceptas los
+          <a routerLink="/terminos" target="_blank" class="text-primary hover:underline"
+            >términos y condiciones</a
+          >
+          y el
+          <a routerLink="/privacidad" target="_blank" class="text-primary hover:underline"
+            >aviso de privacidad</a
+          >.
+        </p>
       </form>
       <p spAuthFooter>
         ¿Ya tienes cuenta?
@@ -118,6 +129,7 @@ export default class Register implements OnInit {
     password: [''],
     organizationName: [''],
   });
+  protected readonly trialDays = TRIAL_DAYS;
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly fields = signal<Record<string, string>>({});
