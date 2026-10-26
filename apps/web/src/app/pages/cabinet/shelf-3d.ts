@@ -9,6 +9,7 @@ import {
   input,
   resource,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -224,6 +225,10 @@ export default class Shelf3d {
 
   /** Ubicación que contiene los gabinetes (parámetro de ruta). */
   readonly id = input.required<string>();
+  /** Cajón (ubicación) a localizar al abrir: `?resaltar=<locationId>`, desde «¿Dónde está?». */
+  readonly resaltar = input<string>();
+  /** Búsqueda inicial, p. ej. el SKU localizado: `?buscar=ESP32`. */
+  readonly buscar = input<string>();
 
   protected readonly place = resource({
     params: () => ({ id: this.id(), org: this.session.orgId() }),
@@ -258,6 +263,8 @@ export default class Shelf3d {
   protected viewer: CabinetViewer | null = null;
   protected press: { x: number; y: number } | null = null;
   private destroyed = false;
+  /** Último `resaltar` ya aplicado (para no volver a llevar la cámara al recargar). */
+  private located: string | null = null;
   private cleanup = () => {};
 
   protected readonly selectedKey = computed(() => {
@@ -341,6 +348,24 @@ export default class Shelf3d {
       if (this.status() !== 'ready' || !this.viewer) return;
       this.viewer.setSelected(s?.compartmentId ?? null, s?.cabinetId ?? '');
       this.open.set(!!s);
+    });
+    effect(() => {
+      const b = this.buscar();
+      if (b) untracked(() => this.query.set(b));
+    });
+    // Llegada desde «¿Dónde está?»: selecciona el cajón, lleva la cámara y lo hace destellar.
+    effect(() => {
+      const target = this.resaltar();
+      const list = this.shelf.value();
+      if (!target || target === this.located || this.status() !== 'ready' || !list) return;
+      for (const sc of list) {
+        const c = sc.cabinet.compartments.find((x) => x.locationId === target);
+        if (!c) continue;
+        this.located = target;
+        untracked(() => this.selected.set({ cabinetId: sc.cabinet.id, compartmentId: c.id }));
+        this.viewer?.locate(c.id, sc.cabinet.id);
+        return;
+      }
     });
   }
 

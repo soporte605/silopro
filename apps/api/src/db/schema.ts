@@ -261,6 +261,11 @@ export const items = pgTable(
       .references(() => units.id),
     manufacturer: text('manufacturer'),
     model: text('model'),
+    /** Nombres alternos para buscarlo («placa wifi» para un ESP32). */
+    aliases: text('aliases')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     cost: money('cost'),
     price: money('price'),
     minStock: qty('min_stock'),

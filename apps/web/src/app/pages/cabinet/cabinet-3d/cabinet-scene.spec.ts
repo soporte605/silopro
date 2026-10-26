@@ -50,4 +50,16 @@ describe('CabinetScene', () => {
     expect(s.isOpen('A1')).toBe(false);
     s.dispose();
   });
+
+  it('hace destellar el cajón localizado unos segundos y luego vuelve a su color', () => {
+    const s = new CabinetScene(model, palette);
+    s.flash('B2', 1);
+    expect(s.isFlashing()).toBe(true);
+    expect(s.step(0.5)).toBe(true);
+    expect(s.step(0.6)).toBe(false);
+    expect(s.isFlashing()).toBe(false);
+    s.flash('Z9');
+    expect(s.isFlashing()).toBe(false);
+    s.dispose();
+  });
 });

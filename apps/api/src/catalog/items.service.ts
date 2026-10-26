@@ -38,6 +38,7 @@ export class ItemsService {
             ilike(items.internalCode, like),
             ilike(items.manufacturer, like),
             ilike(items.model, like),
+            sql`array_to_string(${items.aliases}, ' ') ilike ${like}`,
           )!,
         );
       }
@@ -140,6 +141,7 @@ export class ItemsService {
       unitId: input.unitId,
       manufacturer: input.manufacturer,
       model: input.model,
+      aliases: input.aliases,
       cost: input.cost == null ? null : String(input.cost),
       price: input.price == null ? null : String(input.price),
       minStock: input.minStock == null ? null : String(input.minStock),
@@ -242,6 +244,7 @@ export class ItemsService {
       unitSymbol: r.unitSymbol,
       manufacturer: r.item.manufacturer,
       model: r.item.model,
+      aliases: r.item.aliases,
       cost: num(r.item.cost),
       price: num(r.item.price),
       minStock,

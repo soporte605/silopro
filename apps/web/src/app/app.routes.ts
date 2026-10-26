@@ -58,6 +58,11 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./pages/home/home'), title: 'Inicio · SiloPro' },
       {
+        path: 'donde',
+        loadComponent: () => import('./pages/locate/locate'),
+        title: '¿Dónde está? · SiloPro',
+      },
+      {
         path: 'inventario',
         loadComponent: () => import('./pages/items/items-list'),
         title: 'Artículos · SiloPro',

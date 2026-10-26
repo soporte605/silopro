@@ -87,6 +87,8 @@ function titlePlane(text: string, width: number): Mesh {
 const GAP = 40;
 /** Grosor de la tabla del estante que se dibuja bajo varios gabinetes (mm). */
 const SHELF = 15;
+/** Duración del viaje de la cámara hasta un cajón localizado. */
+const FLIGHT_SECONDS = 0.9;
 
 /**
  * Renderizador, cámara orbital y bucle de dibujo de uno o varios
@@ -110,6 +112,14 @@ export class CabinetViewer {
   private fittedSize = '';
   private frame = 0;
   private last = 0;
+  /** Viaje de la cámara en curso (al localizar un cajón). */
+  private flight: {
+    from: Vector3;
+    to: Vector3;
+    fromTarget: Vector3;
+    toTarget: Vector3;
+    t: number;
+  } | null = null;
 
   /** Lanza un error si el navegador no tiene WebGL. */
   constructor(
@@ -127,6 +137,8 @@ export class CabinetViewer {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.addEventListener('change', () => this.request());
+    // Si el usuario toma la cámara, se cancela el viaje en curso.
+    this.controls.addEventListener('start', () => (this.flight = null));
     this.scene.add(
       new HemisphereLight(0xffffff, 0x8899aa, 1.6),
       new AmbientLight(0xffffff, 0.4),
@@ -252,8 +264,34 @@ export class CabinetViewer {
     this.request();
   }
 
+  /**
+   * Lleva la cámara al gabinete del cajón, con el cajón al centro, y lo hace
+   * destellar: es lo que se ve al llegar desde «¿Dónde está?».
+   */
+  locate(id: string, key = ''): void {
+    const entry = this.entries.find((e) => e.key === key);
+    const front = entry?.scene.frontOf(id);
+    if (!entry || !front) return;
+    const { width, height, depth } = entry.scene.model.outer;
+    const toTarget = new Vector3(front.x, front.y, front.z).add(entry.scene.object.position);
+    const half = Math.tan(((FOV / 2) * Math.PI) / 180);
+    // Todo el gabinete a la vista, con aire para el cajón abierto que sale hacia la cámara.
+    const size = Math.max(height, width / Math.max(this.camera.aspect, 0.3), depth);
+    const dist = (size / 2 / half) * 1.6 + depth * 1.5;
+    this.flight = {
+      from: this.camera.position.clone(),
+      to: toTarget.clone().addScaledVector(VIEW_DIR, dist),
+      fromTarget: this.controls.target.clone(),
+      toTarget,
+      t: 0,
+    };
+    entry.scene.flash(id);
+    this.request();
+  }
+
   /** Encuadra todos los gabinetes. */
   fit(): void {
+    this.flight = null;
     const { width, height, depth } = this.bounds;
     const half = Math.tan(((FOV / 2) * Math.PI) / 180);
     const dist =
@@ -286,6 +324,15 @@ export class CabinetViewer {
     const dt = this.last ? Math.min(0.05, (t - this.last) / 1000) : 1 / 60;
     let moving = false;
     for (const e of this.entries) moving = e.scene.step(dt) || moving;
+    const f = this.flight;
+    if (f) {
+      f.t = Math.min(1, f.t + dt / FLIGHT_SECONDS);
+      const k = 1 - (1 - f.t) ** 3;
+      this.camera.position.lerpVectors(f.from, f.to, k);
+      this.controls.target.lerpVectors(f.fromTarget, f.toTarget, k);
+      if (f.t < 1) moving = true;
+      else this.flight = null;
+    }
     const changed = this.controls.update();
     this.renderer.render(this.scene, this.camera);
     if (moving || changed) {

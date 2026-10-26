@@ -34,6 +34,7 @@ import {
   LucideMapPin,
   LucideMonitor,
   LucideMoon,
+  LucidePackageSearch,
   LucideQrCode,
   LucideSearch,
   LucideSun,
@@ -65,6 +66,7 @@ import { SessionService } from '../core/session';
     LucideSearch,
     LucideSun,
     LucideMoon,
+    LucidePackageSearch,
     LucideMonitor,
     LucideMapPin,
     LucideArrowLeftRight,
@@ -123,6 +125,16 @@ import { SessionService } from '../core/session';
           class="mt-1.5 flex h-7 w-full items-center gap-2 rounded-md px-2 text-sm text-fg-muted hover:bg-surface-hover"
         >
           <svg lucideScanLine [size]="14"></svg> Escanear etiqueta
+        </a>
+        <a
+          routerLink="/donde"
+          routerLinkActive="bg-surface-active"
+          ariaCurrentWhenActive="page"
+          class="mt-0.5 flex h-7 w-full items-center gap-2 rounded-md px-2 text-sm text-fg-muted hover:bg-surface-hover"
+        >
+          <svg lucidePackageSearch [size]="14"></svg>
+          <span class="flex-1">¿Dónde está?</span>
+          <kbd esKbd>/</kbd>
         </a>
       </div>
       <nav class="flex flex-col gap-0.5 px-2" aria-label="Principal">
@@ -205,6 +217,9 @@ import { SessionService } from '../core/session';
         >
           <svg lucideSearch></svg>
         </button>
+        <a esButton variant="ghost" iconOnly aria-label="¿Dónde está?" routerLink="/donde">
+          <svg lucidePackageSearch></svg>
+        </a>
         <a esButton variant="ghost" iconOnly aria-label="Escanear etiqueta" routerLink="/escanear">
           <svg lucideScanLine></svg>
         </a>
@@ -390,6 +405,14 @@ export class Shell {
     this.palette.register([
       { id: 'nav.home', label: 'Ir a Inicio', group: 'Navegación', run: () => this.go('/') },
       {
+        id: 'nav.locate',
+        label: '¿Dónde está? Buscar en qué cajón',
+        group: 'Navegación',
+        shortcut: '/',
+        keywords: ['localizar', 'encontrar', 'ubicar', 'buscar', 'cajón', 'anaquel', '3d'],
+        run: () => this.go('/donde'),
+      },
+      {
         id: 'nav.items',
         label: 'Ir a Artículos',
         group: 'Navegación',
@@ -557,6 +580,12 @@ export class Shell {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       this.palette.toggle();
+    } else if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      // «/» abre «¿Dónde está?», salvo mientras se escribe en un campo.
+      const el = event.target as HTMLElement | null;
+      if (el?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return;
+      event.preventDefault();
+      this.go('/donde');
     }
   }
 

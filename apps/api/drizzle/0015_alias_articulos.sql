@@ -1,0 +1,1 @@
+ALTER TABLE "items" ADD COLUMN "aliases" text[] DEFAULT '{}'::text[] NOT NULL;

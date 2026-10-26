@@ -144,6 +144,21 @@ type AttrValue = string | boolean;
           <es-form-field label="Modelo / número de parte" #f8="esFormField">
             <input esInput formControlName="model" [id]="f8.controlId" />
           </es-form-field>
+          <es-form-field
+            label="También se le dice"
+            hint="Separados por comas. Sirven para encontrarlo en «¿Dónde está?»."
+            [error]="aliasError()"
+            class="sm:col-span-2"
+            #f9="esFormField"
+          >
+            <input
+              esInput
+              formControlName="aliases"
+              placeholder="p. ej. placa wifi, micro"
+              [id]="f9.controlId"
+              [attr.aria-describedby]="f9.describedBy()"
+            />
+          </es-form-field>
         </fieldset>
 
         @if (attributeDefs().length) {
@@ -290,6 +305,7 @@ export class ItemForm {
     unitId: this.data.item?.unitId ?? '',
     manufacturer: this.data.item?.manufacturer ?? '',
     model: this.data.item?.model ?? '',
+    aliases: this.data.item?.aliases.join(', ') ?? '',
     cost: this.data.item?.cost?.toString() ?? '',
     price: this.data.item?.price?.toString() ?? '',
     minStock: this.data.item?.minStock?.toString() ?? '',
@@ -363,6 +379,12 @@ export class ItemForm {
     return out;
   }
 
+  /** Error de la lista de alias (o del primero que falle). */
+  protected aliasError(): string | undefined {
+    const f = this.fields();
+    return f['aliases'] ?? Object.entries(f).find(([k]) => k.startsWith('aliases.'))?.[1];
+  }
+
   protected async save(): Promise<void> {
     const v = this.form.getRawValue();
     const num = (s: string) => (s.trim() === '' ? null : s.replace(',', '.'));
@@ -373,6 +395,7 @@ export class ItemForm {
       categoryId: v.categoryId || null,
       manufacturer: v.manufacturer || null,
       model: v.model || null,
+      aliases: v.aliases.split(','),
       cost: num(v.cost),
       price: num(v.price),
       minStock: num(v.minStock),
