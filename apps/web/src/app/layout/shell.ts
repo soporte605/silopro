@@ -37,6 +37,7 @@ import {
   LucidePackageSearch,
   LucideQrCode,
   LucideSearch,
+  LucideSparkles,
   LucideSun,
   LucideTruck,
   LucideUsers,
@@ -64,6 +65,7 @@ import { SessionService } from '../core/session';
     LucideHouse,
     LucideGrid3x3,
     LucideSearch,
+    LucideSparkles,
     LucideSun,
     LucideMoon,
     LucidePackageSearch,
@@ -135,6 +137,14 @@ import { SessionService } from '../core/session';
           <svg lucidePackageSearch [size]="14"></svg>
           <span class="flex-1">¿Dónde está?</span>
           <kbd esKbd>/</kbd>
+        </a>
+        <a
+          routerLink="/asistente"
+          routerLinkActive="bg-surface-active"
+          ariaCurrentWhenActive="page"
+          class="mt-0.5 flex h-7 w-full items-center gap-2 rounded-md px-2 text-sm text-fg-muted hover:bg-surface-hover"
+        >
+          <svg lucideSparkles [size]="14"></svg> Asistente
         </a>
       </div>
       <nav class="flex flex-col gap-0.5 px-2" aria-label="Principal">
@@ -411,6 +421,13 @@ export class Shell {
         shortcut: '/',
         keywords: ['localizar', 'encontrar', 'ubicar', 'buscar', 'cajón', 'anaquel', '3d'],
         run: () => this.go('/donde'),
+      },
+      {
+        id: 'nav.assistant',
+        label: 'Preguntar al asistente',
+        group: 'Navegación',
+        keywords: ['ia', 'chat', 'ayuda', 'pregunta', 'claude', 'agente'],
+        run: () => this.go('/asistente'),
       },
       {
         id: 'nav.items',

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { PLANS, planState, withinLimit } from './plans.js';
+import {
+  ASSISTANT_MONTHLY_QUESTIONS,
+  assistantPeriod,
+  PLANS,
+  planState,
+  withinLimit,
+} from './plans.js';
 
 const now = new Date('2026-11-01T12:00:00Z');
 const days = (n: number) => new Date(now.getTime() + n * 86_400_000);
@@ -56,5 +62,16 @@ describe('lookup_key de Stripe', () => {
     }
     expect(planFromLookupKey('fincapro_inicial_month')).toBeNull();
     expect(planFromLookupKey(null)).toBeNull();
+  });
+});
+
+describe('cupo del asistente', () => {
+  it('crece con el plan y el periodo es el mes UTC', () => {
+    const q = ASSISTANT_MONTHLY_QUESTIONS;
+    expect(q.basic!).toBeLessThan(q.pro!);
+    expect(q.enterprise).toBeNull();
+    expect(Object.keys(q).sort()).toEqual(Object.keys(PLANS).sort());
+    expect(assistantPeriod(new Date('2026-10-31T23:59:59Z'))).toBe('2026-10');
+    expect(assistantPeriod(new Date('2026-11-01T00:00:00Z'))).toBe('2026-11');
   });
 });

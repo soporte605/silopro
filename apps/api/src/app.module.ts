@@ -1,5 +1,6 @@
 import { type DynamicModule, Global, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AssistantModule } from './assistant/assistant.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BillingModule } from './billing/billing.module.js';
@@ -42,6 +43,7 @@ export class AppModule {
         ReportsModule,
         BillingModule,
         AuditModule,
+        AssistantModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: CsrfGuard }],
     };

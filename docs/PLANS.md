@@ -12,5 +12,6 @@
 - Usuarios cuenta miembros más invitaciones pendientes; artículos, los no archivados.
 - Al pasar un límite la escritura responde `402 PLAN_LIMIT`; lo existente no se toca.
 - Sin prueba vigente ni suscripción activa (`active`, `trialing`, `past_due`) la organización queda en solo lectura (`402 READ_ONLY`). Empresa nunca queda en solo lectura.
+- **Asistente con IA**, preguntas por mes calendario (UTC; `ASSISTANT_MONTHLY_QUESTIONS`): prueba 50, Básico 100, Profesional 500, Empresa sin límite. Al agotarse, `402 ASSISTANT_LIMIT`; se renueva el día 1. Cifras provisionales hasta medir el costo real por pregunta (`assistant_usage` guarda los tokens).
 - Precios aprobados para el lanzamiento (2026-10-25); revisar a los 6 meses.
 - Stripe: claves de búsqueda `silopro_basic_month`, `silopro_basic_year`, `silopro_pro_month`, `silopro_pro_year` (ver [Despliegue](DEPLOYMENT.md)).

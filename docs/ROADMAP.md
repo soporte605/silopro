@@ -92,7 +92,7 @@ Planes y límites, administración comercial, proveedor de pagos aprobado, despl
 
 Plan aprobado el 2026-10-26: en la app hay buscador y chat escrito; la voz va solo en el dispositivo externo.
 
-1. **¿Dónde está?** · en curso: buscador con alias, ruta y cantidades, y el cajón resaltado en el estante 3D (`/donde`, `GET locate`). Pendiente de esta etapa: nada obligatorio; el modo kiosco se cubre con pantalla completa.
-2. **Chat con IA**: preguntas escritas sobre el inventario con herramientas de solo lectura (localizar, stock bajo, faltantes de proyecto, movimientos), cupo por plan.
+1. **¿Dónde está?** · ✅ desplegado (2026-10-26): buscador con alias, ruta y cantidades, y el cajón resaltado en el estante 3D (`/donde`, `GET locate`). Pendiente de esta etapa: nada obligatorio; el modo kiosco se cubre con pantalla completa.
+2. **Chat con IA** · en curso: preguntas escritas sobre el inventario con herramientas de solo lectura (localizar, lista de compras, proyectos, movimientos), «Ver en 3D» en las respuestas y cupo mensual por plan (`/asistente`). Después: acciones con confirmación (registrar una salida, apartar para un proyecto).
 3. **Luces en el anaquel**: ESP32 + tira LED por gabinete, conexión saliente por WebSocket, mapa LED ↔ cajón calculado en `cabinet-engine`.
 4. **Dispositivo de voz**: ESP32-S3 con micrófono y bocina; transcripción en el servidor; responde y enciende la luz.

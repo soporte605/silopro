@@ -102,6 +102,15 @@ Se calcula al consultar. Por artículo: `projectPending` es lo pendiente en proy
 | `GET shopping-list/export` | catalog.read | La misma lista en CSV UTF-8 para Excel                                                                            |
 | `GET alerts`               | catalog.read | `{ lowStock, toBuy, projectsShort }` para los avisos de inicio y del menú                                         |
 
+## Asistente con IA · `/orgs/:orgId/assistant`
+
+Chat sin estado: el navegador envía la conversación completa (solo texto, hasta 20 turnos de 2,000 caracteres; empieza y termina con el usuario). La API consulta a Claude con herramientas de solo lectura que pasan por los servicios de arriba con el contexto del usuario (`localizar`, `que_comprar`, `proyectos`, `movimientos`) y suma preguntas y tokens del mes en `assistant_usage`.
+
+| Método y ruta | Permiso      | Notas                                                                                                                                                                                                                               |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`         | catalog.read | `{ enabled, quota: { used, limit } }`; `limit` `null` = sin límite                                                                                                                                                                  |
+| `POST chat`   | catalog.read | `{ messages }` → `{ answer, hits, quota }`; `hits` son los artículos localizados (como `GET locate`). `402 ASSISTANT_LIMIT` (cupo del mes), `503 ASSISTANT_DISABLED` (sin clave), `429 ASSISTANT_BUSY`, `503 ASSISTANT_UNAVAILABLE` |
+
 ## Reportes · `/orgs/:orgId/reports`
 
 Se calculan al consultar. Cada uno tiene su versión CSV en `…/export` con los mismos parámetros.

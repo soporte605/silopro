@@ -37,6 +37,8 @@ Detener: `docker compose -f infra/docker/compose.yaml down` (añadir `-v` **borr
 | `STRIPE_SECRET_KEY`           | —                                                  | Clave secreta de Stripe (`sk_test_…` mientras no se aprueben cobros reales). Sin ella, «Plan y facturación» ofrece contratar por correo       |
 | `STRIPE_WEBHOOK_SECRET`       | —                                                  | Secreto de firma del webhook (`whsec_…`); lo escribe `stripe-setup.mjs`                                                                       |
 | `STRIPE_PORTAL_CONFIGURATION` | —                                                  | Configuración propia del portal de cliente (`bpc_…`), para no usar la predeterminada de una cuenta compartida; la escribe `stripe-setup.mjs`  |
+| `ANTHROPIC_API_KEY`           | —                                                  | Clave de la API de Claude para el asistente con IA. Sin ella, el asistente aparece desactivado                                                |
+| `ASSISTANT_MODEL`             | `claude-opus-5-5`                                  | Modelo del asistente                                                                                                                          |
 | `MAIL_OUTBOX_DIR`             | —                                                  | Solo desarrollo y e2e: guarda cada correo como JSON en esa carpeta                                                                            |
 
 El contenedor de PostgreSQL crea al iniciarse por primera vez el rol de aplicación `silopro` sin privilegios especiales (`infra/docker/postgres-init.sh`); el superusuario `postgres` solo se usa para administración.
@@ -62,6 +64,7 @@ PUBLIC_WEB_URL=https://app.silopro.elikarsystems.com
 SILOPRO_WEB_PORT=3200
 RESEND_API_KEY=<clave de Resend>
 STRIPE_SECRET_KEY=<sk_test_…>
+ANTHROPIC_API_KEY=<sk-ant-…>   # asistente con IA (opcional)
 ```
 
 Stripe, una vez por cuenta y modo (idempotente; crea productos `silopro_basic` y `silopro_pro`, precios en MXN con IVA aparte y claves `silopro_basic_month`, `silopro_basic_year`, `silopro_pro_month`, `silopro_pro_year`, el webhook a `https://app.silopro.elikarsystems.com/api/billing/webhook` y la configuración del portal, y agrega `STRIPE_WEBHOOK_SECRET` y `STRIPE_PORTAL_CONFIGURATION` al archivo):
