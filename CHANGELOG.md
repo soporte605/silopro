@@ -7,6 +7,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 ### Cambiado
 
 - La página comercial tiene su propio dominio, **silopro.elikarsystems.com** (como FincaPro), y la app queda en app.silopro.elikarsystems.com. En el dominio comercial solo se ven la landing y los avisos legales; «Iniciar sesión», «Prueba gratis» y cualquier otra ruta abren la app. En la app, la raíz sin sesión lleva al acceso y el logotipo de las pantallas de acceso a la página comercial. En la red local todo sigue en un solo origen (`/producto`).
+- **Nuevo inicio para clientes**: resumen de artículos, miembros, fotografías y plan (con lo que permite el plan), avisos, actividad reciente con los últimos movimientos y contacto de soporte. Los primeros pasos solo aparecen mientras la organización no tiene artículos.
+
+### Quitado
+
+- Del inicio, la hoja de ruta, la fase actual y el estado del sistema (información interna). Del menú, el enlace «Design system» y las etiquetas «alpha» y «F7»; el catálogo de componentes sigue en `/sistema/componentes`.
 
 ## [0.7.0] — 2026-10-26
 

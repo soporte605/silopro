@@ -1,10 +1,21 @@
 import { expect, test } from './fixtures';
 
-test('la página de inicio muestra la organización y la hoja de ruta', async ({ page, account }) => {
+test('el inicio muestra la organización, su resumen y los primeros pasos', async ({
+  page,
+  account,
+}) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/SiloPro/);
   await expect(page.getByRole('heading', { name: account.organizationName })).toBeVisible();
-  await expect(page.getByRole('cell', { name: /Fundamentos/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primeros pasos' })).toBeVisible();
+  const summary = page.getByRole('region', { name: 'Resumen' });
+  await expect(summary.getByRole('link', { name: /Artículos/ })).toContainText('0');
+  await expect(summary.getByRole('link', { name: /Prueba gratis/ })).toContainText(/\d+ días/);
+  await expect(page.getByText('Aún no hay movimientos.')).toBeVisible();
+  // Información interna del proyecto, no para clientes.
+  await expect(page.getByText('Hoja de ruta')).toHaveCount(0);
+  await expect(page.getByText('Estado del sistema')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Design system' })).toHaveCount(0);
 });
 
 test('la paleta de comandos navega con el teclado', async ({ page, isMobile, account: _ }) => {

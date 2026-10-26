@@ -27,7 +27,6 @@ import {
   LucideBuilding2,
   LucideCheck,
   LucideClipboardList,
-  LucideComponent,
   LucideFolderTree,
   LucideGrid3x3,
   LucideHouse,
@@ -63,7 +62,6 @@ import { SessionService } from '../core/session';
     EsTooltip,
     LucideHouse,
     LucideGrid3x3,
-    LucideComponent,
     LucideSearch,
     LucideSun,
     LucideMoon,
@@ -109,7 +107,6 @@ import { SessionService } from '../core/session';
       <div class="flex h-12 items-center gap-2 px-3">
         <sp-logo class="h-6" />
         <span class="text-sm font-semibold tracking-tight">SiloPro</span>
-        <span class="ml-auto font-mono text-2xs text-fg-subtle">alpha</span>
       </div>
       <div class="px-2 pb-2">
         <button
@@ -147,7 +144,6 @@ import { SessionService } from '../core/session';
               }
             }
             {{ m.label }}
-            <span class="ml-auto font-mono text-2xs">{{ m.phase }}</span>
           </li>
         }
       </ul>
@@ -172,14 +168,6 @@ import { SessionService } from '../core/session';
         </button>
         <a esNavItem routerLink="/plan" routerLinkActive="is-active" ariaCurrentWhenActive="page">
           <svg lucideCreditCard></svg> Plan y facturación
-        </a>
-        <a
-          esNavItem
-          routerLink="/sistema/componentes"
-          routerLinkActive="is-active"
-          ariaCurrentWhenActive="page"
-        >
-          <svg lucideComponent></svg> Design system
         </a>
         <button
           esNavItem
@@ -396,7 +384,7 @@ export class Shell {
   protected readonly session = inject(SessionService);
   protected readonly alerts = inject(AlertsService);
 
-  protected readonly upcoming = [{ label: 'Fabricación (CAD)', icon: 'grid', phase: 'F7' }];
+  protected readonly upcoming = [{ label: 'Fabricación (CAD)', icon: 'grid' }];
 
   constructor() {
     this.palette.register([
@@ -518,13 +506,6 @@ export class Shell {
         group: 'Navegación',
         keywords: ['cajones', 'demo', '2d'],
         run: () => this.go('/gabinetes/demo'),
-      },
-      {
-        id: 'nav.catalog',
-        label: 'Ver catálogo de componentes',
-        group: 'Navegación',
-        keywords: ['design system', 'ui'],
-        run: () => this.go('/sistema/componentes'),
       },
       {
         id: 'theme.cycle',

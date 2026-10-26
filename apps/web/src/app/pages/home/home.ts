@@ -1,21 +1,28 @@
-import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EsBadge, EsButton, EsSkeleton, EsTable } from '@elikarsystems/ui';
+import { EsButton, EsSkeleton } from '@elikarsystems/ui';
+import type { BillingSummary, JournalMovement, MovementPage } from '@silopro/contracts';
+import { PLANS } from '@silopro/domain';
 import { AlertsService } from '../../core/alerts';
+import { Api } from '../../core/api';
+import { fmtDate, fmtQty } from '../../core/format';
 import { SessionService } from '../../core/session';
+import { CONTACT_EMAIL, gb } from '../billing/plan-copy';
 
-interface Health {
-  status: 'ok' | 'degraded';
-  version: string;
-  checks: Record<string, 'up' | 'down' | 'skipped'>;
-}
+const KIND_LABELS: Record<JournalMovement['kind'], string> = {
+  receipt: 'Entrada',
+  issue: 'Salida',
+  adjustment: 'Ajuste',
+  transfer: 'Transferencia',
+  consumption: 'Consumo',
+};
 
-type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: 'offline' };
+const num = (n: number) => n.toLocaleString('es-MX');
 
+/** Inicio de la organización: resumen, avisos y actividad reciente. */
 @Component({
   selector: 'sp-home',
-  imports: [EsBadge, EsButton, EsSkeleton, EsTable, RouterLink],
+  imports: [EsButton, EsSkeleton, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mx-auto flex max-w-5xl flex-col gap-6 p-4 md:p-6">
@@ -24,179 +31,166 @@ type ApiState = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: '
           <h1 class="text-xl font-semibold tracking-tight">
             {{ session.membership()?.organizationName }}
           </h1>
-          <p class="text-sm text-fg-muted">
-            Sistema universal de inventario y almacenamiento inteligente
-          </p>
+          <p class="text-sm text-fg-muted">Hola, {{ firstName() }}.</p>
         </div>
-        <a esButton variant="primary" routerLink="/inventario">Ver artículos</a>
+        <div class="flex gap-2">
+          <a esButton routerLink="/escanear">Escanear etiqueta</a>
+          <a esButton variant="primary" routerLink="/inventario">Ver artículos</a>
+        </div>
       </header>
 
-      @if (alerts.counts(); as a) {
-        @if (a.lowStock || a.toBuy || a.projectsShort) {
-          <section aria-labelledby="avisos">
-            <h2 id="avisos" class="mb-2 text-xs font-medium text-fg-muted">Avisos</h2>
-            <ul class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      @if (empty()) {
+        <section aria-labelledby="pasos">
+          <h2 id="pasos" class="mb-2 text-xs font-medium text-fg-muted">Primeros pasos</h2>
+          <ol class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            @for (s of steps; track s.n) {
               <li>
                 <a
-                  routerLink="/inventario"
-                  [queryParams]="{ bajo: 1 }"
+                  [routerLink]="s.link"
                   class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
                 >
-                  <span
-                    class="text-2xl font-semibold tabular-nums"
-                    [class.text-warning]="a.lowStock"
-                    >{{ a.lowStock }}</span
-                  >
-                  <span class="text-sm">Artículos con stock bajo</span>
+                  <span class="font-mono text-2xs text-fg-subtle">{{ s.n }}</span>
+                  <span class="text-sm font-medium">{{ s.title }}</span>
+                  <span class="text-xs text-fg-muted">{{ s.text }}</span>
                 </a>
               </li>
-              <li>
-                <a
-                  routerLink="/compras"
-                  class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
-                >
-                  <span class="text-2xl font-semibold tabular-nums">{{ a.toBuy }}</span>
-                  <span class="text-sm">Por comprar</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  routerLink="/proyectos"
-                  class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
-                >
-                  <span
-                    class="text-2xl font-semibold tabular-nums"
-                    [class.text-warning]="a.projectsShort"
-                    >{{ a.projectsShort }}</span
-                  >
-                  <span class="text-sm">Proyectos con faltantes</span>
-                </a>
-              </li>
-            </ul>
-          </section>
-        }
+            }
+          </ol>
+        </section>
       }
 
-      <section aria-labelledby="pasos">
-        <h2 id="pasos" class="mb-2 text-xs font-medium text-fg-muted">Primeros pasos</h2>
-        <ol class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          @for (s of steps; track s.n) {
+      <section aria-labelledby="resumen">
+        <h2 id="resumen" class="mb-2 text-xs font-medium text-fg-muted">Resumen</h2>
+        <ul class="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          @for (s of summary(); track s.label) {
             <li>
               <a
                 [routerLink]="s.link"
                 class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
               >
-                <span class="font-mono text-2xs text-fg-subtle">{{ s.n }}</span>
-                <span class="text-sm font-medium">{{ s.title }}</span>
-                <span class="text-xs text-fg-muted">{{ s.text }}</span>
+                @if (s.value === null) {
+                  <es-skeleton class="h-8 w-16" />
+                } @else {
+                  <span class="text-2xl font-semibold tabular-nums" [class.text-warning]="s.warn">{{
+                    s.value
+                  }}</span>
+                }
+                <span class="text-sm">{{ s.label }}</span>
+                @if (s.hint) {
+                  <span class="text-xs text-fg-muted">{{ s.hint }}</span>
+                }
               </a>
             </li>
           }
-        </ol>
+        </ul>
       </section>
 
-      <section aria-labelledby="estado" class="rounded-lg border border-border bg-surface">
-        <h2 id="estado" class="border-b border-border px-3 py-2 text-xs font-medium text-fg-muted">
-          Estado del sistema
-        </h2>
-        <dl class="grid grid-cols-2 divide-x divide-border text-sm sm:grid-cols-4">
-          <div class="px-3 py-2.5">
-            <dt class="text-xs text-fg-muted">API</dt>
-            <dd class="mt-1">
-              @switch (api().kind) {
-                @case ('loading') {
-                  <es-skeleton class="h-5 w-16" />
-                }
-                @case ('ok') {
-                  <es-badge tone="success" dot>En línea</es-badge>
-                }
-                @default {
-                  <es-badge tone="warning" dot>Sin conexión</es-badge>
-                }
-              }
-            </dd>
-          </div>
-          <div class="px-3 py-2.5">
-            <dt class="text-xs text-fg-muted">Base de datos</dt>
-            <dd class="mt-1">
-              @if (api(); as s) {
-                @if (s.kind === 'ok') {
-                  @switch (s.health.checks['database']) {
-                    @case ('up') {
-                      <es-badge tone="success" dot>Conectada</es-badge>
-                    }
-                    @case ('down') {
-                      <es-badge tone="danger" dot>Caída</es-badge>
-                    }
-                    @default {
-                      <es-badge>No configurada</es-badge>
-                    }
-                  }
-                } @else {
-                  <span class="text-fg-subtle">—</span>
-                }
-              }
-            </dd>
-          </div>
-          <div class="px-3 py-2.5">
-            <dt class="text-xs text-fg-muted">Versión API</dt>
-            <dd class="mt-1 font-mono text-xs">
-              {{ version() }}
-            </dd>
-          </div>
-          <div class="px-3 py-2.5">
-            <dt class="text-xs text-fg-muted">Fase actual</dt>
-            <dd class="mt-1">{{ currentPhase }} · {{ phases[currentPhase - 1]!.name }}</dd>
-          </div>
-        </dl>
+      <section aria-labelledby="avisos">
+        <h2 id="avisos" class="mb-2 text-xs font-medium text-fg-muted">Avisos</h2>
+        @if (alerts.counts(); as a) {
+          <ul class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <li>
+              <a
+                routerLink="/inventario"
+                [queryParams]="{ bajo: 1 }"
+                class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+              >
+                <span
+                  class="text-2xl font-semibold tabular-nums"
+                  [class.text-warning]="a.lowStock"
+                  >{{ a.lowStock }}</span
+                >
+                <span class="text-sm">Artículos con stock bajo</span>
+              </a>
+            </li>
+            <li>
+              <a
+                routerLink="/compras"
+                class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+              >
+                <span class="text-2xl font-semibold tabular-nums">{{ a.toBuy }}</span>
+                <span class="text-sm">Por comprar</span>
+              </a>
+            </li>
+            <li>
+              <a
+                routerLink="/proyectos"
+                class="flex h-full flex-col gap-0.5 rounded-lg border border-border bg-surface p-3 hover:border-border-strong"
+              >
+                <span
+                  class="text-2xl font-semibold tabular-nums"
+                  [class.text-warning]="a.projectsShort"
+                  >{{ a.projectsShort }}</span
+                >
+                <span class="text-sm">Proyectos con faltantes</span>
+              </a>
+            </li>
+          </ul>
+        } @else {
+          <es-skeleton class="h-20 w-full" />
+        }
       </section>
 
       <section
-        aria-labelledby="hoja"
+        aria-labelledby="actividad"
         class="overflow-hidden rounded-lg border border-border bg-surface"
       >
-        <h2 id="hoja" class="border-b border-border px-3 py-2 text-xs font-medium text-fg-muted">
-          Hoja de ruta
-        </h2>
-        <table esTable>
-          <thead>
-            <tr>
-              <th scope="col" class="w-12">Fase</th>
-              <th scope="col">Alcance</th>
-              <th scope="col" class="w-32">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of phases; track p.n) {
-              <tr>
-                <td class="code">{{ p.n }}</td>
-                <td>
-                  <span class="font-medium">{{ p.name }}</span>
-                  <span class="text-fg-muted"> · {{ p.scope }}</span>
-                </td>
-                <td>
-                  @if (p.done) {
-                    <es-badge tone="success">Completada</es-badge>
-                  } @else if (p.n === currentPhase) {
-                    <es-badge tone="primary">En curso</es-badge>
-                  } @else {
-                    <es-badge>Pendiente</es-badge>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="flex items-center justify-between border-b border-border px-3 py-2">
+          <h2 id="actividad" class="text-xs font-medium text-fg-muted">Actividad reciente</h2>
+          <a routerLink="/movimientos" class="text-xs font-medium text-primary hover:underline"
+            >Ver todos los movimientos</a
+          >
+        </div>
+        @if (movements.hasValue()) {
+          @let rows = movements.value().movements;
+          @if (rows.length) {
+            <ul class="divide-y divide-border text-sm">
+              @for (m of rows; track m.id) {
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-3 py-2">
+                  <a [routerLink]="['/inventario', m.itemId]" class="min-w-0 flex-1 truncate">
+                    <span class="font-medium">{{ m.itemName }}</span>
+                    <span class="text-fg-muted"> · {{ m.locationPath }}</span>
+                  </a>
+                  <span
+                    class="tabular-nums"
+                    [class.text-success]="m.delta > 0"
+                    [class.text-danger]="m.delta < 0"
+                    >{{ m.delta > 0 ? '+' : '' }}{{ qty(m.delta) }} {{ m.unitSymbol }}</span
+                  >
+                  <span class="w-full text-xs text-fg-muted sm:w-auto">
+                    {{ kind[m.kind] }} · {{ m.actorName }} · {{ date(m.occurredAt) }}
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="px-3 py-4 text-sm text-fg-muted">
+              Aún no hay movimientos. Aparecerán aquí las entradas, salidas y transferencias.
+            </p>
+          }
+        } @else if (movements.isLoading()) {
+          <div class="p-3"><es-skeleton class="h-24 w-full" /></div>
+        } @else {
+          <p class="px-3 py-4 text-sm text-fg-muted">No se pudo cargar la actividad reciente.</p>
+        }
       </section>
+
+      <p class="text-xs text-fg-subtle">
+        ¿Necesita ayuda? Escríbanos a
+        <a class="underline" [href]="'mailto:' + contact">{{ contact }}</a
+        >.
+      </p>
     </div>
   `,
 })
 export default class Home {
-  private readonly http = inject(HttpClient);
+  private readonly api = inject(Api);
   protected readonly session = inject(SessionService);
   protected readonly alerts = inject(AlertsService);
-  /** La Fase 8 se adelantó a la 7 para lanzar antes (ver ROADMAP). */
-  protected readonly currentPhase = 8;
+  protected readonly contact = CONTACT_EMAIL;
+  protected readonly kind = KIND_LABELS;
+  protected readonly qty = fmtQty;
+  protected readonly date = fmtDate;
   protected readonly steps = [
     {
       n: 1,
@@ -217,52 +211,69 @@ export default class Home {
       link: '/inventario',
     },
   ];
-  protected readonly api = signal<ApiState>({ kind: 'loading' });
-  protected readonly version = computed(() => {
-    const s = this.api();
-    return s.kind === 'ok' ? s.health.version : '—';
+
+  private readonly billing = resource({
+    params: () => this.session.orgId() ?? undefined,
+    loader: () => this.api.get<BillingSummary>('/billing'),
+  });
+  protected readonly movements = resource({
+    params: () => this.session.orgId() ?? undefined,
+    loader: () => this.api.get<MovementPage>('/movements', { limit: 6 }),
   });
 
-  protected readonly phases = [
-    {
-      n: 1,
-      name: 'Fundamentos',
-      scope: 'arquitectura, marca, design system, monorepo, CI',
-      done: true,
-    },
-    {
-      n: 2,
-      name: 'Inventario',
-      scope: 'autenticación, organizaciones, artículos, categorías',
-      done: true,
-    },
-    {
-      n: 3,
-      name: 'Almacenamiento',
-      scope: 'almacenes, ubicaciones, gabinetes, editor 2D',
-      done: true,
-    },
-    {
-      n: 4,
-      name: 'Visualización 3D',
-      scope: 'Three.js, selección, apertura de cajones',
-      done: true,
-    },
-    { n: 5, name: 'Operaciones', scope: 'movimientos, reservas, auditoría, QR', done: true },
-    { n: 6, name: 'Productividad', scope: 'proyectos, BOM, alertas, importación', done: true },
-    { n: 7, name: 'Fabricación', scope: 'CAD paramétrico, STL/3MF, impresión 3D', done: false },
-    {
-      n: 8,
-      name: 'Comercialización',
-      scope: 'planes, cobros, correos, landing, lanzamiento',
-      done: false,
-    },
-  ];
+  protected readonly firstName = computed(() => this.session.me()?.user.name.split(' ')[0] ?? '');
+  /** Sin artículos todavía: se muestran los primeros pasos. */
+  protected readonly empty = computed(
+    () => this.billing.hasValue() && this.billing.value().usage.items === 0,
+  );
 
-  constructor() {
-    this.http.get<Health>('/api/health').subscribe({
-      next: (health) => this.api.set({ kind: 'ok', health }),
-      error: () => this.api.set({ kind: 'offline' }),
-    });
+  protected readonly summary = computed(() => {
+    const b = this.billing.hasValue() ? this.billing.value() : null;
+    const near = (used: number, limit: number | null) => limit !== null && used >= limit * 0.9;
+    const of = (limit: number | null, fmt: (n: number) => string) =>
+      limit === null ? 'Sin límite' : `de ${fmt(limit)} en su plan`;
+    return [
+      {
+        label: 'Artículos',
+        value: b && num(b.usage.items),
+        hint: b && of(b.limits.items, num),
+        warn: !!b && near(b.usage.items, b.limits.items),
+        link: '/inventario',
+      },
+      {
+        label: 'Miembros',
+        value: b && num(b.usage.members),
+        hint: b && of(b.limits.members, num),
+        warn: !!b && near(b.usage.members, b.limits.members),
+        link: '/miembros',
+      },
+      {
+        label: 'Fotografías',
+        value: b && gb(b.usage.photoBytes),
+        hint: b && of(b.limits.photoBytes, gb),
+        warn: !!b && near(b.usage.photoBytes, b.limits.photoBytes),
+        link: '/plan',
+      },
+      {
+        label: !b ? 'Plan' : b.plan === 'trial' ? PLANS.trial.name : `Plan ${PLANS[b.plan].name}`,
+        value: b && this.planValue(b),
+        hint: b && this.planHint(b),
+        warn: !!b && (b.readOnly || (b.trialDaysLeft !== null && b.trialDaysLeft <= 5)),
+        link: '/plan',
+      },
+    ];
+  });
+
+  private planValue(b: BillingSummary): string {
+    if (b.readOnly) return 'Solo lectura';
+    if (b.plan === 'trial' && b.trialDaysLeft !== null)
+      return b.trialDaysLeft === 1 ? '1 día' : `${b.trialDaysLeft} días`;
+    return 'Activo';
+  }
+
+  private planHint(b: BillingSummary): string {
+    if (b.readOnly) return 'Elija un plan para hacer cambios';
+    if (b.plan === 'trial') return 'restantes; ver planes';
+    return 'Ver plan y facturación';
   }
 }
