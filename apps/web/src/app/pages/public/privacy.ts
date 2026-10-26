@@ -13,8 +13,8 @@ import { LegalPage } from './legal-page';
       <p>
         {{ legal.owner }}, con domicilio en {{ legal.address }} («ElikarSystems»), es responsable
         del tratamiento de los datos personales que usted proporciona al usar SiloPro
-        (app.silopro.elikarsystems.com), conforme a la Ley Federal de Protección de Datos Personales
-        en Posesión de los Particulares. Contacto:
+        (silopro.elikarsystems.com y app.silopro.elikarsystems.com), conforme a la Ley Federal de
+        Protección de Datos Personales en Posesión de los Particulares. Contacto:
         <a class="underline" [href]="'mailto:' + legal.email">{{ legal.email }}</a
         >.
       </p>

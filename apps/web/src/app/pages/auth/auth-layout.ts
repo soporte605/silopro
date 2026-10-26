@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { landingUrl } from '../../core/site';
 import { Logo } from '../../layout/logo';
 
 /** Marco común de las pantallas de acceso y registro. */
 @Component({
   selector: 'sp-auth-layout',
-  imports: [Logo, RouterLink],
+  imports: [Logo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="flex min-h-dvh items-center justify-center bg-bg p-4">
       <div class="w-full max-w-sm">
-        <a routerLink="/producto" class="mb-6 flex w-fit items-center gap-2">
+        <a [href]="landing" class="mb-6 flex w-fit items-center gap-2">
           <sp-logo class="h-7" />
           <span class="text-base font-semibold tracking-tight">SiloPro</span>
         </a>
@@ -31,6 +31,8 @@ import { Logo } from '../../layout/logo';
 export class AuthLayout {
   readonly title = input.required<string>();
   readonly subtitle = input<string>();
+  /** Página comercial: su propio dominio en el servidor, `/producto` en local. */
+  protected readonly landing = landingUrl();
 }
 
 /** Acepta solo rutas internas como destino tras iniciar sesión. */

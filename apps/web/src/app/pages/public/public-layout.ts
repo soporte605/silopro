@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EsButton } from '@elikarsystems/ui';
 import { SessionService } from '../../core/session';
+import { landingUrl, siteKind } from '../../core/site';
 import { Logo } from '../../layout/logo';
 import { CONTACT_EMAIL } from '../billing/plan-copy';
 
@@ -14,7 +15,7 @@ import { CONTACT_EMAIL } from '../billing/plan-copy';
     <div class="flex min-h-dvh flex-col bg-bg">
       <header class="border-b border-border bg-surface">
         <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
-          <a routerLink="/producto" class="flex items-center gap-2" aria-label="SiloPro, inicio">
+          <a [href]="home" class="flex items-center gap-2" aria-label="SiloPro, inicio">
             <sp-logo class="h-7" />
             <span class="text-base font-semibold tracking-tight">SiloPro</span>
           </a>
@@ -52,4 +53,5 @@ import { CONTACT_EMAIL } from '../billing/plan-copy';
 export class PublicLayout {
   protected readonly session = inject(SessionService);
   protected readonly contact = CONTACT_EMAIL;
+  protected readonly home = siteKind() === 'landing' ? '/' : landingUrl();
 }
