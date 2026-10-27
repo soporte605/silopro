@@ -63,6 +63,11 @@ export const routes: Routes = [
         title: '¿Dónde está? · SiloPro',
       },
       {
+        path: 'asistente',
+        loadComponent: () => import('./pages/assistant/assistant'),
+        title: 'Asistente · SiloPro',
+      },
+      {
         path: 'inventario',
         loadComponent: () => import('./pages/items/items-list'),
         title: 'Artículos · SiloPro',

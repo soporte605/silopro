@@ -15,9 +15,15 @@ export const TEST_DB = process.env['TEST_DATABASE_URL'];
 /** Carpeta temporal de fotografías compartida por las pruebas de este proceso. */
 export const UPLOADS_DIR = mkdtempSync(join(tmpdir(), 'silopro-uploads-'));
 
-export async function createApp(extraEnv: Record<string, string> = {}): Promise<INestApplication> {
+export async function createApp(
+  extraEnv: Record<string, string> = {},
+  /** Proveedores a sustituir, p. ej. el cliente de Claude por uno simulado. */
+  overrides: [token: unknown, value: unknown][] = [],
+): Promise<INestApplication> {
   const env = loadEnv({ NODE_ENV: 'test', DATABASE_URL: TEST_DB, UPLOADS_DIR, ...extraEnv });
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(env)] }).compile();
+  let builder = Test.createTestingModule({ imports: [AppModule.forRoot(env)] });
+  for (const [token, value] of overrides) builder = builder.overrideProvider(token).useValue(value);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication({ rawBody: true });
   configureApp(app, env);
   await app.init();

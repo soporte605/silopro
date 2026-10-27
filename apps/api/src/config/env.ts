@@ -41,6 +41,10 @@ const envSchema = z.object({
   STRIPE_PORTAL_CONFIGURATION: z.string().startsWith('bpc_').optional(),
   /** Sin Resend, además del registro, guarda cada correo como JSON aquí (desarrollo y e2e). */
   MAIL_OUTBOX_DIR: z.string().min(1).optional(),
+  /** Clave de la API de Claude para el asistente con IA. Sin ella, el asistente se muestra desactivado. */
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  /** Modelo de Claude del asistente. */
+  ASSISTANT_MODEL: z.string().min(1).default('claude-opus-5-5'),
   /** Remitente; el dominio debe estar verificado en Resend. */
   MAIL_FROM: z.string().min(3).default('SiloPro <no-responder@silopro.elikarsystems.com>'),
 });

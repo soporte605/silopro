@@ -19,6 +19,6 @@ import { StockController } from './stock.controller.js';
     QrService,
     ReservationsService,
   ],
-  exports: [MovementsService, ReservationsService],
+  exports: [LocateService, MovementsService, ReservationsService],
 })
 export class StockModule {}

@@ -7,6 +7,7 @@
  */
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   check,
   date,
@@ -556,4 +557,19 @@ export const bomLines = pgTable(
     uniqueIndex('bom_lines_project_item_key').on(t.projectId, t.itemId),
     check('bom_lines_quantity_positive', sql`${t.quantity} > 0`),
   ],
+);
+
+/** Preguntas al asistente con IA por organización y mes (cupo del plan y consumo de tokens). */
+export const assistantUsage = pgTable(
+  'assistant_usage',
+  {
+    organizationId: orgId(),
+    /** Mes calendario UTC, `AAAA-MM`. */
+    period: text('period').notNull(),
+    questions: integer('questions').notNull().default(0),
+    inputTokens: bigint('input_tokens', { mode: 'number' }).notNull().default(0),
+    outputTokens: bigint('output_tokens', { mode: 'number' }).notNull().default(0),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.organizationId, t.period] })],
 );

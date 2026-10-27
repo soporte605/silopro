@@ -9,5 +9,6 @@ import { ShoppingService } from './shopping.service.js';
   imports: [StockModule],
   controllers: [ProjectsController, ShoppingController],
   providers: [ProjectsService, ShoppingService],
+  exports: [ProjectsService, ShoppingService],
 })
 export class ProjectsModule {}

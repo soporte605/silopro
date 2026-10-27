@@ -60,6 +60,22 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
 };
 
 export const PLAN_IDS = Object.keys(PLANS) as PlanId[];
+
+/**
+ * Preguntas al asistente con IA por mes y organización (`null` = sin límite).
+ * Cada pregunta tiene costo de API; cifras provisionales hasta medir el uso real.
+ */
+export const ASSISTANT_MONTHLY_QUESTIONS: Record<PlanId, number | null> = {
+  trial: 50,
+  basic: 100,
+  pro: 500,
+  enterprise: null,
+};
+
+/** Periodo de cobro del cupo del asistente: mes calendario UTC, `AAAA-MM`. */
+export function assistantPeriod(now = new Date()): string {
+  return now.toISOString().slice(0, 7);
+}
 export const isPlanId = (v: string): v is PlanId => v in PLANS;
 
 /** Estados de suscripción de Stripe con los que la cuenta sigue activa. */
